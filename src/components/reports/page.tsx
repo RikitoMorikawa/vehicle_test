@@ -1,10 +1,10 @@
 import React from 'react';
-import Header from '../components/Header';
-import Sidebar from '../components/Sidebar';
-import Footer from '../components/Footer';
+import Header from '../Header';
+import Sidebar from '../Sidebar';
+import Footer from '../Footer';
 import { FileText } from 'lucide-react';
 
-const Reports: React.FC = () => {
+const ReportsPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
@@ -31,4 +31,4 @@ const Reports: React.FC = () => {
   );
 };
 
-export default Reports;
+export default ReportsPage;

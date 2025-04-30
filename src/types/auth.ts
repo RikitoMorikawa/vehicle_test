@@ -1,3 +1,8 @@
+export enum AuthMode {
+  LOGIN = 'login',
+  REGISTER = 'register'
+}
+
 export interface Company {
   id: string;
   name: string;

@@ -1,110 +1,39 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import { Vehicle } from '../types/vehicle';
-import Header from '../components/Header';
-import Sidebar from '../components/Sidebar';
-import Footer from '../components/Footer';
+import React from 'react';
+import Header from '../Header';
+import Sidebar from '../Sidebar';
+import Footer from '../Footer';
 import { Heart } from 'lucide-react';
+import { Vehicle } from '../../types/vehicle';
 
-const ITEMS_PER_PAGE = 6;
-
-const VehicleList: React.FC = () => {
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [searchParams, setSearchParams] = useState({
-    keyword: '',
-    maker: '',
-    year: '',
-    mileage: '',
-    sort: 'newest'
-  });
-
-  const getImageUrl = (imagePath: string) => {
-    const { data } = supabase.storage
-      .from('vehicle-images')
-      .getPublicUrl(imagePath);
-    return data.publicUrl;
+interface VehicleListComponentProps {
+  vehicles: Vehicle[];
+  loading: boolean;
+  error: string | null;
+  currentPage: number;
+  totalPages: number;
+  searchParams: {
+    keyword: string;
+    maker: string;
+    year: string;
+    mileage: string;
+    sort: string;
   };
+  onSearch: (e: React.FormEvent) => void;
+  onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  onPageChange: (page: number) => void;
+}
 
-  const fetchVehicles = async () => {
-    try {
-      let query = supabase
-        .from('vehicles')
-        .select('*', { count: 'exact' });
-
-      // Apply search filters
-      if (searchParams.keyword) {
-        query = query.or(`name.ilike.%${searchParams.keyword}%,maker.ilike.%${searchParams.keyword}%`);
-      }
-      if (searchParams.maker) {
-        query = query.eq('maker', searchParams.maker);
-      }
-      if (searchParams.year) {
-        query = query.eq('year', parseInt(searchParams.year));
-      }
-      if (searchParams.mileage) {
-        const [min, max] = searchParams.mileage.split('-').map(Number);
-        query = query.gte('mileage', min).lte('mileage', max);
-      }
-
-      // Apply sorting
-      switch (searchParams.sort) {
-        case 'newest':
-          query = query.order('created_at', { ascending: false });
-          break;
-        case 'oldest':
-          query = query.order('created_at', { ascending: true });
-          break;
-        case 'price_high':
-          query = query.order('price', { ascending: false });
-          break;
-        case 'price_low':
-          query = query.order('price', { ascending: true });
-          break;
-      }
-
-      // Apply pagination
-      const start = (currentPage - 1) * ITEMS_PER_PAGE;
-      query = query.range(start, start + ITEMS_PER_PAGE - 1);
-
-      const { data, error, count } = await query;
-
-      if (error) throw error;
-
-      // 画像のURLを取得
-      const vehiclesWithImageUrls = data?.map(vehicle => ({
-        ...vehicle,
-        imageUrl: getImageUrl(vehicle.image_path)
-      })) || [];
-
-      setVehicles(vehiclesWithImageUrls);
-      setTotalPages(Math.ceil((count || 0) / ITEMS_PER_PAGE));
-    } catch (err) {
-      console.error('Error fetching vehicles:', err);
-      setError('車両データの取得に失敗しました');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchVehicles();
-  }, [currentPage, searchParams]);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setCurrentPage(1);
-    fetchVehicles();
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setSearchParams(prev => ({ ...prev, [name]: value }));
-  };
-
+const VehicleListComponent: React.FC<VehicleListComponentProps> = ({
+  vehicles,
+  loading,
+  error,
+  currentPage,
+  totalPages,
+  searchParams,
+  onSearch,
+  onInputChange,
+  onPageChange
+}) => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -144,14 +73,14 @@ const VehicleList: React.FC = () => {
           <div className="max-w-7xl mx-auto">
             <div className="mb-8">
               <h1 className="text-2xl font-bold text-gray-900 mb-6">車両検索</h1>
-              <form onSubmit={handleSearch} className="space-y-4">
+              <form onSubmit={onSearch} className="space-y-4">
                 <div className="flex gap-4">
                   <input
                     type="text"
                     name="keyword"
                     placeholder="キーワード検索..."
                     value={searchParams.keyword}
-                    onChange={handleInputChange}
+                    onChange={onInputChange}
                     className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
                   />
                   <button
@@ -165,7 +94,7 @@ const VehicleList: React.FC = () => {
                   <select
                     name="maker"
                     value={searchParams.maker}
-                    onChange={handleInputChange}
+                    onChange={onInputChange}
                     className="rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
                   >
                     <option value="">メーカー: 全て</option>
@@ -177,7 +106,7 @@ const VehicleList: React.FC = () => {
                   <select
                     name="year"
                     value={searchParams.year}
-                    onChange={handleInputChange}
+                    onChange={onInputChange}
                     className="rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
                   >
                     <option value="">年式: 指定なし</option>
@@ -188,7 +117,7 @@ const VehicleList: React.FC = () => {
                   <select
                     name="mileage"
                     value={searchParams.mileage}
-                    onChange={handleInputChange}
+                    onChange={onInputChange}
                     className="rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
                   >
                     <option value="">走行距離: 指定なし</option>
@@ -200,7 +129,7 @@ const VehicleList: React.FC = () => {
                   <select
                     name="sort"
                     value={searchParams.sort}
-                    onChange={handleInputChange}
+                    onChange={onInputChange}
                     className="rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
                   >
                     <option value="newest">登録日: 新しい順</option>
@@ -254,7 +183,7 @@ const VehicleList: React.FC = () => {
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                     <button
                       key={page}
-                      onClick={() => setCurrentPage(page)}
+                      onClick={() => onPageChange(page)}
                       className={`px-3 py-1 rounded-md ${
                         currentPage === page
                           ? 'bg-red-600 text-white'
@@ -275,4 +204,4 @@ const VehicleList: React.FC = () => {
   );
 };
 
-export default VehicleList;
+export default VehicleListComponent;

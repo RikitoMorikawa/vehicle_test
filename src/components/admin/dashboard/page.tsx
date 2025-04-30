@@ -1,73 +1,26 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import Header from '../components/Header';
-import Sidebar from '../components/Sidebar';
-import Footer from '../components/Footer';
-import { supabase } from '../lib/supabase';
-import { User } from '../types/auth';
+import React from 'react';
+import Header from '../../Header';
+import Sidebar from '../../Sidebar';
+import Footer from '../../Footer';
+import Button from '../../ui/Button';
+import { User } from '../../../types/auth';
 import { UserCog, CheckCircle, XCircle, Pencil } from 'lucide-react';
-import Button from '../components/ui/Button';
 
-const AdminDashboard: React.FC = () => {
-  const navigate = useNavigate();
-  const { user: currentUser } = useAuth();
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+interface AdminDashboardComponentProps {
+  users: User[];
+  loading: boolean;
+  error: string | null;
+  onApproval: (userId: string, approve: boolean) => Promise<void>;
+  onEditUser: (userId: string) => void;
+}
 
-  const fetchUsers = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .order('role', { ascending: false })
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        throw error;
-      }
-
-      // 管理者を先頭に、それ以外のユーザーを作成日順にソート
-      const sortedUsers = (data || []).sort((a, b) => {
-        if (a.role === 'admin' && b.role !== 'admin') return -1;
-        if (a.role !== 'admin' && b.role === 'admin') return 1;
-        return 0;
-      });
-
-      setUsers(sortedUsers);
-    } catch (err) {
-      setError('ユーザー情報の取得に失敗しました');
-      console.error('Error fetching users:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const handleApproval = async (userId: string, approve: boolean) => {
-    try {
-      const { error } = await supabase
-        .from('users')
-        .update({ is_approved: approve })
-        .eq('id', userId);
-
-      if (error) throw error;
-
-      await fetchUsers();
-    } catch (err) {
-      setError('ユーザーの承認状態の更新に失敗しました');
-      console.error('Error updating user approval:', err);
-    }
-  };
-
-  const handleEditUser = (userId: string) => {
-    navigate(`/admin/users/${userId}/edit`);
-  };
-
+const AdminDashboardComponent: React.FC<AdminDashboardComponentProps> = ({
+  users,
+  loading,
+  error,
+  onApproval,
+  onEditUser
+}) => {
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -168,7 +121,7 @@ const AdminDashboard: React.FC = () => {
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    onClick={() => handleEditUser(user.id)}
+                                    onClick={() => onEditUser(user.id)}
                                     className="flex items-center"
                                   >
                                     <Pencil className="h-4 w-4 mr-1" />
@@ -177,7 +130,7 @@ const AdminDashboard: React.FC = () => {
                                   {!user.is_approved && (
                                     <Button
                                       size="sm"
-                                      onClick={() => handleApproval(user.id, true)}
+                                      onClick={() => onApproval(user.id, true)}
                                       className="flex items-center"
                                     >
                                       <CheckCircle className="h-4 w-4 mr-1" />
@@ -188,7 +141,7 @@ const AdminDashboard: React.FC = () => {
                                     <Button
                                       size="sm"
                                       variant="outline"
-                                      onClick={() => handleApproval(user.id, false)}
+                                      onClick={() => onApproval(user.id, false)}
                                       className="flex items-center"
                                     >
                                       <XCircle className="h-4 w-4 mr-1" />
@@ -214,4 +167,4 @@ const AdminDashboard: React.FC = () => {
   );
 };
 
-export default AdminDashboard;
+export default AdminDashboardComponent;
