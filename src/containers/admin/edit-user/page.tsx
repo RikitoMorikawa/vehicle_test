@@ -70,7 +70,8 @@ const EditUserContainer: React.FC = () => {
         navigate("/admin");
       }, 2000);
     } catch (err) {
-      setError("ユーザー情報の更新に失敗しました");
+      console.error("更新エラー:", err);
+      setError(`ユーザー情報の更新に失敗しました: ${err instanceof Error ? err.message : "不明なエラー"}`);
     }
   };
 

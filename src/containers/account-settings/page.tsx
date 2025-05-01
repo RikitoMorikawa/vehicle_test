@@ -19,7 +19,7 @@ const AccountSettingsContainer: React.FC = () => {
     confirmPassword: "",
   });
 
-  const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({});
+  const [passwordErrors, setPasswordErrors] = useState<Record<string, string | undefined>>({});
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -39,7 +39,12 @@ const AccountSettingsContainer: React.FC = () => {
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setPasswordForm((prev) => ({ ...prev, [name]: value }));
-    setPasswordErrors((prev) => ({ ...prev, [name]: undefined }));
+    // 型を明確にする
+    setPasswordErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[name]; // undefinedを代入する代わりにプロパティを削除
+      return newErrors;
+    });
   };
 
   const validatePasswordForm = (): boolean => {
@@ -76,6 +81,12 @@ const AccountSettingsContainer: React.FC = () => {
     setError(null);
     setSuccess(null);
 
+    // user.idが存在することを確認
+    if (!user?.id) {
+      setError("ユーザーIDが見つかりません");
+      return;
+    }
+
     try {
       await updateProfile.mutateAsync({
         ...formData,
@@ -95,6 +106,12 @@ const AccountSettingsContainer: React.FC = () => {
     setSuccess(null);
 
     if (!validatePasswordForm()) return;
+
+    // user.idが存在することを確認
+    if (!user?.id) {
+      setError("ユーザーIDが見つかりません");
+      return;
+    }
 
     try {
       await updatePassword.mutateAsync({

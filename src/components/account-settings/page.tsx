@@ -23,7 +23,7 @@ interface AccountSettingsComponentProps {
     newPassword: string;
     confirmPassword: string;
   };
-  passwordErrors: Record<string, string>;
+  passwordErrors: Record<string, string | undefined>;
   error: string | null;
   success: string | null;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;

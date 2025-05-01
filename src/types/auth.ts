@@ -19,15 +19,32 @@ export interface User {
   is_approved?: boolean;
 }
 
+// `any`型を避けた定義
+export interface Session {
+  access_token?: string;
+  refresh_token?: string;
+  expires_at?: number;
+  user?: User;
+  // 必要に応じて他のセッション関連のプロパティを追加
+}
+
 export interface AuthState {
   user: User | null;
-  session: any;
+  // `any`を具体的な型に変更
+  session: Session | null;
   loading: boolean;
 }
 
+export interface AuthError {
+  message: string;
+  code?: string;
+  // 必要に応じて他のエラー関連のプロパティを追加
+}
+
 export interface AuthContextType extends AuthState {
-  signIn: (email: string, password: string) => Promise<{ error: any; needsApproval?: boolean }>;
-  signUp: (email: string, password: string, userData: Omit<User, "id" | "role" | "is_approved">) => Promise<{ error: any }>;
+  // `any`型をより具体的な型に変更
+  signIn: (email: string, password: string) => Promise<{ error: AuthError | null; needsApproval?: boolean }>;
+  signUp: (email: string, password: string, userData: Omit<User, "id" | "role" | "is_approved">) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
 }
 

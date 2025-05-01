@@ -1,16 +1,10 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+// src/context/AuthContext.tsx
+import React, { createContext, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { AuthContextType, AuthState, User } from "../types/auth";
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-};
+// コンテキストをエクスポート（useAuthフックから使用できるように）
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const initialState: AuthState = {
   user: null,
@@ -51,6 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           loading: false,
         });
       } catch (error) {
+        console.error("Error fetching session:", error);
         localStorage.removeItem("user-email");
         setState({
           ...initialState,
@@ -88,6 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return { error: null, needsApproval: false };
     } catch (error) {
+      console.error("Error during signIn:", error);
       return { error: { message: "予期せぬエラーが発生しました" } };
     }
   };
@@ -100,7 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: { message: "このメールアドレスは既に登録されています" } };
       }
 
-      const { data: user, error } = await supabase
+      const { data: error } = await supabase
         .from("users")
         .insert([{ ...userData, password, role: "user" }])
         .select()
@@ -112,6 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return { error: null };
     } catch (error) {
+      console.error("Error during signUp:", error);
       return { error: { message: "予期せぬエラーが発生しました" } };
     }
   };
