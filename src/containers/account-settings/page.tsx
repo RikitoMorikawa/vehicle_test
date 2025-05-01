@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { useAuth } from "../../context/AuthContext";
 import { accountService } from "../../services/account/page";
 import AccountSettingsComponent from "../../components/account-settings/page";
+import { useAuth } from "../../hooks/useAuth";
 
 const AccountSettingsContainer: React.FC = () => {
   const { user } = useAuth();

@@ -4,33 +4,7 @@ import { AuthMode, AuthFormData, FormError, Company } from "../types/auth";
 import { supabase } from "../lib/supabase";
 import Input from "./ui/Input";
 import Button from "./ui/Button";
-import { Layers } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
-
-const AuthLayout: React.FC<{
-  children: React.ReactNode;
-  title: string;
-  description?: string;
-}> = ({ children, title, description }) => {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-300 hover:shadow-xl">
-          <div className="p-6 sm:p-8">
-            <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-teal-100 mb-4">
-                <Layers className="h-6 w-6 text-teal-600" />
-              </div>
-              <h1 className="text-2xl font-bold text-slate-900 mb-2">{title}</h1>
-              {description && <p className="text-slate-500">{description}</p>}
-            </div>
-            {children}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const LoginForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) => {
   const { signIn } = useAuth();
@@ -77,6 +51,7 @@ const LoginForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) => {
         onSuccess();
       }
     } catch (err) {
+      console.error("ログイン中にエラーが発生しました:", err);
       setErrors({ general: "予期せぬエラーが発生しました" });
     } finally {
       setIsLoading(false);
@@ -115,7 +90,7 @@ const LoginForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) => {
   );
 };
 
-const RegisterForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) => {
+const RegisterForm: React.FC<{ onSuccess?: () => void }> = () => {
   const { signUp } = useAuth();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [formData, setFormData] = useState<AuthFormData>({
@@ -199,6 +174,7 @@ const RegisterForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) => {
         });
       }
     } catch (err) {
+      console.error("登録中にエラーが発生しました:", err);
       setErrors({ general: "予期せぬエラーが発生しました" });
     } finally {
       setIsLoading(false);

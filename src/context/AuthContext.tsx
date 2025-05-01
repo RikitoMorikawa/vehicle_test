@@ -3,6 +3,7 @@ import React, { createContext, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { AuthContextType, AuthState, User } from "../types/auth";
 
+
 // コンテキストをエクスポート（useAuthフックから使用できるように）
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
