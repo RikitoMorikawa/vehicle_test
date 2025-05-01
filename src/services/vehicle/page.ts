@@ -1,22 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { vehicleHandler } from "../../server/vehicles/handler";
 import { QUERY_KEYS } from "../../constants/queryKeys";
-import type { Vehicle } from "../../types/vehicle";
-
-interface SearchParams {
-  keyword: string;
-  maker: string;
-  year: string;
-  mileage: string;
-  sort: string;
-}
-
-interface VehicleQueryResult {
-  vehicles: Vehicle[];
-  totalPages: number;
-  isLoading: boolean;
-  error: Error | null;
-}
+import { SearchParams, VehicleQueryResult } from "../../types/vehicle/page";
 
 function useVehicles(currentPage: number, searchParams: SearchParams): VehicleQueryResult {
   const { data, isLoading, error } = useQuery({

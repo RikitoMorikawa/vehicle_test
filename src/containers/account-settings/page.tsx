@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { accountService } from "../../services/account/page";
+import { accountService } from "../../services/account-settings/page";
 import AccountSettingsComponent from "../../components/account-settings/page";
 import { useAuth } from "../../hooks/useAuth";
+import { validatePasswordForm, validateProfileForm } from "../../validations/account-settings/page";
 
 const AccountSettingsContainer: React.FC = () => {
   const { user } = useAuth();
@@ -19,15 +20,11 @@ const AccountSettingsContainer: React.FC = () => {
     confirmPassword: "",
   });
 
-  const [passwordErrors, setPasswordErrors] = useState<Record<string, string | undefined>>({});
+  const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Only fetch account data if we have a valid UUID
-  const { isLoading: isProfileLoading } = accountService.useAccount(
-    user?.id ? user.id : "" // Pass the UUID instead of email
-  );
-
+  const { isLoading: isProfileLoading } = accountService.useAccount(user?.id ? user.id : "");
   const updateProfile = accountService.useUpdateProfile();
   const updatePassword = accountService.useUpdatePassword();
 
@@ -39,41 +36,11 @@ const AccountSettingsContainer: React.FC = () => {
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setPasswordForm((prev) => ({ ...prev, [name]: value }));
-    // 型を明確にする
     setPasswordErrors((prev) => {
       const newErrors = { ...prev };
-      delete newErrors[name]; // undefinedを代入する代わりにプロパティを削除
+      delete newErrors[name];
       return newErrors;
     });
-  };
-
-  const validatePasswordForm = (): boolean => {
-    const errors: Record<string, string> = {};
-    let isValid = true;
-
-    if (!passwordForm.currentPassword.trim()) {
-      errors.currentPassword = "現在のパスワードを入力してください";
-      isValid = false;
-    }
-
-    if (!passwordForm.newPassword.trim()) {
-      errors.newPassword = "新しいパスワードを入力してください";
-      isValid = false;
-    } else if (passwordForm.newPassword.length < 8) {
-      errors.newPassword = "パスワードは8文字以上で入力してください";
-      isValid = false;
-    }
-
-    if (!passwordForm.confirmPassword.trim()) {
-      errors.confirmPassword = "確認用パスワードを入力してください";
-      isValid = false;
-    } else if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      errors.confirmPassword = "新しいパスワードと確認用パスワードが一致しません";
-      isValid = false;
-    }
-
-    setPasswordErrors(errors);
-    return isValid;
   };
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
@@ -81,7 +48,13 @@ const AccountSettingsContainer: React.FC = () => {
     setError(null);
     setSuccess(null);
 
-    // user.idが存在することを確認
+    // バリデーション
+    const validation = validateProfileForm(formData);
+    if (!validation.success) {
+      // エラーがある場合
+      return;
+    }
+
     if (!user?.id) {
       setError("ユーザーIDが見つかりません");
       return;
@@ -90,12 +63,12 @@ const AccountSettingsContainer: React.FC = () => {
     try {
       await updateProfile.mutateAsync({
         ...formData,
-        id: user?.id, // Include the user's UUID in the update
+        id: user.id,
       });
       setSuccess("プロフィール情報を更新しました");
       setIsEditing(false);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
+      console.error(err);
       setError("プロフィール情報の更新に失敗しました");
     }
   };
@@ -105,9 +78,13 @@ const AccountSettingsContainer: React.FC = () => {
     setError(null);
     setSuccess(null);
 
-    if (!validatePasswordForm()) return;
+    // バリデーション
+    const validation = validatePasswordForm(passwordForm);
+    if (!validation.success) {
+      setPasswordErrors(validation.errors);
+      return;
+    }
 
-    // user.idが存在することを確認
     if (!user?.id) {
       setError("ユーザーIDが見つかりません");
       return;
@@ -115,7 +92,7 @@ const AccountSettingsContainer: React.FC = () => {
 
     try {
       await updatePassword.mutateAsync({
-        id: user?.id, // Include the user's UUID in the password update
+        id: user.id,
         currentPassword: passwordForm.currentPassword,
         newPassword: passwordForm.newPassword,
       });

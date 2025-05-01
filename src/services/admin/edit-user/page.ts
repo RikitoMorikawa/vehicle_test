@@ -1,13 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
+// src/services/admin/edit-user/page.ts
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { editUserHandler } from "../../../server/admin/edit-user/handler";
 import { QUERY_KEYS } from "../../../constants/queryKeys";
-import type { User } from "../../../types/auth";
-
-interface UserQueryResult {
-  user: User | null;
-  isLoading: boolean;
-  error: Error | null;
-}
+import { UserQueryResult, UserFormData } from "../../../types/admin/edit-user/page";
 
 function useUser(userId: string): UserQueryResult {
   const { data, isLoading, error } = useQuery({
@@ -23,6 +18,19 @@ function useUser(userId: string): UserQueryResult {
   };
 }
 
+function useUpdateUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ userId, data }: { userId: string; data: UserFormData }) => editUserHandler.updateUser(userId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USERS });
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEYS.USERS, variables.userId] });
+    },
+  });
+}
+
 export const editUserService = {
   useUser,
+  useUpdateUser,
 };

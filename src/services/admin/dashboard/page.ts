@@ -1,13 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminDashboardHandler } from "../../../server/admin/dashboard/handler";
 import { QUERY_KEYS } from "../../../constants/queryKeys";
-import type { User } from "../../../types/auth";
-
-interface UsersQueryResult {
-  users: User[];
-  isLoading: boolean;
-  error: Error | null;
-}
+import { UsersQueryResult } from "../../../types/admin/dashboard/page";
 
 function useUsers(): UsersQueryResult {
   const { data, isLoading, error } = useQuery({

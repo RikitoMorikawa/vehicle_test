@@ -1,62 +1,12 @@
-import React, { useState } from "react";
-import { Navigate } from "react-router-dom";
-import { AuthMode, AuthFormData, FormError, Company } from "../types/auth";
-import { supabase } from "../lib/supabase";
-import Input from "./ui/Input";
-import Button from "./ui/Button";
-import { useAuth } from "../hooks/useAuth";
+// src/components/AuthPage.tsx
+import React from "react";
+import Input from "../ui/Input";
+import Button from "../ui/Button";
+import { AuthMode } from "../../types/enum";
+import { useLoginForm, useRegisterForm } from "../../hooks/useAuthForms";
 
-const LoginForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) => {
-  const { signIn } = useAuth();
-  const [formData, setFormData] = useState<AuthFormData>({
-    email: "",
-    password: "",
-  });
-  const [errors, setErrors] = useState<FormError>({});
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name as keyof FormError]) {
-      setErrors((prev) => ({ ...prev, [name]: undefined }));
-    }
-  };
-
-  const validateForm = (): boolean => {
-    const newErrors: FormError = {};
-    if (!formData.email) {
-      newErrors.email = "メールアドレスを入力してください";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "有効なメールアドレスを入力してください";
-    }
-    if (!formData.password) {
-      newErrors.password = "パスワードを入力してください";
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateForm()) return;
-    setIsLoading(true);
-    try {
-      const { error, needsApproval } = await signIn(formData.email, formData.password);
-      if (error) {
-        setErrors({ general: error.message });
-      } else if (needsApproval) {
-        setErrors({ general: "アカウントは現在承認待ちです。管理者による承認をお待ちください。" });
-      } else if (onSuccess) {
-        onSuccess();
-      }
-    } catch (err) {
-      console.error("ログイン中にエラーが発生しました:", err);
-      setErrors({ general: "予期せぬエラーが発生しました" });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+const LoginForm: React.FC = () => {
+  const { formData, errors, isLoading, handleChange, handleSubmit } = useLoginForm();
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -90,96 +40,8 @@ const LoginForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) => {
   );
 };
 
-const RegisterForm: React.FC<{ onSuccess?: () => void }> = () => {
-  const { signUp } = useAuth();
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [formData, setFormData] = useState<AuthFormData>({
-    email: "",
-    password: "",
-    company_name: "",
-    user_name: "",
-    phone: "",
-  });
-  const [errors, setErrors] = useState<FormError>({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [registrationComplete, setRegistrationComplete] = useState(false);
-
-  React.useEffect(() => {
-    const fetchCompanies = async () => {
-      try {
-        const { data, error } = await supabase.from("companies").select("id, name").order("name");
-        if (error) throw error;
-        setCompanies(data || []);
-      } catch (err) {
-        console.error("会社データの取得に失敗しました:", err);
-      }
-    };
-    fetchCompanies();
-  }, []);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name as keyof FormError]) {
-      setErrors((prev) => ({ ...prev, [name]: undefined }));
-    }
-  };
-
-  const validateForm = (): boolean => {
-    const newErrors: FormError = {};
-    if (!formData.email) {
-      newErrors.email = "メールアドレスを入力してください";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "有効なメールアドレスを入力してください";
-    }
-    if (!formData.password) {
-      newErrors.password = "パスワードを入力してください";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "パスワードは6文字以上で入力してください";
-    }
-    if (!formData.company_name) {
-      newErrors.company_name = "会社名を選択してください";
-    }
-    if (!formData.user_name) {
-      newErrors.user_name = "担当者名を入力してください";
-    }
-    if (!formData.phone) {
-      newErrors.phone = "電話番号を入力してください";
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateForm()) return;
-    setIsLoading(true);
-    try {
-      const { error } = await signUp(formData.email, formData.password, {
-        email: formData.email,
-        company_name: formData.company_name!,
-        user_name: formData.user_name!,
-        phone: formData.phone!,
-      });
-      if (error) {
-        setErrors({ general: error.message });
-      } else {
-        setRegistrationComplete(true);
-        setFormData({
-          email: "",
-          password: "",
-          company_name: "",
-          user_name: "",
-          phone: "",
-        });
-      }
-    } catch (err) {
-      console.error("登録中にエラーが発生しました:", err);
-      setErrors({ general: "予期せぬエラーが発生しました" });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+const RegisterForm: React.FC = () => {
+  const { formData, errors, isLoading, companies, registrationComplete, handleChange, handleSubmit, resetForm } = useRegisterForm();
 
   if (registrationComplete) {
     return (
@@ -197,7 +59,7 @@ const RegisterForm: React.FC<{ onSuccess?: () => void }> = () => {
             承認後、ログインが可能になります。
           </p>
         </div>
-        <Button type="button" variant="outline" onClick={() => window.location.reload()} className="mt-4">
+        <Button type="button" variant="outline" onClick={resetForm} className="mt-4">
           ログイン画面に戻る
         </Button>
       </div>
@@ -332,15 +194,4 @@ const AuthContainer: React.FC<{
   );
 };
 
-const AuthPage: React.FC = () => {
-  const { user } = useAuth();
-  const [mode, setMode] = useState<AuthMode>(AuthMode.LOGIN);
-
-  if (user) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  return <AuthContainer mode={mode} onModeChange={setMode} />;
-};
-
-export default AuthPage;
+export default AuthContainer;

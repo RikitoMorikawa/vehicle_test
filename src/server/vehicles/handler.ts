@@ -1,20 +1,7 @@
 import { supabase } from "../../lib/supabase";
-import { Vehicle } from "../../types/vehicle";
+import { FetchVehiclesResult, SearchParams } from "../../types/vehicle/page";
 
 const ITEMS_PER_PAGE = 6;
-
-interface SearchParams {
-  keyword: string;
-  maker: string;
-  year: string;
-  mileage: string;
-  sort: string;
-}
-
-interface FetchVehiclesResult {
-  vehicles: Vehicle[];
-  totalPages: number;
-}
 
 export const vehicleHandler = {
   async fetchVehicles(currentPage: number, searchParams: SearchParams): Promise<FetchVehiclesResult> {

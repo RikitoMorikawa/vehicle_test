@@ -1,33 +1,14 @@
+// src/services/account/page.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { accountHandler } from "../../server/account/handler";
+import { accountHandler } from "../../server/account-settings/handler";
 import { QUERY_KEYS } from "../../constants/queryKeys";
-import type { User } from "../../types/auth";
-
-interface AccountQueryResult {
-  user: User | null;
-  isLoading: boolean;
-  error: Error | null;
-}
-
-interface UpdateProfileData {
-  id: string; // Add UUID field
-  company_name: string;
-  user_name: string;
-  phone: string;
-  email: string;
-}
-
-interface UpdatePasswordData {
-  id: string; // Add UUID field
-  currentPassword: string;
-  newPassword: string;
-}
+import { AccountQueryResult, UpdatePasswordData, UpdateProfileData } from "../../types/account-settings/page";
 
 function useAccount(userId: string): AccountQueryResult {
   const { data, isLoading, error } = useQuery({
     queryKey: [...QUERY_KEYS.ACCOUNT, userId],
     queryFn: () => accountHandler.fetchAccount(userId),
-    enabled: !!userId && userId.length > 0, // Only run query if we have a valid UUID
+    enabled: !!userId && userId.length > 0,
   });
 
   return {

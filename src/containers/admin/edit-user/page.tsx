@@ -1,24 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { editUserHandler } from "../../../server/admin/edit-user/handler";
 import { editUserService } from "../../../services/admin/edit-user/page";
-import { QUERY_KEYS } from "../../../constants/queryKeys";
 import EditUserComponent from "../../../components/admin/edit-user/page";
-
-interface UserFormData {
-  company_name: string;
-  user_name: string;
-  phone: string;
-  email: string;
-  password: string;
-  currentPassword: string;
-}
+import { UserFormData } from "../../../types/admin/edit-user/page";
 
 const EditUserContainer: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [formData, setFormData] = useState<UserFormData>({
@@ -31,14 +19,7 @@ const EditUserContainer: React.FC = () => {
   });
 
   const { user, isLoading } = editUserService.useUser(id!);
-
-  const updateUser = useMutation({
-    mutationFn: (data: UserFormData) => editUserHandler.updateUser(id!, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USERS });
-      queryClient.invalidateQueries({ queryKey: [...QUERY_KEYS.USERS, id] });
-    },
-  });
+  const updateUserMutation = editUserService.useUpdateUser();
 
   useEffect(() => {
     if (user) {
@@ -64,7 +45,7 @@ const EditUserContainer: React.FC = () => {
     setSuccess(null);
 
     try {
-      await updateUser.mutateAsync(formData);
+      await updateUserMutation.mutateAsync({ userId: id!, data: formData });
       setSuccess("ユーザー情報を更新しました");
       setTimeout(() => {
         navigate("/admin");
@@ -82,7 +63,7 @@ const EditUserContainer: React.FC = () => {
   return (
     <EditUserComponent
       loading={isLoading}
-      saving={updateUser.isPending}
+      saving={updateUserMutation.isPending}
       error={error}
       success={success}
       formData={formData}

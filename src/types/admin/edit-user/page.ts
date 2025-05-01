@@ -1,0 +1,25 @@
+// src / types / admin / edit - user / page.ts;
+import { User } from "../../auth";
+
+export interface UserQueryResult {
+  user: User | null;
+  isLoading: boolean;
+  error: Error | null;
+}
+
+export interface UserFormData {
+  company_name: string;
+  user_name: string;
+  phone: string;
+  email: string;
+  password: string;
+  currentPassword: string;
+}
+
+export interface UpdateUserData {
+  company_name: string;
+  user_name: string;
+  phone: string;
+  email: string;
+  password?: string;
+}

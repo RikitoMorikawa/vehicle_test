@@ -1,13 +1,6 @@
 import { supabase } from "../../../lib/supabase";
+import { UpdateUserData } from "../../../types/admin/edit-user/page";
 import type { User } from "../../../types/auth";
-
-interface UpdateUserData {
-  company_name: string;
-  user_name: string;
-  phone: string;
-  email: string;
-  password?: string;
-}
 
 export const editUserHandler = {
   async fetchUser(userId: string): Promise<User> {

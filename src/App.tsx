@@ -2,13 +2,13 @@ import React from "react";
 import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
-import AuthPage from "./components/AuthPage";
 import VehicleListPage from "./pages/VehicleList/page";
 import AdminDashboardPage from "./pages/admin/dashboard/page";
 import EditUserPage from "./pages/admin/edit-user/page";
 import AccountSettingsPage from "./pages/account-settings/page";
 import FavoritesContainer from "./containers/favorites/page";
 import ReportsContainer from "./containers/reports/page";
+import AuthPageContainer from "./containers/auth/page";
 import { JSX } from "react/jsx-runtime";
 
 // ProtectedRouteをラップするヘルパー関数
@@ -28,7 +28,7 @@ const createProtectedRoute = (
 const routes = [
   {
     path: "/login",
-    element: <AuthPage />,
+    element: <AuthPageContainer />,
   },
   {
     path: "/dashboard",
