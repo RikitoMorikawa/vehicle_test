@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-import AccountSettingsComponent from '../../components/account-settings/page';
 import { useAuth } from '../../context/AuthContext';
-import { supabase } from '../../lib/supabase';
+import { accountService } from '../../services/account/page';
+import AccountSettingsComponent from '../../components/account-settings/page';
 
 const AccountSettingsContainer: React.FC = () => {
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [formData, setFormData] = useState({
     company_name: user?.company_name || '',
     user_name: user?.user_name || '',
@@ -21,9 +19,17 @@ const AccountSettingsContainer: React.FC = () => {
     confirmPassword: ''
   });
 
-  const [passwordErrors, setPasswordErrors] = useState({});
+  const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Only fetch account data if we have a valid UUID
+  const { isLoading: isProfileLoading } = accountService.useAccount(
+    user?.id ? user.id : '' // Pass the UUID instead of email
+  );
+  
+  const updateProfile = accountService.useUpdateProfile();
+  const updatePassword = accountService.useUpdatePassword();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -36,74 +42,49 @@ const AccountSettingsContainer: React.FC = () => {
     setPasswordErrors(prev => ({ ...prev, [name]: undefined }));
   };
 
-  const validatePasswordForm = async (): Promise<boolean> => {
+  const validatePasswordForm = (): boolean => {
     const errors: Record<string, string> = {};
     let isValid = true;
 
-    try {
-      const { data } = await supabase
-        .from('users')
-        .select('password')
-        .eq('id', user?.id)
-        .single();
-
-      if (!passwordForm.currentPassword.trim()) {
-        errors.currentPassword = '現在のパスワードを入力してください';
-        isValid = false;
-      } else if (data && passwordForm.currentPassword !== data.password) {
-        errors.currentPassword = '現在のパスワードが正しくありません';
-        isValid = false;
-      }
-
-      if (!passwordForm.newPassword.trim()) {
-        errors.newPassword = '新しいパスワードを入力してください';
-        isValid = false;
-      } else if (passwordForm.newPassword.length < 8) {
-        errors.newPassword = 'パスワードは8文字以上で入力してください';
-        isValid = false;
-      }
-
-      if (!passwordForm.confirmPassword.trim()) {
-        errors.confirmPassword = '確認用パスワードを入力してください';
-        isValid = false;
-      } else if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-        errors.confirmPassword = '新しいパスワードと確認用パスワードが一致しません';
-        isValid = false;
-      }
-
-      setPasswordErrors(errors);
-      return isValid;
-    } catch (err) {
-      setError('パスワードの検証に失敗しました');
-      return false;
+    if (!passwordForm.currentPassword.trim()) {
+      errors.currentPassword = '現在のパスワードを入力してください';
+      isValid = false;
     }
+
+    if (!passwordForm.newPassword.trim()) {
+      errors.newPassword = '新しいパスワードを入力してください';
+      isValid = false;
+    } else if (passwordForm.newPassword.length < 8) {
+      errors.newPassword = 'パスワードは8文字以上で入力してください';
+      isValid = false;
+    }
+
+    if (!passwordForm.confirmPassword.trim()) {
+      errors.confirmPassword = '確認用パスワードを入力してください';
+      isValid = false;
+    } else if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      errors.confirmPassword = '新しいパスワードと確認用パスワードが一致しません';
+      isValid = false;
+    }
+
+    setPasswordErrors(errors);
+    return isValid;
   };
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
-    setIsProfileLoading(true);
 
     try {
-      const { error: updateError } = await supabase
-        .from('users')
-        .update({
-          company_name: formData.company_name,
-          user_name: formData.user_name,
-          phone: formData.phone,
-          email: formData.email
-        })
-        .eq('id', user?.id);
-
-      if (updateError) throw updateError;
-
+      await updateProfile.mutateAsync({
+        ...formData,
+        id: user?.id // Include the user's UUID in the update
+      });
       setSuccess('プロフィール情報を更新しました');
       setIsEditing(false);
     } catch (err) {
       setError('プロフィール情報の更新に失敗しました');
-    } finally {
-      setIsProfileLoading(false);
     }
   };
 
@@ -111,21 +92,15 @@ const AccountSettingsContainer: React.FC = () => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
-    setIsLoading(true);
+
+    if (!validatePasswordForm()) return;
 
     try {
-      const isValid = await validatePasswordForm();
-      if (!isValid) {
-        setIsLoading(false);
-        return;
-      }
-
-      const { error: updateError } = await supabase
-        .from('users')
-        .update({ password: passwordForm.newPassword })
-        .eq('id', user?.id);
-
-      if (updateError) throw updateError;
+      await updatePassword.mutateAsync({
+        id: user?.id, // Include the user's UUID in the password update
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword
+      });
 
       setSuccess('パスワードを更新しました');
       setPasswordForm({
@@ -135,9 +110,7 @@ const AccountSettingsContainer: React.FC = () => {
       });
       setPasswordErrors({});
     } catch (err) {
-      setError('パスワードの更新に失敗しました');
-    } finally {
-      setIsLoading(false);
+      setError(err instanceof Error ? err.message : 'パスワードの更新に失敗しました');
     }
   };
 
@@ -146,8 +119,8 @@ const AccountSettingsContainer: React.FC = () => {
       user={user}
       isEditing={isEditing}
       setIsEditing={setIsEditing}
-      isLoading={isLoading}
-      isProfileLoading={isProfileLoading}
+      isLoading={updatePassword.isPending}
+      isProfileLoading={updateProfile.isPending || isProfileLoading}
       formData={formData}
       passwordForm={passwordForm}
       passwordErrors={passwordErrors}

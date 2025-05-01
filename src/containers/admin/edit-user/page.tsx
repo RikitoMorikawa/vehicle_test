@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '../../../lib/supabase';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { editUserHandler } from '../../../server/admin/edit-user/handler';
+import { editUserService } from '../../../services/admin/edit-user/page';
+import { QUERY_KEYS } from '../../../constants/queryKeys';
 import EditUserComponent from '../../../components/admin/edit-user/page';
 
 interface UserFormData {
@@ -15,8 +18,7 @@ interface UserFormData {
 const EditUserContainer: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [formData, setFormData] = useState<UserFormData>({
@@ -28,35 +30,28 @@ const EditUserContainer: React.FC = () => {
     currentPassword: ''
   });
 
+  const { user, isLoading } = editUserService.useUser(id!);
+  
+  const updateUser = useMutation({
+    mutationFn: (data: UserFormData) => editUserHandler.updateUser(id!, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USERS });
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEYS.USERS, id] });
+    },
+  });
+
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', id)
-          .single();
-
-        if (error) throw error;
-        if (data) {
-          setFormData({
-            company_name: data.company_name || '',
-            user_name: data.user_name || '',
-            phone: data.phone || '',
-            email: data.email || '',
-            password: '',
-            currentPassword: data.password || ''
-          });
-        }
-      } catch (err) {
-        setError('ユーザー情報の取得に失敗しました');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
-  }, [id]);
+    if (user) {
+      setFormData({
+        company_name: user.company_name || '',
+        user_name: user.user_name || '',
+        phone: user.phone || '',
+        email: user.email || '',
+        password: '',
+        currentPassword: user.password || ''
+      });
+    }
+  }, [user]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -65,37 +60,17 @@ const EditUserContainer: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
     setError(null);
     setSuccess(null);
 
     try {
-      const updateData: Partial<UserFormData> = {
-        company_name: formData.company_name,
-        user_name: formData.user_name,
-        phone: formData.phone,
-        email: formData.email
-      };
-
-      if (formData.password) {
-        updateData.password = formData.password;
-      }
-
-      const { error } = await supabase
-        .from('users')
-        .update(updateData)
-        .eq('id', id);
-
-      if (error) throw error;
-
+      await updateUser.mutateAsync(formData);
       setSuccess('ユーザー情報を更新しました');
       setTimeout(() => {
         navigate('/admin');
       }, 2000);
     } catch (err) {
       setError('ユーザー情報の更新に失敗しました');
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -105,8 +80,8 @@ const EditUserContainer: React.FC = () => {
 
   return (
     <EditUserComponent
-      loading={loading}
-      saving={saving}
+      loading={isLoading}
+      saving={updateUser.isPending}
       error={error}
       success={success}
       formData={formData}
