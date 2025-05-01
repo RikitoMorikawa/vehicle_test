@@ -41,8 +41,9 @@ const LoginForm: React.FC = () => {
 };
 
 const RegisterForm: React.FC = () => {
-  const { formData, errors, isLoading, companies, registrationComplete, handleChange, handleSubmit, resetForm } = useRegisterForm();
+  const { formData, errors, isLoading, companies, registrationComplete, handleChange, handleSubmit, resetRegistration } = useRegisterForm();
 
+  // 登録完了時の表示
   if (registrationComplete) {
     return (
       <div className="text-center">
@@ -54,12 +55,14 @@ const RegisterForm: React.FC = () => {
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">登録が完了しました</h3>
           <p className="text-sm text-gray-600">
+            アカウントは現在承認待ちです。
+            <br />
             管理者による承認をお待ちください。
             <br />
             承認後、ログインが可能になります。
           </p>
         </div>
-        <Button type="button" variant="outline" onClick={resetForm} className="mt-4">
+        <Button type="button" variant="outline" onClick={resetRegistration} className="mt-4">
           ログイン画面に戻る
         </Button>
       </div>

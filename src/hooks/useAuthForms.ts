@@ -107,17 +107,21 @@ export const useRegisterForm = () => {
     e.preventDefault();
     if (!validateForm()) return;
     setIsLoading(true);
+
     try {
-      const { error } = await signUp(formData.email, formData.password, {
+      const result = await signUp(formData.email, formData.password, {
         email: formData.email,
         company_name: formData.company_name!,
         user_name: formData.user_name!,
         phone: formData.phone!,
       });
-      if (error) {
-        setErrors({ general: error.message });
+      // エラーメッセージが含まれている場合のみエラー処理
+      if (result && result.error && result.error.message) {
+        setErrors({ general: result.error.message });
       } else {
+        // 登録完了フラグを立てる
         setRegistrationComplete(true);
+        // フォームリセット
         setFormData({
           email: "",
           password: "",
@@ -134,8 +138,8 @@ export const useRegisterForm = () => {
     }
   };
 
-  const resetForm = () => {
-    window.location.reload();
+  const resetRegistration = () => {
+    setRegistrationComplete(false);
   };
 
   return {
@@ -146,6 +150,6 @@ export const useRegisterForm = () => {
     registrationComplete,
     handleChange,
     handleSubmit,
-    resetForm,
+    resetRegistration,
   };
 };
