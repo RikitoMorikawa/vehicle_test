@@ -1,6 +1,6 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import React from "react";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -8,11 +8,7 @@ interface ProtectedRouteProps {
   requireApproval?: boolean;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
-  children, 
-  allowedRoles,
-  requireApproval = true
-}) => {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles, requireApproval = true }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -36,9 +32,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   // ユーザーのロールが許可されているロールに含まれているか確認
-  if (!allowedRoles.includes(user.role || '')) {
+  if (!allowedRoles.includes(user.role || "")) {
     // adminの場合は管理者ページへ、それ以外はダッシュボードへリダイレクト
-    return <Navigate to={user.role === 'admin' ? '/admin' : '/dashboard'} replace />;
+    return <Navigate to={user.role === "admin" ? "/admin" : "/dashboard"} replace />;
   }
 
   return <>{children}</>;

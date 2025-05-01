@@ -1,6 +1,6 @@
 export enum AuthMode {
-  LOGIN = 'login',
-  REGISTER = 'register'
+  LOGIN = "login",
+  REGISTER = "register",
 }
 
 export interface Company {
@@ -11,6 +11,7 @@ export interface Company {
 export interface User {
   id: string;
   email?: string;
+  password?: string;
   company_name?: string;
   user_name?: string;
   phone?: string;
@@ -26,7 +27,7 @@ export interface AuthState {
 
 export interface AuthContextType extends AuthState {
   signIn: (email: string, password: string) => Promise<{ error: any; needsApproval?: boolean }>;
-  signUp: (email: string, password: string, userData: Omit<User, 'id' | 'role' | 'is_approved'>) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, userData: Omit<User, "id" | "role" | "is_approved">) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
 

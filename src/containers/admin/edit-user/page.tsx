@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { editUserHandler } from '../../../server/admin/edit-user/handler';
-import { editUserService } from '../../../services/admin/edit-user/page';
-import { QUERY_KEYS } from '../../../constants/queryKeys';
-import EditUserComponent from '../../../components/admin/edit-user/page';
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { editUserHandler } from "../../../server/admin/edit-user/handler";
+import { editUserService } from "../../../services/admin/edit-user/page";
+import { QUERY_KEYS } from "../../../constants/queryKeys";
+import EditUserComponent from "../../../components/admin/edit-user/page";
 
 interface UserFormData {
   company_name: string;
@@ -22,16 +22,16 @@ const EditUserContainer: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [formData, setFormData] = useState<UserFormData>({
-    company_name: '',
-    user_name: '',
-    phone: '',
-    email: '',
-    password: '',
-    currentPassword: ''
+    company_name: "",
+    user_name: "",
+    phone: "",
+    email: "",
+    password: "",
+    currentPassword: "",
   });
 
   const { user, isLoading } = editUserService.useUser(id!);
-  
+
   const updateUser = useMutation({
     mutationFn: (data: UserFormData) => editUserHandler.updateUser(id!, data),
     onSuccess: () => {
@@ -43,19 +43,19 @@ const EditUserContainer: React.FC = () => {
   useEffect(() => {
     if (user) {
       setFormData({
-        company_name: user.company_name || '',
-        user_name: user.user_name || '',
-        phone: user.phone || '',
-        email: user.email || '',
-        password: '',
-        currentPassword: user.password || ''
+        company_name: user.company_name || "",
+        user_name: user.user_name || "",
+        phone: user.phone || "",
+        email: user.email || "",
+        password: "",
+        currentPassword: user.password || "",
       });
     }
   }, [user]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,17 +65,17 @@ const EditUserContainer: React.FC = () => {
 
     try {
       await updateUser.mutateAsync(formData);
-      setSuccess('ユーザー情報を更新しました');
+      setSuccess("ユーザー情報を更新しました");
       setTimeout(() => {
-        navigate('/admin');
+        navigate("/admin");
       }, 2000);
     } catch (err) {
-      setError('ユーザー情報の更新に失敗しました');
+      setError("ユーザー情報の更新に失敗しました");
     }
   };
 
   const handleCancel = () => {
-    navigate('/admin');
+    navigate("/admin");
   };
 
   return (

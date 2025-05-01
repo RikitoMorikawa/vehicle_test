@@ -1,9 +1,9 @@
-import React from 'react';
-import Header from '../Header';
-import Sidebar from '../Sidebar';
-import Footer from '../Footer';
-import { Heart } from 'lucide-react';
-import { Vehicle } from '../../types/vehicle';
+import React from "react";
+import Header from "../Header";
+import Sidebar from "../Sidebar";
+import Footer from "../Footer";
+import { Heart } from "lucide-react";
+import { Vehicle } from "../../types/vehicle";
 
 interface VehicleListComponentProps {
   vehicles: Vehicle[];
@@ -32,7 +32,7 @@ const VehicleListComponent: React.FC<VehicleListComponentProps> = ({
   searchParams,
   onSearch,
   onInputChange,
-  onPageChange
+  onPageChange,
 }) => {
   if (loading) {
     return (
@@ -83,10 +83,7 @@ const VehicleListComponent: React.FC<VehicleListComponentProps> = ({
                     onChange={onInputChange}
                     className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
                   />
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-                  >
+                  <button type="submit" className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
                     検索
                   </button>
                 </div>
@@ -110,8 +107,10 @@ const VehicleListComponent: React.FC<VehicleListComponentProps> = ({
                     className="rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
                   >
                     <option value="">年式: 指定なし</option>
-                    {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map(year => (
-                      <option key={year} value={year}>{year}年</option>
+                    {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                      <option key={year} value={year}>
+                        {year}年
+                      </option>
                     ))}
                   </select>
                   <select
@@ -142,20 +141,14 @@ const VehicleListComponent: React.FC<VehicleListComponentProps> = ({
             </div>
 
             <div className="mb-4">
-              <div className="text-sm text-gray-700">
-                検索結果: {vehicles.length}件
-              </div>
+              <div className="text-sm text-gray-700">検索結果: {vehicles.length}件</div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {vehicles.map((vehicle) => (
                 <div key={vehicle.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
                   <div className="relative">
-                    <img
-                      src={vehicle.imageUrl}
-                      alt={vehicle.name}
-                      className="w-full h-48 object-cover"
-                    />
+                    <img src={vehicle.imageUrl} alt={vehicle.name} className="w-full h-48 object-cover" />
                     <button className="absolute top-2 right-2 p-2 rounded-full bg-white/80 hover:bg-white">
                       <Heart className="h-5 w-5 text-red-600" />
                     </button>
@@ -169,9 +162,7 @@ const VehicleListComponent: React.FC<VehicleListComponentProps> = ({
                       <span className="mx-2">|</span>
                       <span>走行: {vehicle.mileage.toLocaleString()}km</span>
                     </div>
-                    <div className="text-xl font-bold text-red-600">
-                      ¥{vehicle.price.toLocaleString()}
-                    </div>
+                    <div className="text-xl font-bold text-red-600">¥{vehicle.price.toLocaleString()}</div>
                   </div>
                 </div>
               ))}
@@ -184,11 +175,7 @@ const VehicleListComponent: React.FC<VehicleListComponentProps> = ({
                     <button
                       key={page}
                       onClick={() => onPageChange(page)}
-                      className={`px-3 py-1 rounded-md ${
-                        currentPage === page
-                          ? 'bg-red-600 text-white'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
+                      className={`px-3 py-1 rounded-md ${currentPage === page ? "bg-red-600 text-white" : "text-gray-700 hover:bg-gray-100"}`}
                     >
                       {page}
                     </button>

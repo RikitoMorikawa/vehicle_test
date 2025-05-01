@@ -1,5 +1,5 @@
-import { supabase } from '../../../lib/supabase';
-import type { User } from '../../../types/auth';
+import { supabase } from "../../../lib/supabase";
+import type { User } from "../../../types/auth";
 
 interface UpdateUserData {
   company_name: string;
@@ -11,11 +11,7 @@ interface UpdateUserData {
 
 export const editUserHandler = {
   async fetchUser(userId: string): Promise<User> {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', userId)
-      .single();
+    const { data, error } = await supabase.from("users").select("*").eq("id", userId).single();
 
     if (error) throw error;
     return data;
@@ -33,14 +29,9 @@ export const editUserHandler = {
       updateData.password = data.password;
     }
 
-    const { data: updatedUser, error } = await supabase
-      .from('users')
-      .update(updateData)
-      .eq('id', userId)
-      .select()
-      .single();
+    const { data: updatedUser, error } = await supabase.from("users").update(updateData).eq("id", userId).select().single();
 
     if (error) throw error;
     return updatedUser;
-  }
+  },
 };

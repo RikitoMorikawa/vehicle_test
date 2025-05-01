@@ -1,10 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { User, LogOut, Settings } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import React, { useState, useRef, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { User, LogOut, Settings } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 const Header: React.FC = () => {
-  const { signOut, user } = useAuth();
+  const { signOut } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -15,8 +15,8 @@ const Header: React.FC = () => {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
@@ -26,12 +26,9 @@ const Header: React.FC = () => {
           <Link to="/dashboard" className="flex items-center text-xl font-semibold text-gray-900">
             車両販売プラットフォーム
           </Link>
-          
+
           <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center text-gray-700 hover:text-gray-900"
-            >
+            <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="flex items-center text-gray-700 hover:text-gray-900">
               <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
                 <User className="h-5 w-5" />
               </div>
@@ -40,19 +37,11 @@ const Header: React.FC = () => {
             {isDropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
                 <div className="py-1" role="menu">
-                  <Link
-                    to="/account-settings"
-                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    role="menuitem"
-                  >
+                  <Link to="/account-settings" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
                     <Settings className="h-4 w-4 mr-2" />
                     アカウント設定
                   </Link>
-                  <button
-                    onClick={signOut}
-                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    role="menuitem"
-                  >
+                  <button onClick={signOut} className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
                     <LogOut className="h-4 w-4 mr-2" />
                     サインアウト
                   </button>

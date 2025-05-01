@@ -1,7 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { accountHandler } from '../../server/account/handler';
-import { QUERY_KEYS } from '../../constants/queryKeys';
-import type { User } from '../../types/auth';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { accountHandler } from "../../server/account/handler";
+import { QUERY_KEYS } from "../../constants/queryKeys";
+import type { User } from "../../types/auth";
 
 interface AccountQueryResult {
   user: User | null;
@@ -33,18 +33,18 @@ function useAccount(userId: string): AccountQueryResult {
   return {
     user: data || null,
     isLoading,
-    error: error as Error | null
+    error: error as Error | null,
   };
 }
 
 function useUpdateProfile() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (data: UpdateProfileData) => accountHandler.updateProfile(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ACCOUNT });
-    }
+    },
   });
 }
 
@@ -57,5 +57,5 @@ function useUpdatePassword() {
 export const accountService = {
   useAccount,
   useUpdateProfile,
-  useUpdatePassword
+  useUpdatePassword,
 };

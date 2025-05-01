@@ -1,10 +1,10 @@
-import React from 'react';
-import Header from '../Header';
-import Sidebar from '../Sidebar';
-import Footer from '../Footer';
-import Button from '../ui/Button';
-import Input from '../ui/Input';
-import { User } from '../../types/auth';
+import React from "react";
+import Header from "../Header";
+import Sidebar from "../Sidebar";
+import Footer from "../Footer";
+import Button from "../ui/Button";
+import Input from "../ui/Input";
+import { User } from "../../types/auth";
 
 interface AccountSettingsComponentProps {
   user: User | null;
@@ -33,7 +33,6 @@ interface AccountSettingsComponentProps {
 }
 
 const AccountSettingsComponent: React.FC<AccountSettingsComponentProps> = ({
-  user,
   isEditing,
   setIsEditing,
   isLoading,
@@ -46,7 +45,7 @@ const AccountSettingsComponent: React.FC<AccountSettingsComponentProps> = ({
   onInputChange,
   onPasswordChange,
   onProfileSubmit,
-  onPasswordSubmit
+  onPasswordSubmit,
 }) => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -59,12 +58,8 @@ const AccountSettingsComponent: React.FC<AccountSettingsComponentProps> = ({
               <div className="px-6 py-4 border-b border-gray-200">
                 <div className="flex justify-between items-center">
                   <h1 className="text-xl font-semibold text-gray-900">アカウント設定</h1>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => setIsEditing(!isEditing)}
-                  >
-                    {isEditing ? 'キャンセル' : 'アカウント管理'}
+                  <Button variant="primary" size="sm" onClick={() => setIsEditing(!isEditing)}>
+                    {isEditing ? "キャンセル" : "アカウント管理"}
                   </Button>
                 </div>
               </div>
@@ -92,20 +87,8 @@ const AccountSettingsComponent: React.FC<AccountSettingsComponentProps> = ({
                       onChange={onInputChange}
                       disabled={!isEditing || isProfileLoading}
                     />
-                    <Input
-                      label="担当者名"
-                      name="user_name"
-                      value={formData.user_name}
-                      onChange={onInputChange}
-                      disabled={!isEditing || isProfileLoading}
-                    />
-                    <Input
-                      label="電話番号"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={onInputChange}
-                      disabled={!isEditing || isProfileLoading}
-                    />
+                    <Input label="担当者名" name="user_name" value={formData.user_name} onChange={onInputChange} disabled={!isEditing || isProfileLoading} />
+                    <Input label="電話番号" name="phone" value={formData.phone} onChange={onInputChange} disabled={!isEditing || isProfileLoading} />
                     <Input
                       label="メールアドレス"
                       name="email"
@@ -117,10 +100,7 @@ const AccountSettingsComponent: React.FC<AccountSettingsComponentProps> = ({
                   </div>
                   {isEditing && (
                     <div className="flex justify-end">
-                      <Button
-                        type="submit"
-                        isLoading={isProfileLoading}
-                      >
+                      <Button type="submit" isLoading={isProfileLoading}>
                         保存
                       </Button>
                     </div>
@@ -160,10 +140,7 @@ const AccountSettingsComponent: React.FC<AccountSettingsComponentProps> = ({
                       />
                     </div>
                     <div className="flex justify-end">
-                      <Button 
-                        type="submit"
-                        isLoading={isLoading}
-                      >
+                      <Button type="submit" isLoading={isLoading}>
                         パスワードを変更
                       </Button>
                     </div>

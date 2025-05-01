@@ -1,9 +1,9 @@
-import React from 'react';
-import Header from '../../Header';
-import Sidebar from '../../Sidebar';
-import Footer from '../../Footer';
-import Button from '../../ui/Button';
-import Input from '../../ui/Input';
+import React from "react";
+import Header from "../../Header";
+import Sidebar from "../../Sidebar";
+import Footer from "../../Footer";
+import Button from "../../ui/Button";
+import Input from "../../ui/Input";
 
 interface EditUserComponentProps {
   loading: boolean;
@@ -23,16 +23,7 @@ interface EditUserComponentProps {
   onCancel: () => void;
 }
 
-const EditUserComponent: React.FC<EditUserComponentProps> = ({
-  loading,
-  saving,
-  error,
-  success,
-  formData,
-  onInputChange,
-  onSubmit,
-  onCancel
-}) => {
+const EditUserComponent: React.FC<EditUserComponentProps> = ({ loading, saving, error, success, formData, onInputChange, onSubmit, onCancel }) => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -74,35 +65,10 @@ const EditUserComponent: React.FC<EditUserComponentProps> = ({
 
               <div className="p-6">
                 <form onSubmit={onSubmit} className="space-y-6">
-                  <Input
-                    label="会社名"
-                    name="company_name"
-                    value={formData.company_name}
-                    onChange={onInputChange}
-                    disabled={saving}
-                  />
-                  <Input
-                    label="担当者名"
-                    name="user_name"
-                    value={formData.user_name}
-                    onChange={onInputChange}
-                    disabled={saving}
-                  />
-                  <Input
-                    label="電話番号"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={onInputChange}
-                    disabled={saving}
-                  />
-                  <Input
-                    label="メールアドレス"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={onInputChange}
-                    disabled={saving}
-                  />
+                  <Input label="会社名" name="company_name" value={formData.company_name} onChange={onInputChange} disabled={saving} />
+                  <Input label="担当者名" name="user_name" value={formData.user_name} onChange={onInputChange} disabled={saving} />
+                  <Input label="電話番号" name="phone" value={formData.phone} onChange={onInputChange} disabled={saving} />
+                  <Input label="メールアドレス" name="email" type="email" value={formData.email} onChange={onInputChange} disabled={saving} />
                   <Input
                     label="現在のパスワード"
                     name="currentPassword"
@@ -120,18 +86,10 @@ const EditUserComponent: React.FC<EditUserComponentProps> = ({
                     disabled={saving}
                   />
                   <div className="flex justify-end space-x-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={onCancel}
-                      disabled={saving}
-                    >
+                    <Button type="button" variant="outline" onClick={onCancel} disabled={saving}>
                       キャンセル
                     </Button>
-                    <Button
-                      type="submit"
-                      isLoading={saving}
-                    >
+                    <Button type="submit" isLoading={saving}>
                       保存
                     </Button>
                   </div>

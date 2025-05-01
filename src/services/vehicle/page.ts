@@ -1,7 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
-import { vehicleHandler } from '../../server/vehicles/handler';
-import { QUERY_KEYS } from '../../constants/queryKeys';
-import type { Vehicle } from '../../types/vehicle';
+import { useQuery } from "@tanstack/react-query";
+import { vehicleHandler } from "../../server/vehicles/handler";
+import { QUERY_KEYS } from "../../constants/queryKeys";
+import type { Vehicle } from "../../types/vehicle";
 
 interface SearchParams {
   keyword: string;
@@ -21,17 +21,17 @@ interface VehicleQueryResult {
 function useVehicles(currentPage: number, searchParams: SearchParams): VehicleQueryResult {
   const { data, isLoading, error } = useQuery({
     queryKey: [...QUERY_KEYS.VEHICLES, currentPage, searchParams],
-    queryFn: () => vehicleHandler.fetchVehicles(currentPage, searchParams)
+    queryFn: () => vehicleHandler.fetchVehicles(currentPage, searchParams),
   });
 
   return {
     vehicles: data?.vehicles || [],
     totalPages: data?.totalPages || 1,
     isLoading,
-    error: error as Error | null
+    error: error as Error | null,
   };
 }
 
 export const vehicleService = {
-  useVehicles
+  useVehicles,
 };

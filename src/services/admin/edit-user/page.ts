@@ -1,7 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
-import { editUserHandler } from '../../../server/admin/edit-user/handler';
-import { QUERY_KEYS } from '../../../constants/queryKeys';
-import type { User } from '../../../types/auth';
+import { useQuery } from "@tanstack/react-query";
+import { editUserHandler } from "../../../server/admin/edit-user/handler";
+import { QUERY_KEYS } from "../../../constants/queryKeys";
+import type { User } from "../../../types/auth";
 
 interface UserQueryResult {
   user: User | null;
@@ -19,7 +19,7 @@ function useUser(userId: string): UserQueryResult {
   return {
     user: data || null,
     isLoading,
-    error: error as Error | null
+    error: error as Error | null,
   };
 }
 

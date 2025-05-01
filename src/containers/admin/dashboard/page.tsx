@@ -1,7 +1,7 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { adminDashboardService } from '../../../services/admin/dashboard/page';
-import AdminDashboardComponent from '../../../components/admin/dashboard/page';
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { adminDashboardService } from "../../../services/admin/dashboard/page";
+import AdminDashboardComponent from "../../../components/admin/dashboard/page";
 
 const AdminDashboardContainer: React.FC = () => {
   const navigate = useNavigate();
@@ -12,7 +12,7 @@ const AdminDashboardContainer: React.FC = () => {
     try {
       await updateApproval.mutateAsync({ userId, approve });
     } catch (err) {
-      console.error('Error updating user approval:', err);
+      console.error("Error updating user approval:", err);
     }
   };
 
@@ -24,7 +24,7 @@ const AdminDashboardContainer: React.FC = () => {
     <AdminDashboardComponent
       users={users}
       loading={isLoading}
-      error={error ? 'ユーザー情報の取得に失敗しました' : null}
+      error={error ? "ユーザー情報の取得に失敗しました" : null}
       onApproval={handleApproval}
       onEditUser={handleEditUser}
     />

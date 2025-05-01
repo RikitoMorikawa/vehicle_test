@@ -1,5 +1,5 @@
-import React from 'react';
-import FavoritesPage from '../../components/favorites/page';
+import React from "react";
+import FavoritesPage from "../../components/favorites/page";
 
 const FavoritesContainer: React.FC = () => {
   return <FavoritesPage />;
