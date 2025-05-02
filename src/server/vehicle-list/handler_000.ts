@@ -1,6 +1,6 @@
 // src/server/vehicle-list/handler_000.ts
 import { supabase } from "../../lib/supabase";
-import { FetchVehiclesResult, SearchParams } from "../../types/vehicle/page";
+import { FetchVehiclesResult, SearchParams } from "../../types/vehicle-list/page";
 
 const ITEMS_PER_PAGE = 6;
 

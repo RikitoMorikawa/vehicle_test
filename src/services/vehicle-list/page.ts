@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { vehicleHandler } from "../../server/vehicle-list/handler_000";
 import { QUERY_KEYS } from "../../constants/queryKeys";
-import { SearchParams, VehicleQueryResult } from "../../types/vehicle/page";
+import { SearchParams, VehicleQueryResult } from "../../types/vehicle-list/page";
 
 function useVehicles(currentPage: number, searchParams: SearchParams): VehicleQueryResult {
   const { data, isLoading, error } = useQuery({

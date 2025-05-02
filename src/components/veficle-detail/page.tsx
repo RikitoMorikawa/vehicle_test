@@ -1,22 +1,14 @@
-// src/components/vehicle-detail/page.tsx
-import React from "react";
+import React, { useState } from "react";
 import { ArrowLeft, Heart } from "lucide-react";
 import Header from "../Header";
 import Sidebar from "../Sidebar";
 import Footer from "../Footer";
-import { Vehicle } from "../../types/db/vehicle";
+import { VehicleDetailComponentProps } from "../../types/vehicle-detail/page";
 
-interface VehicleDetailComponentProps {
-  vehicle?: Vehicle | null;
-  loading: boolean;
-  error: string | null;
-  isFavorite: boolean;
-  onToggleFavorite: () => void;
-  onBack: () => void;
-  onInquiry?: () => void;
-}
+const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({ vehicle, loading, error, isFavorite, onToggleFavorite, onBack }) => {
+  // 表示する画像を管理するステート
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({ vehicle, loading, error, isFavorite, onToggleFavorite, onBack, onInquiry }) => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -50,6 +42,17 @@ const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({ vehicle
       </div>
     );
   }
+
+  // メイン画像のURLを生成
+  const mainImageUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/vehicle-images/${vehicle.image_path}`;
+
+  // その他の画像URLを生成
+  const otherImagesUrls = vehicle.other_images_path
+    ? vehicle.other_images_path.map((path) => `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/vehicle-images/${path}`)
+    : [];
+
+  // 表示する画像（選択されていなければメイン画像）
+  const displayImageUrl = selectedImage || mainImageUrl;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -89,11 +92,14 @@ const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({ vehicle
                       {vehicle.maker} {vehicle.name}
                     </h1>
                     <p className="mt-1 text-sm text-gray-500">
-                      {vehicle.year}年モデル｜走行距離：{vehicle.mileage}km｜車両ID: {vehicle.vehicle_id}
+                      {vehicle.year}年モデル｜走行距離：{vehicle.mileage.toLocaleString()}km｜車両ID: {vehicle.vehicle_id || vehicle.id}
                     </p>
                   </div>
                   <div className="flex items-center space-x-4">
                     <span className="text-3xl font-bold text-red-600">¥{vehicle.price.toLocaleString()}</span>
+                    <button className="flex items-center gap-1 px-6 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                      今すぐ注文
+                    </button>
                     <button
                       onClick={onToggleFavorite}
                       className={`flex items-center gap-1 px-4 py-2 rounded-md border ${
@@ -110,24 +116,45 @@ const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({ vehicle
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
                 <div>
                   <div className="aspect-w-16 aspect-h-9 mb-4 h-64 md:h-80">
-                    <img src={vehicle.imageUrl} alt={`${vehicle.maker} ${vehicle.name}`} className="rounded-lg object-cover w-full h-full" />
+                    <img src={displayImageUrl} alt={`${vehicle.maker} ${vehicle.name}`} className="rounded-lg object-cover w-full h-full" />
                   </div>
-                  <div className="grid grid-cols-5 gap-2">
-                    {Array.from({ length: 5 }).map((_, index) => (
-                      <div key={index} className="aspect-square">
+
+                  {/* サムネイル画像の表示（メイン画像とその他の画像） */}
+                  {(otherImagesUrls.length > 0 || vehicle.image_path) && (
+                    <div className="grid grid-cols-5 gap-2">
+                      {/* メイン画像のサムネイル */}
+                      <div
+                        className={`aspect-square cursor-pointer ${selectedImage === null ? "ring-2 ring-red-500" : ""}`}
+                        onClick={() => setSelectedImage(null)}
+                      >
                         <img
-                          src={vehicle.imageUrl}
-                          alt={`${vehicle.maker} ${vehicle.name} - ${index + 1}`}
-                          className="rounded-lg object-cover w-full h-full cursor-pointer hover:opacity-80 transition-opacity"
+                          src={mainImageUrl}
+                          alt={`${vehicle.maker} ${vehicle.name} - メイン`}
+                          className="rounded-lg object-cover w-full h-full hover:opacity-80 transition-opacity"
                         />
                       </div>
-                    ))}
-                  </div>
+
+                      {/* その他の画像のサムネイル */}
+                      {otherImagesUrls.map((url, index) => (
+                        <div
+                          key={index}
+                          className={`aspect-square cursor-pointer ${selectedImage === url ? "ring-2 ring-red-500" : ""}`}
+                          onClick={() => setSelectedImage(url)}
+                        >
+                          <img
+                            src={url}
+                            alt={`${vehicle.maker} ${vehicle.name} - ${index + 1}`}
+                            className="rounded-lg object-cover w-full h-full hover:opacity-80 transition-opacity"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">基本情報</h2>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">車両スペック</h2>
                     <dl className="grid grid-cols-1 gap-4">
                       <div className="flex items-center py-3 border-b border-gray-200">
                         <dt className="flex items-center text-sm text-gray-500 w-32">メーカー</dt>
@@ -165,24 +192,18 @@ const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({ vehicle
                         <dt className="flex items-center text-sm text-gray-500 w-32">駆動方式</dt>
                         <dd className="text-sm text-gray-900">{vehicle.drive_system || "不明"}</dd>
                       </div>
+                      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                        <div></div>
+                        <div className="flex space-x-4">
+                          <button className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                            見積書作成
+                          </button>
+                          <button className="px-6 py-2 border border-gray-300 bg-white text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+                            ローン審査申込
+                          </button>
+                        </div>
+                      </div>
                     </dl>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-6 bg-gray-50 border-t border-gray-200">
-                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-                  <div></div>
-                  <div className="flex space-x-4">
-                    <button
-                      onClick={onInquiry}
-                      className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-                    >
-                      見積書作成
-                    </button>
-                    <button className="px-6 py-2 border border-gray-300 bg-white text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
-                      ローン審査申込
-                    </button>
                   </div>
                 </div>
               </div>
