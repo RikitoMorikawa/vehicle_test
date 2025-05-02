@@ -17,7 +17,7 @@ export const favoritesHandler = {
     if (!data) return [];
 
     // デバッグ用
-    console.log("Supabase response:", JSON.stringify(data, null, 2));
+    // console.log("Supabase response:", JSON.stringify(data, null, 2));
 
     return data
       .map((item) => {
