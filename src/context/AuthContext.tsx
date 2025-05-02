@@ -165,6 +165,71 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // const signUp = async (email: string, password: string, userData: Omit<User, "id" | "role" | "is_approved">) => {
+  //   try {
+  //     const { data: existingUser } = await supabase.from("users").select("id").eq("email", email).maybeSingle();
+
+  //     if (existingUser) {
+  //       return { error: { message: "このメールアドレスは既に登録されています" } };
+  //     }
+
+  //     const { error } = await supabase
+  //       .from("users")
+  //       .insert([{ ...userData, password, role: "user", is_approved: false }])
+  //       .select()
+  //       .single();
+
+  //     if (error) {
+  //       return { error: { message: error.message } };
+  //     }
+
+  //     // メール送信APIを呼び出し
+  //     try {
+  //       // ポート3001のExpressサーバーを使用
+  //       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3001";
+
+  //       const emailPromises = [
+  //         // ユーザーへの確認メール
+  //         fetch(`${apiUrl}/api/send-email`, {
+  //           method: "POST",
+  //           headers: { "Content-Type": "application/json" },
+  //           body: JSON.stringify({
+  //             email,
+  //             type: "user_confirmation",
+  //             userData: {
+  //               ...userData,
+  //               email,
+  //             },
+  //           }),
+  //         }),
+  //         // 管理者への通知メール
+  //         fetch(`${apiUrl}/api/send-email`, {
+  //           method: "POST",
+  //           headers: { "Content-Type": "application/json" },
+  //           body: JSON.stringify({
+  //             email,
+  //             type: "admin_notification",
+  //             userData: {
+  //               ...userData,
+  //               email,
+  //             },
+  //           }),
+  //         }),
+  //       ];
+
+  //       await Promise.allSettled(emailPromises);
+  //     } catch (emailError) {
+  //       console.error("メール送信中にエラーが発生しました:", emailError);
+  //       // メール送信エラーはユーザー登録の成功に影響しない
+  //     }
+
+  //     return { error: null };
+  //   } catch (error) {
+  //     console.error("Error during sign up:", error);
+  //     return { error: { message: "予期せぬエラーが発生しました" } };
+  //   }
+  // };
+
   const signOut = async () => {
     // Cookieを確実に削除
     document.cookie = `${TOKEN_COOKIE_NAME}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; secure; samesite=strict`;
