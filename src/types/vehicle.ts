@@ -1,3 +1,4 @@
+// src / types / vehicle.ts;
 export interface Vehicle {
   id: string;
   name: string;

@@ -3,6 +3,13 @@ import { FetchVehiclesResult, SearchParams } from "../../types/vehicle/page";
 
 const ITEMS_PER_PAGE = 6;
 
+/**
+ * 000.ts
+ * 初期表示用の車両データを取得する関数
+ * @param currentPage 現在のページ番号
+ * @param searchParams 検索パラメータ
+ * @returns 車両データと総ページ数を含むオブジェクト
+ */
 export const vehicleHandler = {
   async fetchVehicles(currentPage: number, searchParams: SearchParams): Promise<FetchVehiclesResult> {
     let query = supabase.from("vehicles").select("*", { count: "exact" });

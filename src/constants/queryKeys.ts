@@ -1,5 +1,6 @@
 export const QUERY_KEYS = {
   VEHICLES: ["vehicles"] as const,
+  FAVORITES: ["favorites"] as const,
   ACCOUNT: ["account"] as const,
   USERS: ["users"] as const,
 } as const;

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { vehicleHandler } from "../../server/vehicles/handler";
+import { vehicleHandler } from "../../server/vehicles/handler_000";
 import { QUERY_KEYS } from "../../constants/queryKeys";
 import { SearchParams, VehicleQueryResult } from "../../types/vehicle/page";
 

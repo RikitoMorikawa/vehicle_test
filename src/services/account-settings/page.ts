@@ -1,6 +1,6 @@
 // src/services/account/page.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { accountHandler } from "../../server/account-settings/handler";
+import { accountHandler } from "../../server/account-settings/handler_000";
 import { QUERY_KEYS } from "../../constants/queryKeys";
 import { AccountQueryResult, UpdatePasswordData, UpdateProfileData } from "../../types/account-settings/page";
 

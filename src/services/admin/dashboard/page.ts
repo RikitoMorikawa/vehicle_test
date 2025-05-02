@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { adminDashboardHandler } from "../../../server/admin/dashboard/handler";
+import { adminDashboardHandler } from "../../../server/admin/dashboard/handler_000";
 import { QUERY_KEYS } from "../../../constants/queryKeys";
 import { UsersQueryResult } from "../../../types/admin/dashboard/page";
 

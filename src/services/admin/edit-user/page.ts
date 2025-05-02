@@ -1,6 +1,6 @@
 // src/services/admin/edit-user/page.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { editUserHandler } from "../../../server/admin/edit-user/handler";
+import { editUserHandler } from "../../../server/admin/edit-user/handler_000";
 import { QUERY_KEYS } from "../../../constants/queryKeys";
 import { UserQueryResult, UserFormData } from "../../../types/admin/edit-user/page";
 

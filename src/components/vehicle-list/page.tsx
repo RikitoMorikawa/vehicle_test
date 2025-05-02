@@ -21,6 +21,8 @@ interface VehicleListComponentProps {
   onSearch: (e: React.FormEvent) => void;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   onPageChange: (page: number) => void;
+  onToggleFavorite: (vehicleId: string) => void; // onAddFavoriteからonToggleFavoriteに変更
+  favoriteVehicleIds: string[];
 }
 
 const VehicleListComponent: React.FC<VehicleListComponentProps> = ({
@@ -33,6 +35,8 @@ const VehicleListComponent: React.FC<VehicleListComponentProps> = ({
   onSearch,
   onInputChange,
   onPageChange,
+  onToggleFavorite,
+  favoriteVehicleIds,
 }) => {
   if (loading) {
     return (
@@ -149,8 +153,13 @@ const VehicleListComponent: React.FC<VehicleListComponentProps> = ({
                 <div key={vehicle.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
                   <div className="relative">
                     <img src={vehicle.imageUrl} alt={vehicle.name} className="w-full h-48 object-cover" />
-                    <button className="absolute top-2 right-2 p-2 rounded-full bg-white/80 hover:bg-white">
-                      <Heart className="h-5 w-5 text-red-600" />
+                    <button
+                      onClick={() => onToggleFavorite(vehicle.id)}
+                      className={`absolute top-2 right-2 p-2 rounded-full bg-white/80 hover:bg-white transition-colors ${
+                        favoriteVehicleIds.includes(vehicle.id) ? "text-red-600" : ""
+                      }`}
+                    >
+                      <Heart className="h-5 w-5" fill={favoriteVehicleIds.includes(vehicle.id) ? "currentColor" : "none"} />
                     </button>
                   </div>
                   <div className="p-4">
