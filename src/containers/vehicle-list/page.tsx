@@ -1,5 +1,6 @@
+// src/containers/vehicle-list/page.tsx
 import React, { useState } from "react";
-import { vehicleService } from "../../services/vehicle/page";
+import { vehicleService } from "../../services/vehicle-list/page";
 import { favoritesService } from "../../services/favorites/page";
 import VehicleListComponent from "../../components/vehicle-list/page";
 import { useAuth } from "../../hooks/useAuth";

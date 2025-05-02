@@ -23,7 +23,7 @@ const Header: React.FC = () => {
     <header className="bg-white shadow-sm">
       <div className="max-w-full mx-2 px-2 sm:px-4">
         <div className="flex justify-between h-16 items-center">
-          <Link to="/dashboard" className="flex items-center text-xl font-semibold text-gray-900">
+          <Link to="/vehicles" className="flex items-center text-xl font-semibold text-gray-900">
             車両販売プラットフォーム
           </Link>
 

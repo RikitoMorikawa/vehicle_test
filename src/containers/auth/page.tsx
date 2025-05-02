@@ -11,7 +11,7 @@ const AuthPageContainer: React.FC = () => {
   const [mode, setMode] = useState<AuthMode>(AuthMode.LOGIN);
 
   if (user) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/vehicles" replace />;
   }
 
   const handleModeChange = (newMode: AuthMode) => {

@@ -2,13 +2,14 @@ import React from "react";
 import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
-import VehicleListPage from "./pages/VehicleList/page";
+import VehicleListPage from "./pages/vehicle-list/page";
 import AdminDashboardPage from "./pages/admin/dashboard/page";
 import EditUserPage from "./pages/admin/edit-user/page";
 import AccountSettingsPage from "./pages/account-settings/page";
 import FavoritesContainer from "./containers/favorites/page";
 import ReportsContainer from "./containers/reports/page";
 import AuthPageContainer from "./containers/auth/page";
+import VehicleDetailPage from "./pages/vehicle-detail/page";
 import { JSX } from "react/jsx-runtime";
 
 // ProtectedRouteをラップするヘルパー関数
@@ -31,8 +32,12 @@ const routes = [
     element: <AuthPageContainer />,
   },
   {
-    path: "/dashboard",
+    path: "/vehicles",
     ...createProtectedRoute(<VehicleListPage />, ["user", "admin"], true),
+  },
+  {
+    path: "/vehicle/:id",
+    ...createProtectedRoute(<VehicleDetailPage />, ["user", "admin"], true),
   },
   {
     path: "/admin",

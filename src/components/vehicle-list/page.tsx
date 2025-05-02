@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom"; // React Routerのインポートを追加
 import Header from "../Header";
 import Sidebar from "../Sidebar";
 import Footer from "../Footer";
@@ -21,7 +22,7 @@ interface VehicleListComponentProps {
   onSearch: (e: React.FormEvent) => void;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   onPageChange: (page: number) => void;
-  onToggleFavorite: (vehicleId: string) => void; // onAddFavoriteからonToggleFavoriteに変更
+  onToggleFavorite: (vehicleId: string) => void;
   favoriteVehicleIds: string[];
 }
 
@@ -151,28 +152,35 @@ const VehicleListComponent: React.FC<VehicleListComponentProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {vehicles.map((vehicle) => (
                 <div key={vehicle.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
-                  <div className="relative">
-                    <img src={vehicle.imageUrl} alt={vehicle.name} className="w-full h-48 object-cover" />
-                    <button
-                      onClick={() => onToggleFavorite(vehicle.id)}
-                      className={`absolute top-2 right-2 p-2 rounded-full bg-white/80 hover:bg-white transition-colors ${
-                        favoriteVehicleIds.includes(vehicle.id) ? "text-red-600" : ""
-                      }`}
-                    >
-                      <Heart className="h-5 w-5" fill={favoriteVehicleIds.includes(vehicle.id) ? "currentColor" : "none"} />
-                    </button>
-                  </div>
-                  <div className="p-4">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                      {vehicle.maker} {vehicle.name}
-                    </h3>
-                    <div className="text-sm text-gray-600 mb-2">
-                      <span>年式: {vehicle.year}年</span>
-                      <span className="mx-2">|</span>
-                      <span>走行: {vehicle.mileage.toLocaleString()}km</span>
+                  {/* 車両カード全体をリンクで囲む */}
+                  <Link to={`/vehicle/${vehicle.id}`} className="block">
+                    <div className="relative">
+                      <img src={vehicle.imageUrl} alt={vehicle.name} className="w-full h-48 object-cover" />
+                      {/* お気に入りボタンのリンクイベントを防止 */}
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault(); // リンクの遷移を防止
+                          onToggleFavorite(vehicle.id);
+                        }}
+                        className={`absolute top-2 right-2 p-2 rounded-full bg-white/80 hover:bg-white transition-colors ${
+                          favoriteVehicleIds.includes(vehicle.id) ? "text-red-600" : ""
+                        }`}
+                      >
+                        <Heart className="h-5 w-5" fill={favoriteVehicleIds.includes(vehicle.id) ? "currentColor" : "none"} />
+                      </button>
                     </div>
-                    <div className="text-xl font-bold text-red-600">¥{vehicle.price.toLocaleString()}</div>
-                  </div>
+                    <div className="p-4">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                        {vehicle.maker} {vehicle.name}
+                      </h3>
+                      <div className="text-sm text-gray-600 mb-2">
+                        <span>年式: {vehicle.year}年</span>
+                        <span className="mx-2">|</span>
+                        <span>走行: {vehicle.mileage.toLocaleString()}km</span>
+                      </div>
+                      <div className="text-xl font-bold text-red-600">¥{vehicle.price.toLocaleString()}</div>
+                    </div>
+                  </Link>
                 </div>
               ))}
             </div>

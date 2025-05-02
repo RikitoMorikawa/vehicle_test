@@ -8,7 +8,7 @@ const Sidebar: React.FC = () => {
   const isAdmin = user?.role === "admin";
 
   const navItems = [
-    { to: "/dashboard", icon: <Search className="w-5 h-5" />, label: "車両検索" },
+    { to: "/vehicles", icon: <Search className="w-5 h-5" />, label: "車両検索" },
     { to: "/favorites", icon: <Heart className="w-5 h-5" />, label: "お気に入り一覧" },
     { to: "/reports", icon: <FileText className="w-5 h-5" />, label: "帳票管理" },
     ...(isAdmin ? [{ to: "/admin", icon: <Users className="w-5 h-5" />, label: "ユーザー管理" }] : []),
