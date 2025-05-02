@@ -4,7 +4,7 @@ import Header from "../Header";
 import Sidebar from "../Sidebar";
 import Footer from "../Footer";
 import { Heart } from "lucide-react";
-import { Vehicle } from "../../types/vehicle";
+import { Vehicle } from "../../types/db/vehicle";
 
 interface VehicleListComponentProps {
   vehicles: Vehicle[];

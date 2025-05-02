@@ -4,7 +4,7 @@ import Sidebar from "../Sidebar";
 import Footer from "../Footer";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
-import { User } from "../../types/auth";
+import { User } from "../../types/auth/page";
 
 interface AccountSettingsComponentProps {
   user: User | null;

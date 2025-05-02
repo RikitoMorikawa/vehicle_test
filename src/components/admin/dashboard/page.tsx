@@ -3,7 +3,7 @@ import Header from "../../Header";
 import Sidebar from "../../Sidebar";
 import Footer from "../../Footer";
 import Button from "../../ui/Button";
-import { User } from "../../../types/auth";
+import { User } from "../../../types/auth/page";
 import { UserCog, CheckCircle, XCircle, Pencil } from "lucide-react";
 
 interface AdminDashboardComponentProps {

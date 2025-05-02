@@ -1,6 +1,6 @@
 import { supabase } from "../../lib/supabase";
 import { UpdatePasswordData, UpdateProfileData } from "../../types/account-settings/page";
-import type { User } from "../../types/auth";
+import type { User } from "../../types/auth/page";
 
 export const accountHandler = {
   async fetchAccount(userId: string): Promise<User | null> {

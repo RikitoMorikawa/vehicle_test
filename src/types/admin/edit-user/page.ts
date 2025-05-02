@@ -1,5 +1,5 @@
 // src / types / admin / edit - user / page.ts;
-import { User } from "../../auth";
+import { User } from "../../auth/page";
 
 export interface UserQueryResult {
   user: User | null;

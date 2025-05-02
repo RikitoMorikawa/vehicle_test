@@ -1,6 +1,6 @@
 // src/hooks/useAuthForms.ts
 import { useState, useEffect } from "react";
-import { AuthFormData, FormError, Company } from "../types/auth";
+import { AuthFormData, FormError, Company } from "../types/auth/page";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "./useAuth";
 import { validateLoginForm, validateRegisterForm } from "../validations/auth/page";

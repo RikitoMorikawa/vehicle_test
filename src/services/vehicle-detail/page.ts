@@ -1,7 +1,7 @@
 // src/services/vehicle-detail/page.ts
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../lib/supabase";
-import { Vehicle } from "../../types/vehicle";
+import { Vehicle } from "../../types/db/vehicle";
 import { QUERY_KEYS } from "../../constants/queryKeys";
 
 // 車両詳細を取得するフック - 修正版

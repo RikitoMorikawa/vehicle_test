@@ -1,4 +1,4 @@
-// src / types / vehicle.ts;
+// src/types/db/vehicle.ts
 export interface Vehicle {
   id: string;
   name: string;
@@ -9,7 +9,18 @@ export interface Vehicle {
   image_path: string;
   created_at?: string;
   updated_at?: string;
-  imageUrl?: string;
+  imageUrl?: string;  
+  model_code?: string;
+  color?: string;
+  engine_size?: number;
+  transmission?: string;
+  drive_system?: string;
+  inspection_date?: string;
+  description?: string;
+  features?: string[];
+  vehicle_id?: string;
+  manufacturer_code?: string;
+  other_images_path?: string[];
 }
 
 export interface VehicleSearchParams {

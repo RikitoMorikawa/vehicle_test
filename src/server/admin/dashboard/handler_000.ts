@@ -1,5 +1,5 @@
 import { supabase } from "../../../lib/supabase";
-import type { User } from "../../../types/auth";
+import type { User } from "../../../types/auth/page";
 
 export const adminDashboardHandler = {
   async fetchUsers(): Promise<User[]> {

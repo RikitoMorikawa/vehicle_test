@@ -1,6 +1,6 @@
 // src / types / admin / dashboard / page.ts;
 
-import { User } from "../../auth";
+import { User } from "../../auth/page";
 
 export interface UsersQueryResult {
   users: User[];

@@ -1,6 +1,6 @@
 // src / types / vehicle / page.ts;
 
-import { Vehicle } from "../vehicle";
+import { Vehicle } from "../db/vehicle";
 
 export interface SearchParams {
   keyword: string;

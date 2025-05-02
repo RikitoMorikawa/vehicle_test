@@ -1,7 +1,7 @@
 import React, { createContext, useEffect, useState, useRef } from "react";
 import Cookies from "js-cookie";
 import { supabase } from "../lib/supabase";
-import { AuthContextType, AuthState, User } from "../types/auth";
+import { AuthContextType, AuthState, User } from "../types/auth/page";
 
 // AuthContextを名前付きエクスポートとして公開
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
