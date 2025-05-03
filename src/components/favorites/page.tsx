@@ -52,16 +52,22 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({ favorites, loading, error
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {favorites.map((vehicle) => (
                   <div key={vehicle.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
-                    <Link to={`/vehicle/${vehicle.id}`} className="block">
-                      <div className="relative">
+                    <div className="relative">
+                      <Link to={`/vehicle/${vehicle.id}`} className="block">
                         <img src={vehicle.imageUrl} alt={vehicle.name} className="w-full h-48 object-cover" />
-                        <button
-                          onClick={() => onRemoveFavorite(vehicle.favorite_id)}
-                          className="absolute top-2 right-2 p-2 rounded-full bg-white/80 hover:bg-white hover:text-red-600 transition-colors"
-                        >
-                          <Trash2 className="h-5 w-5" />
-                        </button>
-                      </div>
+                      </Link>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onRemoveFavorite(vehicle.favorite_id);
+                        }}
+                        className="absolute top-2 right-2 p-2 rounded-full bg-white/80 hover:bg-white hover:text-red-600 transition-colors"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    </div>
+                    <Link to={`/vehicle/${vehicle.id}`} className="block">
                       <div className="p-4">
                         <h3 className="text-lg font-semibold text-gray-900 mb-1">
                           {vehicle.maker} {vehicle.name}

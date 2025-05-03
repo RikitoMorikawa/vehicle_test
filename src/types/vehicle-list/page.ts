@@ -15,9 +15,11 @@ export interface VehicleQueryResult {
   totalPages: number;
   isLoading: boolean;
   error: Error | null;
+    totalCount: number;
 }
 
 export interface FetchVehiclesResult {
   vehicles: Vehicle[];
   totalPages: number;
+    totalCount: number;
 }

@@ -8,6 +8,11 @@ import { useAuth } from "../../hooks/useAuth";
 const VehicleListContainer: React.FC = () => {
   const { user } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
+
+  // キーワード入力用の状態
+  const [keyword, setKeyword] = useState("");
+
+  // 実際の検索に使用する状態
   const [searchParams, setSearchParams] = useState({
     keyword: "",
     maker: "",
@@ -16,7 +21,7 @@ const VehicleListContainer: React.FC = () => {
     sort: "newest",
   });
 
-  const { vehicles, totalPages, isLoading, error } = vehicleService.useVehicles(currentPage, searchParams);
+  const { vehicles, totalPages, totalCount, isLoading, error } = vehicleService.useVehicles(currentPage, searchParams);
   const { favorites } = favoritesService.useFavorites(user?.id || "");
   const addFavorite = favoritesService.useAddFavorite();
   const removeFavorite = favoritesService.useRemoveFavorite();
@@ -24,33 +29,43 @@ const VehicleListContainer: React.FC = () => {
   // お気に入りマップを作成
   const favoriteMap = new Map(favorites.map((fav) => [fav.id, fav.favorite_id]));
 
+  // 検索ボタン押下時の処理
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    // キーワードを検索パラメータに反映
+    setSearchParams((prev) => ({ ...prev, keyword }));
+    // ページを1に戻す
     setCurrentPage(1);
   };
 
+  // 入力値の変更処理
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+
+    // キーワード入力は状態のみ更新（検索は実行しない）
+    if (name === "keyword") {
+      setKeyword(value);
+      return;
+    }
+
+    // キーワード以外の変更は即時検索実行
     setSearchParams((prev) => ({ ...prev, [name]: value }));
+    setCurrentPage(1); // ページを1に戻す
   };
 
   const handleToggleFavorite = async (vehicleId: string) => {
     if (!user) return;
 
-    // すでにお気に入りに追加されている場合は削除
     if (favoriteMap.has(vehicleId)) {
       const favoriteId = favoriteMap.get(vehicleId);
       if (favoriteId) {
         try {
-          // ここを修正: favoriteIdのみを渡す
           await removeFavorite.mutateAsync(favoriteId);
         } catch (err) {
           console.error("Error removing favorite:", err);
         }
       }
-    }
-    // まだお気に入りに追加されていない場合は追加
-    else {
+    } else {
       try {
         await addFavorite.mutateAsync({
           userId: user.id,
@@ -62,14 +77,21 @@ const VehicleListContainer: React.FC = () => {
     }
   };
 
+  // 表示用のパラメータ（キーワードは入力中の値を表示、他は検索パラメータを表示）
+  const displayParams = {
+    ...searchParams,
+    keyword,
+  };
+
   return (
     <VehicleListComponent
       vehicles={vehicles}
-      loading={isLoading} // お気に入り処理中のローディング表示は不要
+      loading={isLoading}
       error={error ? "データの取得に失敗しました" : null}
       currentPage={currentPage}
       totalPages={totalPages}
-      searchParams={searchParams}
+      totalCount={totalCount}
+      searchParams={displayParams} // 表示用の値を使用
       onSearch={handleSearch}
       onInputChange={handleInputChange}
       onPageChange={setCurrentPage}

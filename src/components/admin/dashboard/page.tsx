@@ -35,8 +35,9 @@ const AdminDashboardComponent: React.FC<AdminDashboardComponentProps> = ({ users
       <Header />
       <div className="flex-1 flex">
         <Sidebar />
-        <main className="flex-1 p-8">
-          <div className="max-w-7xl mx-auto">
+        {/* メインコンテンツエリアに overflow-auto を追加 */}
+        <main className="flex-1 p-8 overflow-auto">
+          <div className="max-w-full mx-auto">
             <div className="bg-white shadow-sm rounded-lg overflow-hidden">
               <div className="px-6 py-5 border-b border-gray-200">
                 <div className="flex items-center">
@@ -95,7 +96,7 @@ const AdminDashboardComponent: React.FC<AdminDashboardComponentProps> = ({ users
                                     編集
                                   </Button>
                                   {!user.is_approved && (
-                                    <Button size="sm" onClick={() => onApproval(user.id, true)} className="flex items-center">
+                                    <Button size="sm" variant="primary" onClick={() => onApproval(user.id, true)} className="flex items-center">
                                       <CheckCircle className="h-4 w-4 mr-1" />
                                       承認
                                     </Button>

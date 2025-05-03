@@ -44,7 +44,7 @@ export const vehicleHandler = {
         break;
     }
 
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+      const start = (currentPage - 1) * ITEMS_PER_PAGE;
     query = query.range(start, start + ITEMS_PER_PAGE - 1);
 
     const { data, error: queryError, count } = await query;
@@ -60,6 +60,7 @@ export const vehicleHandler = {
     return {
       vehicles: vehiclesWithImageUrls,
       totalPages: Math.ceil((count || 0) / ITEMS_PER_PAGE),
+      totalCount: count || 0 // 全データ件数を追加
     };
   },
 };

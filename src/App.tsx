@@ -11,6 +11,7 @@ import ReportsContainer from "./containers/reports/page";
 import AuthPageContainer from "./containers/auth/page";
 import VehicleDetailPage from "./pages/vehicle-detail/page";
 import { JSX } from "react/jsx-runtime";
+import VehicleRegisterPage from "./pages/vehicle-register/page";
 
 // ProtectedRouteをラップするヘルパー関数
 const createProtectedRoute = (
@@ -34,6 +35,10 @@ const routes = [
   {
     path: "/vehicles",
     ...createProtectedRoute(<VehicleListPage />, ["user", "admin"], true),
+  },
+  {
+    path: "/admin/vehicles/new",
+    ...createProtectedRoute(<VehicleRegisterPage />, ["admin"], false),
   },
   {
     path: "/vehicle/:id",

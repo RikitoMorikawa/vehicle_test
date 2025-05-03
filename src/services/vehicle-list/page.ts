@@ -12,6 +12,7 @@ function useVehicles(currentPage: number, searchParams: SearchParams): VehicleQu
   return {
     vehicles: data?.vehicles || [],
     totalPages: data?.totalPages || 1,
+    totalCount: data?.totalCount || 0, 
     isLoading,
     error: error as Error | null,
   };

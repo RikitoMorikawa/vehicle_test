@@ -1,3 +1,4 @@
+// src / containers / favorites / page.tsx;
 import React from "react";
 import { favoritesService } from "../../services/favorites/page";
 import FavoritesPage from "../../components/favorites/page";
@@ -10,7 +11,6 @@ const FavoritesContainer: React.FC = () => {
 
   const handleRemoveFavorite = async (favoriteId: string) => {
     try {
-      
       await removeFavorite.mutateAsync(favoriteId);
     } catch (err) {
       console.error("Error removing favorite:", err);

@@ -12,6 +12,7 @@ interface VehicleListComponentProps {
   error: string | null;
   currentPage: number;
   totalPages: number;
+  totalCount: number;
   searchParams: {
     keyword: string;
     maker: string;
@@ -32,6 +33,7 @@ const VehicleListComponent: React.FC<VehicleListComponentProps> = ({
   error,
   currentPage,
   totalPages,
+  totalCount,
   searchParams,
   onSearch,
   onInputChange,
@@ -86,7 +88,7 @@ const VehicleListComponent: React.FC<VehicleListComponentProps> = ({
                     placeholder="キーワード検索..."
                     value={searchParams.keyword}
                     onChange={onInputChange}
-                    className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                    className="flex-1 pl-2 rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
                   />
                   <button type="submit" className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
                     検索
@@ -97,7 +99,7 @@ const VehicleListComponent: React.FC<VehicleListComponentProps> = ({
                     name="maker"
                     value={searchParams.maker}
                     onChange={onInputChange}
-                    className="rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                    className="rounded-md py-2 pl-2 border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
                   >
                     <option value="">メーカー: 全て</option>
                     <option value="トヨタ">トヨタ</option>
@@ -109,7 +111,7 @@ const VehicleListComponent: React.FC<VehicleListComponentProps> = ({
                     name="year"
                     value={searchParams.year}
                     onChange={onInputChange}
-                    className="rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                    className="rounded-md pl-2 border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
                   >
                     <option value="">年式: 指定なし</option>
                     {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map((year) => (
@@ -122,7 +124,7 @@ const VehicleListComponent: React.FC<VehicleListComponentProps> = ({
                     name="mileage"
                     value={searchParams.mileage}
                     onChange={onInputChange}
-                    className="rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                    className="rounded-md pl-2 border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
                   >
                     <option value="">走行距離: 指定なし</option>
                     <option value="0-10000">1万km未満</option>
@@ -134,7 +136,7 @@ const VehicleListComponent: React.FC<VehicleListComponentProps> = ({
                     name="sort"
                     value={searchParams.sort}
                     onChange={onInputChange}
-                    className="rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                    className="rounded-md pl-2 border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
                   >
                     <option value="newest">登録日: 新しい順</option>
                     <option value="oldest">登録日: 古い順</option>
@@ -146,7 +148,7 @@ const VehicleListComponent: React.FC<VehicleListComponentProps> = ({
             </div>
 
             <div className="mb-4">
-              <div className="text-sm text-gray-700">検索結果: {vehicles.length}件</div>
+              <div className="text-sm text-gray-700">検索結果: {totalCount}件</div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
