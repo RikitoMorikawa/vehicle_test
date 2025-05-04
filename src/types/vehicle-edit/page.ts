@@ -1,0 +1,1 @@
+// src/types/vehicle-edit/page.ts

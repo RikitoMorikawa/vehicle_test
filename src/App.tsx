@@ -10,8 +10,9 @@ import FavoritesContainer from "./containers/favorites/page";
 import ReportsContainer from "./containers/reports/page";
 import AuthPageContainer from "./containers/auth/page";
 import VehicleDetailPage from "./pages/vehicle-detail/page";
-import { JSX } from "react/jsx-runtime";
 import VehicleRegisterPage from "./pages/vehicle-register/page";
+import VehicleEditPage from "./pages/vehicle-edit/page";
+import { JSX } from "react/jsx-runtime";
 
 // ProtectedRouteをラップするヘルパー関数
 const createProtectedRoute = (
@@ -39,6 +40,10 @@ const routes = [
   {
     path: "/admin/vehicles/new",
     ...createProtectedRoute(<VehicleRegisterPage />, ["admin"], false),
+  },
+  {
+    path: "/admin/vehicles/:id/edit",
+    ...createProtectedRoute(<VehicleEditPage />, ["admin"], false),
   },
   {
     path: "/vehicle/:id",
@@ -70,7 +75,6 @@ const routes = [
   },
 ];
 
-// React Router v7ではシンプルに
 const router = createBrowserRouter(routes);
 
 function App() {
