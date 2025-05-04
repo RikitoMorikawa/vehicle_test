@@ -8,6 +8,7 @@ import { useAuth } from "../../hooks/useAuth";
 const VehicleListContainer: React.FC = () => {
   const { user } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
+  const isAdmin = user?.role === "admin";
 
   // キーワード入力用の状態
   const [keyword, setKeyword] = useState("");
@@ -91,7 +92,8 @@ const VehicleListContainer: React.FC = () => {
       currentPage={currentPage}
       totalPages={totalPages}
       totalCount={totalCount}
-      searchParams={displayParams} // 表示用の値を使用
+      searchParams={displayParams}
+      isAdmin={isAdmin}
       onSearch={handleSearch}
       onInputChange={handleInputChange}
       onPageChange={setCurrentPage}

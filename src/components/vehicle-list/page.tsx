@@ -1,9 +1,9 @@
 import React from "react";
-import { Link } from "react-router-dom"; // React Routerのインポートを追加
+import { Link } from "react-router-dom";
 import Header from "../Header";
 import Sidebar from "../Sidebar";
 import Footer from "../Footer";
-import { Heart } from "lucide-react";
+import { Heart, Pencil } from "lucide-react";
 import { Vehicle } from "../../types/db/vehicle";
 
 interface VehicleListComponentProps {
@@ -20,6 +20,7 @@ interface VehicleListComponentProps {
     mileage: string;
     sort: string;
   };
+  isAdmin: boolean;
   onSearch: (e: React.FormEvent) => void;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   onPageChange: (page: number) => void;
@@ -35,6 +36,7 @@ const VehicleListComponent: React.FC<VehicleListComponentProps> = ({
   totalPages,
   totalCount,
   searchParams,
+  isAdmin,
   onSearch,
   onInputChange,
   onPageChange,
@@ -154,22 +156,31 @@ const VehicleListComponent: React.FC<VehicleListComponentProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {vehicles.map((vehicle) => (
                 <div key={vehicle.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
-                  {/* 車両カード全体をリンクで囲む */}
                   <Link to={`/vehicle/${vehicle.id}`} className="block">
                     <div className="relative">
                       <img src={vehicle.imageUrl} alt={vehicle.name} className="w-full h-48 object-cover" />
-                      {/* お気に入りボタンのリンクイベントを防止 */}
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault(); // リンクの遷移を防止
-                          onToggleFavorite(vehicle.id);
-                        }}
-                        className={`absolute top-2 right-2 p-2 rounded-full bg-white/80 hover:bg-white transition-colors ${
-                          favoriteVehicleIds.includes(vehicle.id) ? "text-red-600" : ""
-                        }`}
-                      >
-                        <Heart className="h-5 w-5" fill={favoriteVehicleIds.includes(vehicle.id) ? "currentColor" : "none"} />
-                      </button>
+                      <div className="absolute top-2 right-2 flex gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            onToggleFavorite(vehicle.id);
+                          }}
+                          className={`p-2 rounded-full bg-white/80 hover:bg-white transition-colors ${
+                            favoriteVehicleIds.includes(vehicle.id) ? "text-red-600" : ""
+                          }`}
+                        >
+                          <Heart className="h-5 w-5" fill={favoriteVehicleIds.includes(vehicle.id) ? "currentColor" : "none"} />
+                        </button>
+                        {isAdmin && (
+                          <Link
+                            to={`/admin/vehicles/${vehicle.id}/edit`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="p-2 rounded-full bg-white/80 hover:bg-white transition-colors text-blue-600"
+                          >
+                            <Pencil className="h-5 w-5" />
+                          </Link>
+                        )}
+                      </div>
                     </div>
                     <div className="p-4">
                       <h3 className="text-lg font-semibold text-gray-900 mb-1">

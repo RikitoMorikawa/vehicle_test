@@ -19,8 +19,12 @@ export const vehicleRegisterHandler = {
         drive_system: data.drive_system,
         inspection_date: data.inspection_date,
         vehicle_id: data.vehicle_id
-      }]);
+      }])
+      .select();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Vehicle registration error:', error);
+      throw new Error(error.message || '車両の登録に失敗しました');
+    }
   }
 };
