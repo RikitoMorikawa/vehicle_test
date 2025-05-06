@@ -147,7 +147,7 @@ const VehicleEditContainer: React.FC = () => {
       // プレビューURLから元のパスへのマッピングを作成
       const pathMapping: { [key: string]: string } = {};
 
-      vehicle?.view360_images?.forEach((path, index) => {
+      vehicle?.view360_images?.forEach((path) => {
         const previewUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/vehicle-360/${path}`;
         pathMapping[previewUrl] = path;
       });
@@ -189,47 +189,43 @@ const VehicleEditContainer: React.FC = () => {
       // 360度画像の処理
       const hasNewImages = view360Files.length > 0;
 
+      // 新しい画像と既存の画像を両方処理
+      // 1. まず既存の画像をview360_imagesに追加
+      if (originalView360Paths.length > 0) {
+        view360_images = [...originalView360Paths];
+      }
+
+      // 2. 新しい画像をアップロード
       if (hasNewImages) {
-        // 新しい画像がある場合は既存の画像を削除
-        if (originalView360Paths.length > 0) {
+        const baseIndex = view360_images.length; // 既存の画像数からインデックスを開始
+        const paddedLength = Math.max(
+          (baseIndex + view360Files.length).toString().length,
+          2 // 最低2桁で統一
+        );
+
+        // 新しいファイルを順番に処理
+        for (let i = 0; i < view360Files.length; i++) {
+          const file = view360Files[i];
+          const fileExt = file.name.split(".").pop() || "jpg";
+          const paddedIndex = (baseIndex + i + 1).toString().padStart(paddedLength, "0");
+          const filePath = `${id}/${paddedIndex}.${fileExt}`;
+
           try {
-            await supabase.storage.from("vehicle-360").remove(originalView360Paths);
-          } catch (err) {
-            console.error("Error removing existing 360 images:", err);
-          }
-        }
+            const { error: uploadError } = await supabase.storage.from("vehicle-360").upload(filePath, file, {
+              cacheControl: "3600",
+              upsert: true,
+            });
 
-        // 新しい画像をアップロード - 現在の表示順序でアップロード
-        if (view360Files.length > 0) {
-          const paddedLength = view360Files.length.toString().length;
-
-          // 新しいファイルを順番に処理
-          for (let i = 0; i < view360Files.length; i++) {
-            const file = view360Files[i];
-            const fileExt = file.name.split(".").pop() || "jpg";
-            const paddedIndex = (i + 1).toString().padStart(paddedLength, "0");
-            const filePath = `${id}/${paddedIndex}.${fileExt}`;
-
-            try {
-              const { error: uploadError } = await supabase.storage.from("vehicle-360").upload(filePath, file, {
-                cacheControl: "3600",
-                upsert: true,
-              });
-
-              if (uploadError) {
-                console.error(`Error uploading 360 image ${filePath}:`, uploadError);
-                throw uploadError;
-              }
-
-              view360_images.push(filePath);
-            } catch (err) {
-              console.error(`Failed to upload file ${filePath}:`, err);
+            if (uploadError) {
+              console.error(`Error uploading 360 image ${filePath}:`, uploadError);
+              throw uploadError;
             }
+
+            view360_images.push(filePath);
+          } catch (err) {
+            console.error(`Failed to upload file ${filePath}:`, err);
           }
         }
-      } else if (originalView360Paths.length > 0) {
-        // 新しい画像がない場合は、並べ替えられたoriginalView360Pathsを使用
-        view360_images = originalView360Paths;
       }
 
       // 車両データの更新
@@ -242,7 +238,7 @@ const VehicleEditContainer: React.FC = () => {
         },
       });
 
-      navigate("/vehicles");
+      // navigate("/vehicles");
     } catch (err: unknown) {
       console.error(err);
       setError({

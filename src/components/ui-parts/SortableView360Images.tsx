@@ -1,5 +1,5 @@
 // src/components/ui-parts/SortableView360Images.tsx
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, rectSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { X, Move } from "lucide-react";
@@ -12,7 +12,13 @@ interface SortableItemProps {
   onRemove: (index: number) => void;
 }
 
-// ドラッグ可能な個別のアイテム
+/**
+ * 画像をドラッグ可能なアイテムとして表示するコンポーネント
+ * @param url 画像URL
+ * @param index アイテムのインデックス
+ * @param id アイテムの一意のID
+ * @param onRemove 画像削除時のコールバック関数
+ */
 function SortableItem({ url, index, id, onRemove }: SortableItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
 
@@ -68,7 +74,7 @@ export default function SortableView360Images({ images, onImagesReorder, onRemov
   // 各アイテムに一意のIDを割り当て - インデックスベースのIDを使用
   const items = images.map((url, index) => ({ id: `item-${index}`, url }));
 
-  function handleDragEnd(event: { active: any; over: any; }) {
+  function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {

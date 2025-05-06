@@ -11,13 +11,18 @@ interface View360ViewerProps {
 // 画像キャッシュ用のグローバルオブジェクト
 const imageCache: Record<string, HTMLImageElement[]> = {};
 
+/**
+ * 360度ビュー画像を表示するコンポーネント
+ * @param vehicleId 車両ID
+ * @param images 画像URLの配列
+ * @param className カスタムクラス名
+ */
 const View360Viewer: React.FC<View360ViewerProps> = ({ vehicleId, images, className = "" }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
-  const [loadedImages, setLoadedImages] = useState<HTMLImageElement[]>([]);
 
   // 回転の感度調整 - 大きい値ほど鈍感になる
   const rotationSensitivity = 20; // 調整可能な値
@@ -40,7 +45,6 @@ const View360Viewer: React.FC<View360ViewerProps> = ({ vehicleId, images, classN
     const loadImages = async () => {
       // すでにキャッシュがある場合はそれを使用
       if (imageCache[cacheKey] && imageCache[cacheKey].length === images.length) {
-        setLoadedImages(imageCache[cacheKey]);
         setIsLoading(false);
         return;
       }
@@ -73,7 +77,6 @@ const View360Viewer: React.FC<View360ViewerProps> = ({ vehicleId, images, classN
 
       // キャッシュに保存
       imageCache[cacheKey] = [...imageElements];
-      setLoadedImages(imageElements);
       setIsLoading(false);
     };
 
