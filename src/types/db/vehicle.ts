@@ -21,6 +21,7 @@ export interface Vehicle {
   vehicle_id?: string;
   manufacturer_code?: string;
   other_images_path?: string[];
+  view360_images?: string[];
 }
 
 export interface VehicleSearchParams {

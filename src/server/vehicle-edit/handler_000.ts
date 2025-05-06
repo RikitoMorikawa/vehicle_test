@@ -31,6 +31,8 @@ export const vehicleEditHandler = {
         drive_system: data.drive_system,
         inspection_date: data.inspection_date,
         vehicle_id: data.vehicle_id,
+        image_path: data.image_path, // ここに image_path を追加
+        view360_images: data.view360_images, // 360度ビュー画像パスを追加
       })
       .eq("id", id)
       .select()
@@ -42,5 +44,69 @@ export const vehicleEditHandler = {
     }
 
     return updatedVehicle;
+  },
+
+  async deleteVehicle(id: string): Promise<void> {
+    // 車両データを取得
+    const { data: vehicle, error: fetchError } = await supabase
+      .from("vehicles")
+      .select("image_path, view360_images")
+      .eq("id", id)
+      .single();
+      
+    if (fetchError) {
+      console.error("Fetch vehicle error:", fetchError);
+      throw new Error(fetchError.message || "車両情報の取得に失敗しました");
+    }
+    
+    // メイン画像の削除
+    if (vehicle.image_path) {
+      const { error: storageError } = await supabase
+        .storage
+        .from("vehicle-images")
+        .remove([vehicle.image_path]);
+        
+      if (storageError) {
+        console.error("Main image delete error:", storageError);
+      }
+    }
+    
+    // 360度ビュー画像の削除
+    if (vehicle.view360_images && vehicle.view360_images.length > 0) {
+      const { error: view360Error } = await supabase
+        .storage
+        .from("vehicle-360")
+        .remove(vehicle.view360_images);
+        
+      if (view360Error) {
+        console.error("360 view images delete error:", view360Error);
+      }
+      
+      // フォルダ自体も削除（オプション）
+      try {
+        // 空のフォルダを削除するために空のリストを渡す
+        const { error: folderError } = await supabase
+          .storage
+          .from("vehicle-360")
+          .remove([`${id}/`]);
+          
+        if (folderError) {
+          console.error("Failed to remove 360 view folder:", folderError);
+        }
+      } catch (error) {
+        console.error("Error during folder removal:", error);
+      }
+    }
+    
+    // 車両データの削除
+    const { error: deleteError } = await supabase
+      .from("vehicles")
+      .delete()
+      .eq("id", id);
+      
+    if (deleteError) {
+      console.error("Vehicle delete error:", deleteError);
+      throw new Error(deleteError.message || "車両の削除に失敗しました");
+    }
   },
 };

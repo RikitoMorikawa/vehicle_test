@@ -19,7 +19,15 @@ function useUpdateVehicle() {
   });
 }
 
+function useDeleteVehicle() {
+  return useMutation({
+    mutationFn: (id: string) => vehicleEditHandler.deleteVehicle(id),
+  });
+}
+
+
 export const vehicleEditService = {
   useVehicle,
   useUpdateVehicle,
+  useDeleteVehicle,
 };

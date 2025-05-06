@@ -1,4 +1,4 @@
-// src / components / vehicle - register / page.tsx;
+// src/components/vehicle-register/page.tsx
 import React from "react";
 import Header from "../Header";
 import Sidebar from "../Sidebar";
@@ -6,8 +6,21 @@ import Footer from "../Footer";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
 import type { RegisterVehicleComponentProps } from "../../types/vehicle-register/page";
+import { Image, Info, RotateCw, Upload, X } from "lucide-react";
 
-const VehicleRegisterComponent: React.FC<RegisterVehicleComponentProps> = ({ formData, isLoading, error, onInputChange, onSubmit, onCancel }) => {
+const VehicleRegisterComponent: React.FC<RegisterVehicleComponentProps> = ({
+  formData,
+  isLoading,
+  error,
+  imagePreview,
+  onInputChange,
+  onImageChange,
+  onSubmit,
+  onCancel,
+  view360ImagePreviews, // 追加
+  onView360ImagesChange, // 追加
+  onRemoveView360Image, // 追加
+}) => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
@@ -27,6 +40,96 @@ const VehicleRegisterComponent: React.FC<RegisterVehicleComponentProps> = ({ for
               )}
 
               <form onSubmit={onSubmit} className="p-6 space-y-6">
+                {/* 画像アップロード部分 */}
+                <div className="space-y-4">
+                  <label className="block text-sm font-medium text-gray-700">車両画像</label>
+                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                    <div className="space-y-1 text-center">
+                      {imagePreview ? (
+                        <div className="relative">
+                          <img src={imagePreview} alt="Preview" className="mx-auto h-64 w-auto rounded-lg" />
+                          <label
+                            htmlFor="image-upload"
+                            className="absolute bottom-2 right-2 bg-white rounded-full p-2 shadow-lg cursor-pointer hover:bg-gray-100"
+                          >
+                            <Upload className="h-5 w-5 text-gray-600" />
+                            <input id="image-upload" type="file" accept="image/*" className="hidden" onChange={onImageChange} />
+                          </label>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center">
+                          <Image className="mx-auto h-12 w-12 text-gray-400" />
+                          <div className="flex text-sm text-gray-600">
+                            <label htmlFor="image-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-red-600 hover:text-red-500">
+                              <span>画像をアップロード</span>
+                              <input id="image-upload" type="file" accept="image/*" className="hidden" onChange={onImageChange} />
+                            </label>
+                          </div>
+                          <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 360度ビュー用の画像アップロードセクション（追加） */}
+                <div className="space-y-4">
+                  <div className="flex items-center">
+                    <label className="block text-sm font-medium text-gray-700">360度ビュー画像</label>
+                    <div className="ml-2 cursor-pointer group relative">
+                      <Info className="h-4 w-4 text-gray-400" />
+                      <div className="hidden group-hover:block absolute z-10 w-72 p-2 bg-gray-800 text-white text-xs rounded shadow-lg">
+                        複数の角度から撮影した画像をアップロードしてください。これらの画像は360度ビューアーで表示されます。
+                        最適な結果を得るには、一定の角度間隔で撮影された36〜72枚の画像をおすすめします。
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-1 border-2 border-gray-300 border-dashed rounded-md p-4">
+                    <div className="space-y-4">
+                      {/* プレビュー画像の表示 */}
+                      {view360ImagePreviews && view360ImagePreviews.length > 0 && (
+                        <div>
+                          <p className="text-sm text-gray-600 mb-2">アップロード予定: {view360ImagePreviews.length}枚</p>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                            {view360ImagePreviews.map((preview, index) => (
+                              <div key={index} className="relative group">
+                                <div className="absolute top-0 right-0 bg-white text-xs px-1 rounded-bl-md">{index + 1}</div>
+                                <img src={preview} alt={`360ビュー ${index + 1}`} className="h-24 w-full object-cover rounded-md border border-gray-200" />
+                                <button
+                                  type="button"
+                                  onClick={() => onRemoveView360Image(index)}
+                                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* アップロードボタン */}
+                      <div className="flex justify-center">
+                        <label
+                          htmlFor="view360-upload"
+                          className="cursor-pointer flex items-center gap-2 bg-white rounded-md font-medium text-red-600 hover:text-red-500 px-4 py-2 border border-gray-300"
+                        >
+                          <RotateCw className="h-4 w-4" />
+                          360度ビュー用画像を追加
+                          <input id="view360-upload" type="file" accept="image/*" multiple className="hidden" onChange={onView360ImagesChange} />
+                        </label>
+                      </div>
+                      <div className="text-xs text-gray-500 text-center space-y-1">
+                        <p>PNG, JPG, GIF 最大10MB、複数選択可能</p>
+                        <p>ファイル名は自動的に順番に並べ替えられます（例: 01.jpg, 02.jpg...）</p>
+                        <p>推奨: 36〜72枚の等間隔で撮影された画像</p>
+                      </div>
+                    </div>
+                  </div>
+                  {error?.view360_images && <p className="mt-1 text-sm text-red-600">{error.view360_images}</p>}
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Input label="車両ID" name="vehicle_id" value={formData.vehicle_id} onChange={onInputChange} error={error?.vehicle_id} required />
                   <div>

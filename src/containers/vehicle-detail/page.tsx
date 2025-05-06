@@ -17,13 +17,6 @@ const VehicleDetailContainer: React.FC = () => {
       navigate("/vehicles");
       return;
     }
-
-    // エラーログを確認し、vehicle_viewsテーブルがないため一時的にコメントアウト
-    /*
-    if (user?.id) {
-      recordVehicleView(user.id, id).catch(console.error);
-    }
-    */
   }, [id, user?.id, navigate]);
 
   // IDがない場合は早期リターン

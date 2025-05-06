@@ -4,6 +4,7 @@ import Header from "../Header";
 import Sidebar from "../Sidebar";
 import Footer from "../Footer";
 import { VehicleDetailComponentProps } from "../../types/vehicle-detail/page";
+import View360Viewer from "../ui-parts/View360Viewer";
 
 const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({ vehicle, loading, error, isFavorite, onToggleFavorite, onBack }) => {
   // 表示する画像を管理するステート
@@ -55,6 +56,9 @@ const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({ vehicle
 
   // 表示する画像（選択されていなければメイン画像）
   const displayImageUrl = selectedImage || mainImageUrl;
+
+  // 360度ビュー用の画像ファイル名を取得
+  const view360Images = vehicle.view360_images || [];
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -261,10 +265,16 @@ const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({ vehicle
                 )}
 
                 {activeTab === "360°ビュー" && (
-                  <div className="p-12 flex items-center justify-center">
-                    <div className="text-center">
-                      <p className="text-gray-500">360°ビューは現在準備中です</p>
-                    </div>
+                  <div className="p-6">
+                    {view360Images.length > 0 ? (
+                      <View360Viewer vehicleId={vehicle.id} images={view360Images} className="max-w-3xl mx-auto" />
+                    ) : (
+                      <div className="p-12 flex items-center justify-center">
+                        <div className="text-center">
+                          <p className="text-gray-500">この車両の360度ビュー画像はありません</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
