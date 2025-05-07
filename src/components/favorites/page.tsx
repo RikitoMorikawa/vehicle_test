@@ -2,7 +2,7 @@ import React from "react";
 import Header from "../Header";
 import Sidebar from "../Sidebar";
 import Footer from "../Footer";
-import { Heart, Trash2 } from "lucide-react";
+import { Heart, Trash2, AlertCircle } from "lucide-react"; // AlertCircleアイコンを追加
 import { FavoritesPageProps } from "../../types/favorites/page";
 import { Link } from "react-router-dom";
 
@@ -22,6 +22,9 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({ favorites, loading, error
     );
   }
 
+  // お気に入りが20件以上かどうかをチェック
+  const hasManyFavorites = favorites.length >= 20;
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
@@ -36,6 +39,14 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({ favorites, loading, error
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
                 <p className="text-red-600">{error}</p>
+              </div>
+            )}
+
+            {/* お気に入りが20件以上の場合の警告 */}
+            {hasManyFavorites && (
+              <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-6 flex items-start">
+                <AlertCircle className="h-5 w-5 text-amber-500 mr-2 mt-0.5 flex-shrink-0" />
+                <p className="text-amber-700">お気に入りに登録された車両が20件以上あります。</p>
               </div>
             )}
 
