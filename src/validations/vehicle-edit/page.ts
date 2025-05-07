@@ -5,8 +5,8 @@ import { validateForm, ValidationResult } from "../index";
 export const vehicleEditSchema = z.object({
   vehicle_id: z.string().min(1, "車両IDを入力してください"),
   maker: z.string().min(1, "メーカーを選択してください"),
-  name: z.string().min(1, "車名を入力してください"),
-  model_code: z.string().min(1, "型式を入力してください"),
+  name: z.string().min(1, "車名を入力してください").max(100, "車名は最大50文字以内で入力してください"),
+  model_code: z.string().min(1, "型式を入力してください").max(50, "型式は最大50文字以内で入力してください"),
   year: z.string().min(1, "年式を選択してください"),
   // 走行距離を0以上の整数に制限
   mileage: z
@@ -18,7 +18,7 @@ export const vehicleEditSchema = z.object({
     .string()
     .min(1, "価格を入力してください")
     .refine((val) => !isNaN(Number(val)) && Number(val) >= 0 && Number.isInteger(Number(val)), "0以上の整数を入力してください"),
-  color: z.string().min(1, "ボディカラーを入力してください"),
+  color: z.string().min(1, "ボディカラーを入力してください").max(50, "ボディカラーは最大50文字以内で入力してください"),
   // 排気量を0以上の整数に制限
   engine_size: z
     .string()

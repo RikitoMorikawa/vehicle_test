@@ -9,6 +9,7 @@ import type { VehicleFormData, VehicleRegisterError } from "../../types/vehicle-
 import { Upload, RotateCw, Info, Image } from "lucide-react";
 import SortableView360Images from "../ui-parts/SortableView360Images";
 import { CarMaker } from "../../types/db/car_makers";
+import Select from "../ui/Select";
 
 interface VehicleEditComponentProps {
   formData: VehicleFormData;
@@ -161,47 +162,40 @@ const VehicleEditComponent: React.FC<VehicleEditComponentProps> = ({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Input label="車両ID" name="vehicle_id" value={formData.vehicle_id} onChange={onInputChange} error={error?.vehicle_id} required />
-                  {/* メーカー選択部分を変更 */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">メーカー</label>
-                    <select
-                      name="maker"
-                      value={formData.maker}
-                      onChange={onInputChange}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
-                      required
-                    >
-                      <option value="">選択してください</option>
-                      {/* Supabaseから取得したメーカー一覧を表示 */}
-                      {carMakers.map((maker) => (
-                        <option key={maker.id} value={maker.name}>
-                          {maker.name}
-                        </option>
-                      ))}
-                    </select>
-                    {error?.maker && <p className="mt-1 text-sm text-red-600">{error.maker}</p>}
-                  </div>
                   <Input label="車名" name="name" value={formData.name} onChange={onInputChange} error={error?.name} required />
                   <Input label="型式" name="model_code" value={formData.model_code} onChange={onInputChange} error={error?.model_code} required />
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">年式</label>
-                    <select
-                      name="year"
-                      value={formData.year}
-                      onChange={onInputChange}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
-                      required
-                    >
-                      <option value="">選択してください</option>
-                      {generateYearOptions().map((year) => (
-                        <option key={year} value={year.toString()}>
-                          {year}年
-                        </option>
-                      ))}
-                    </select>
-                    {error?.year && <p className="mt-1 text-sm text-red-600">{error.year}</p>}
-                  </div>
                   <Input label="走行距離 (km)" name="mileage" type="number" value={formData.mileage} onChange={onInputChange} error={error?.mileage} required />
+                  {/* メーカー選択部分を変更 */}
+                  <Select label="メーカー" name="maker" value={formData.maker} onChange={onInputChange} error={error?.maker} required>
+                    <option value="">選択してください</option>
+                    {carMakers.map((maker) => (
+                      <option key={maker.id} value={maker.name}>
+                        {maker.name}
+                      </option>
+                    ))}
+                  </Select>
+                  {/* 年式選択部分を変更 */}
+                  <Select label="年式" name="year" value={formData.year} onChange={onInputChange} error={error?.year} required>
+                    <option value="">選択してください</option>
+                    {generateYearOptions().map((year) => (
+                      <option key={year} value={year.toString()}>
+                        {year}年
+                      </option>
+                    ))}
+                  </Select>
+                  {/* シフト選択部分を変更 */}
+                  <Select label="シフト" name="transmission" value={formData.transmission} onChange={onInputChange} error={error?.transmission} required>
+                    <option value="">選択してください</option>
+                    <option value="AT">AT</option>
+                    <option value="MT">MT</option>
+                    <option value="CVT">CVT</option>
+                  </Select>
+                  {/* 駆動方式選択部分を変更 */}
+                  <Select label="駆動方式" name="drive_system" value={formData.drive_system} onChange={onInputChange} error={error?.drive_system} required>
+                    <option value="">選択してください</option>
+                    <option value="2WD">2WD</option>
+                    <option value="4WD">4WD</option>
+                  </Select>
                   <Input label="価格 (円)" name="price" type="number" value={formData.price} onChange={onInputChange} error={error?.price} required />
                   <Input label="ボディカラー" name="color" value={formData.color} onChange={onInputChange} error={error?.color} required />
                   <Input
@@ -213,37 +207,6 @@ const VehicleEditComponent: React.FC<VehicleEditComponentProps> = ({
                     error={error?.engine_size}
                     required
                   />
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">シフト</label>
-                    <select
-                      name="transmission"
-                      value={formData.transmission}
-                      onChange={onInputChange}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
-                      required
-                    >
-                      <option value="">選択してください</option>
-                      <option value="AT">AT</option>
-                      <option value="MT">MT</option>
-                      <option value="CVT">CVT</option>
-                    </select>
-                    {error?.transmission && <p className="mt-1 text-sm text-red-600">{error.transmission}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">駆動方式</label>
-                    <select
-                      name="drive_system"
-                      value={formData.drive_system}
-                      onChange={onInputChange}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
-                      required
-                    >
-                      <option value="">選択してください</option>
-                      <option value="2WD">2WD</option>
-                      <option value="4WD">4WD</option>
-                    </select>
-                    {error?.drive_system && <p className="mt-1 text-sm text-red-600">{error.drive_system}</p>}
-                  </div>
                   <Input
                     label="車検満了日"
                     name="inspection_date"
