@@ -1,5 +1,4 @@
 // src/containers/vehicle-register/page.tsx
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { vehicleRegisterService } from "../../services/vehicle-register/page";

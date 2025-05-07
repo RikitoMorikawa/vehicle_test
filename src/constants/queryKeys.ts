@@ -7,6 +7,7 @@ export const QUERY_KEYS = {
   FAVORITES: ["favorites"] as const,
   ACCOUNT: ["account"] as const,
   USERS: ["users"] as const,
+  Car_MAKERS: ["carMakers"] as const,
 } as const;
 
 export type QueryKeys = typeof QUERY_KEYS;

@@ -8,6 +8,7 @@ import Button from "../ui/Button";
 import type { VehicleFormData, VehicleRegisterError } from "../../types/vehicle-register/page";
 import { Upload, RotateCw, Info, Image } from "lucide-react";
 import SortableView360Images from "../ui-parts/SortableView360Images";
+import { CarMaker } from "../../types/db/car_makers";
 
 interface VehicleEditComponentProps {
   formData: VehicleFormData;
@@ -25,7 +26,21 @@ interface VehicleEditComponentProps {
   onView360ImagesChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onRemoveView360Image: (index: number) => void;
   onReorderView360Images: (newOrder: string[]) => void;
+  carMakers: CarMaker[];
 }
+
+// 年式の選択肢を生成する関数を追加
+const generateYearOptions = () => {
+  const currentYear = new Date().getFullYear();
+  const startYear = 1990; // 例として1990年から
+  const years = [];
+
+  for (let year = currentYear; year >= startYear; year--) {
+    years.push(year);
+  }
+
+  return years;
+};
 
 const VehicleEditComponent: React.FC<VehicleEditComponentProps> = ({
   formData,
@@ -43,6 +58,7 @@ const VehicleEditComponent: React.FC<VehicleEditComponentProps> = ({
   onView360ImagesChange,
   onRemoveView360Image,
   onReorderView360Images,
+  carMakers,
 }) => {
   if (isLoading) {
     return (
@@ -156,6 +172,7 @@ const VehicleEditComponent: React.FC<VehicleEditComponentProps> = ({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Input label="車両ID" name="vehicle_id" value={formData.vehicle_id} onChange={onInputChange} error={error?.vehicle_id} required />
+                  {/* メーカー選択部分を変更 */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">メーカー</label>
                     <select
@@ -166,17 +183,35 @@ const VehicleEditComponent: React.FC<VehicleEditComponentProps> = ({
                       required
                     >
                       <option value="">選択してください</option>
-                      <option value="トヨタ">トヨタ</option>
-                      <option value="日産">日産</option>
-                      <option value="ホンダ">ホンダ</option>
-                      <option value="マツダ">マツダ</option>
-                      <option value="スバル">スバル</option>
+                      {/* Supabaseから取得したメーカー一覧を表示 */}
+                      {carMakers.map((maker) => (
+                        <option key={maker.id} value={maker.name}>
+                          {maker.name}
+                        </option>
+                      ))}
                     </select>
                     {error?.maker && <p className="mt-1 text-sm text-red-600">{error.maker}</p>}
                   </div>
                   <Input label="車名" name="name" value={formData.name} onChange={onInputChange} error={error?.name} required />
                   <Input label="型式" name="model_code" value={formData.model_code} onChange={onInputChange} error={error?.model_code} required />
-                  <Input label="年式" name="year" type="number" value={formData.year} onChange={onInputChange} error={error?.year} required />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">年式</label>
+                    <select
+                      name="year"
+                      value={formData.year}
+                      onChange={onInputChange}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                      required
+                    >
+                      <option value="">選択してください</option>
+                      {generateYearOptions().map((year) => (
+                        <option key={year} value={year.toString()}>
+                          {year}年
+                        </option>
+                      ))}
+                    </select>
+                    {error?.year && <p className="mt-1 text-sm text-red-600">{error.year}</p>}
+                  </div>
                   <Input label="走行距離 (km)" name="mileage" type="number" value={formData.mileage} onChange={onInputChange} error={error?.mileage} required />
                   <Input label="価格 (円)" name="price" type="number" value={formData.price} onChange={onInputChange} error={error?.price} required />
                   <Input label="ボディカラー" name="color" value={formData.color} onChange={onInputChange} error={error?.color} required />
@@ -200,8 +235,8 @@ const VehicleEditComponent: React.FC<VehicleEditComponentProps> = ({
                     >
                       <option value="">選択してください</option>
                       <option value="AT">AT</option>
-                      <option value="CVT">CVT</option>
                       <option value="MT">MT</option>
+                      <option value="CVT">CVT</option>
                     </select>
                     {error?.transmission && <p className="mt-1 text-sm text-red-600">{error.transmission}</p>}
                   </div>
@@ -215,8 +250,7 @@ const VehicleEditComponent: React.FC<VehicleEditComponentProps> = ({
                       required
                     >
                       <option value="">選択してください</option>
-                      <option value="FF">FF</option>
-                      <option value="FR">FR</option>
+                      <option value="2WD">2WD</option>
                       <option value="4WD">4WD</option>
                     </select>
                     {error?.drive_system && <p className="mt-1 text-sm text-red-600">{error.drive_system}</p>}

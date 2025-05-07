@@ -6,6 +6,7 @@ import { vehicleEditService } from "../../services/vehicle-edit/page";
 import { validateVehicleEditForm } from "../../validations/vehicle-edit/page";
 import type { VehicleFormData, VehicleRegisterError } from "../../types/vehicle-register/page";
 import { supabase } from "../../lib/supabase";
+import { makerService } from "../../services/custom/car_makers/page";
 
 const VehicleEditContainer: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -18,6 +19,8 @@ const VehicleEditContainer: React.FC = () => {
   const [view360Files, setView360Files] = useState<File[]>([]);
   // 削除用のミューテーションを追加
   const deleteVehicle = vehicleEditService.useDeleteVehicle();
+  // 車両メーカーの取得
+  const { data: carMakers, isLoading: isLoadingMakers } = makerService.useMakers();
 
   // 既存のファイルパスを保存するステートを追加
   const [originalView360Paths, setOriginalView360Paths] = useState<string[]>([]);
@@ -298,7 +301,7 @@ const VehicleEditContainer: React.FC = () => {
   return (
     <VehicleEditComponent
       formData={formData}
-      isLoading={isLoading}
+      isLoading={isLoading || isLoadingMakers}
       isSaving={updateVehicle.isPending}
       error={error}
       imagePreview={imagePreview}
@@ -312,6 +315,7 @@ const VehicleEditContainer: React.FC = () => {
       onView360ImagesChange={handleView360ImagesChange}
       onRemoveView360Image={handleRemoveView360Image}
       onReorderView360Images={handleReorderView360Images}
+      carMakers={carMakers || []}
     />
   );
 };
