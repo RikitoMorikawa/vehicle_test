@@ -27,20 +27,8 @@ interface VehicleEditComponentProps {
   onRemoveView360Image: (index: number) => void;
   onReorderView360Images: (newOrder: string[]) => void;
   carMakers: CarMaker[];
+  generateYearOptions: () => number[];
 }
-
-// 年式の選択肢を生成する関数を追加
-const generateYearOptions = () => {
-  const currentYear = new Date().getFullYear();
-  const startYear = 1990; // 例として1990年から
-  const years = [];
-
-  for (let year = currentYear; year >= startYear; year--) {
-    years.push(year);
-  }
-
-  return years;
-};
 
 const VehicleEditComponent: React.FC<VehicleEditComponentProps> = ({
   formData,
@@ -59,6 +47,7 @@ const VehicleEditComponent: React.FC<VehicleEditComponentProps> = ({
   onRemoveView360Image,
   onReorderView360Images,
   carMakers,
+  generateYearOptions,
 }) => {
   if (isLoading) {
     return (

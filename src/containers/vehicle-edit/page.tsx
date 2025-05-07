@@ -21,7 +21,6 @@ const VehicleEditContainer: React.FC = () => {
   const deleteVehicle = vehicleEditService.useDeleteVehicle();
   // 車両メーカーの取得
   const { data: carMakers, isLoading: isLoadingMakers } = makerService.useMakers();
-
   // 既存のファイルパスを保存するステートを追加
   const [originalView360Paths, setOriginalView360Paths] = useState<string[]>([]);
   // 並べ替え後のファイルと元のパスの対応関係
@@ -73,6 +72,19 @@ const VehicleEditContainer: React.FC = () => {
     inspection_date: "",
     vehicle_id: "",
   });
+
+  // 年式の選択肢を生成する関数を追加
+  const generateYearOptions = () => {
+    const currentYear = new Date().getFullYear();
+    const startYear = 1990; // 例として1990年から
+    const years = [];
+
+    for (let year = currentYear; year >= startYear; year--) {
+      years.push(year);
+    }
+
+    return years;
+  };
 
   // ファイル名でソートするヘルパー関数
   const sortFilesByName = (files: File[]): File[] => {
@@ -316,6 +328,7 @@ const VehicleEditContainer: React.FC = () => {
       onRemoveView360Image={handleRemoveView360Image}
       onReorderView360Images={handleReorderView360Images}
       carMakers={carMakers || []}
+      generateYearOptions={generateYearOptions}
     />
   );
 };
