@@ -204,7 +204,12 @@ const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({
                 {activeTab === "360°ビュー" && (
                   <div className="p-6">
                     {view360Images.length > 0 ? (
-                      <View360Viewer vehicleId={vehicle.id} images={view360Images} className="max-w-3xl mx-auto" />
+                      <View360Viewer
+                        vehicleId={vehicle.id}
+                        images={view360Images}
+                        className="max-w-3xl mx-auto"
+                        isActive={activeTab === "360°ビュー"} // アクティブ状態を渡す
+                      />
                     ) : (
                       <div className="p-12 flex items-center justify-center">
                         <div className="text-center">

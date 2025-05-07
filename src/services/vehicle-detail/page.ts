@@ -4,7 +4,7 @@ import { supabase } from "../../lib/supabase";
 import { Vehicle } from "../../types/db/vehicle";
 import { QUERY_KEYS } from "../../constants/queryKeys";
 
-// 車両詳細を取得するフック - 修正版
+// 車両詳細を取得するフック
 const useVehicleDetail = (id: string) => {
   return useQuery({
     queryKey: [QUERY_KEYS.VEHICLE_DETAIL, id],

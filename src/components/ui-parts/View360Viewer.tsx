@@ -1,11 +1,11 @@
 // src/components/ui-parts/View360Viewer.tsx
-
 import React, { useEffect, useRef, useState } from "react";
 
 interface View360ViewerProps {
   vehicleId: string;
   images: string[];
   className?: string;
+  isActive: boolean; // タブがアクティブかどうかを示すプロパティを追加
 }
 
 // 画像キャッシュ用のグローバルオブジェクト
@@ -16,13 +16,15 @@ const imageCache: Record<string, HTMLImageElement[]> = {};
  * @param vehicleId 車両ID
  * @param images 画像URLの配列
  * @param className カスタムクラス名
+ * @param isActive タブがアクティブかどうか
  */
-const View360Viewer: React.FC<View360ViewerProps> = ({ vehicleId, images, className = "" }) => {
+const View360Viewer: React.FC<View360ViewerProps> = ({ vehicleId, images, className = "", isActive }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
 
   // 回転の感度調整 - 大きい値ほど鈍感になる
   const rotationSensitivity = 20; // 調整可能な値
@@ -30,13 +32,22 @@ const View360Viewer: React.FC<View360ViewerProps> = ({ vehicleId, images, classN
   // キャッシュキー（車両ID）
   const cacheKey = vehicleId;
 
-  // 画像のURLを生成
-  const imageUrls = images.map((path) => `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/vehicle-360/${path}`);
+  // isActiveが変更されたときに画像URLを再生成
+  useEffect(() => {
+    if (isActive) {
+      // 画像のURLを再生成
+      const urls = images.map((path) => `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/vehicle-360/${path}?t=${Date.now()}`);
+      setImageUrls(urls);
+
+      // キャッシュをクリア
+      delete imageCache[cacheKey];
+    }
+  }, [isActive, images, cacheKey]);
 
   // 画像のロード
   useEffect(() => {
-    // 画像がない場合は早期リターン
-    if (images.length === 0) {
+    // 画像がない場合やURLが設定されていない場合は早期リターン
+    if (images.length === 0 || imageUrls.length === 0) {
       setIsLoading(false);
       return;
     }

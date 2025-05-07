@@ -238,7 +238,7 @@ const VehicleEditContainer: React.FC = () => {
         },
       });
 
-      // navigate("/vehicles");
+      navigate("/vehicles");
     } catch (err: unknown) {
       console.error(err);
       setError({
