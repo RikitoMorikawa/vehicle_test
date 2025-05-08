@@ -26,6 +26,36 @@ const VehicleEditContainer: React.FC = () => {
   // 並べ替え後のファイルと元のパスの対応関係
   const [view360FileMap, setView360FileMap] = useState<{ [key: string]: File }>({});
 
+  const [formData, setFormData] = useState<VehicleFormData>({
+    name: "",
+    maker: "",
+    year: new Date().getFullYear().toString(),
+    mileage: "",
+    price: "",
+    model_code: "",
+    color: "",
+    engine_size: "",
+    transmission: "",
+    drive_system: "",
+    inspection_date: "",
+    vehicle_id: "",
+    // 新しいフィールドの初期値
+    vehicle_status: "",
+    full_model_code: "",
+    grade: "",
+    registration_number: "",
+    first_registration_date: "",
+    chassis_number: "",
+    body_type: "",
+    door_count: "",
+    desired_number: "",
+    sales_format: "",
+    accident_history: "",
+    recycling_deposit: "",
+    registration_date: "",
+    tax_rate: "",
+  });
+
   useEffect(() => {
     if (vehicle) {
       setFormData({
@@ -42,6 +72,22 @@ const VehicleEditContainer: React.FC = () => {
         inspection_date: vehicle.inspection_date || "",
         vehicle_id: vehicle.vehicle_id || "",
         image_path: vehicle.image_path,
+        // 新しいフィールドの値を設定
+        vehicle_status: vehicle.vehicle_status || "",
+        full_model_code: vehicle.full_model_code || "",
+        grade: vehicle.grade || "",
+        registration_number: vehicle.registration_number || "",
+        first_registration_date: vehicle.first_registration_date || "",
+        chassis_number: vehicle.chassis_number || "",
+        body_type: vehicle.body_type || "",
+        door_count: vehicle.door_count?.toString() || "",
+        desired_number: vehicle.desired_number || "",
+        sales_format: vehicle.sales_format || "",
+        // ブール値を文字列に変換して設定
+        accident_history: vehicle.accident_history ? "true" : "false",
+        recycling_deposit: vehicle.recycling_deposit ? "true" : "false",
+        registration_date: vehicle.registration_date || "",
+        tax_rate: vehicle.tax_rate?.toString() || "",
       });
 
       if (vehicle.image_path) {
@@ -57,21 +103,6 @@ const VehicleEditContainer: React.FC = () => {
       }
     }
   }, [vehicle]);
-
-  const [formData, setFormData] = useState<VehicleFormData>({
-    name: "",
-    maker: "",
-    year: new Date().getFullYear().toString(),
-    mileage: "",
-    price: "",
-    model_code: "",
-    color: "",
-    engine_size: "",
-    transmission: "",
-    drive_system: "",
-    inspection_date: "",
-    vehicle_id: "",
-  });
 
   // 年式の選択肢を生成する関数を追加
   const generateYearOptions = () => {
@@ -89,6 +120,14 @@ const VehicleEditContainer: React.FC = () => {
   // ファイル名でソートするヘルパー関数
   const sortFilesByName = (files: File[]): File[] => {
     return [...files].sort((a, b) => a.name.localeCompare(b.name));
+  };
+
+  // チェックボックスの状態を処理する関数を追加
+  const handleCheckboxChange = (name: string, checked: boolean) => {
+    setFormData((prev) => ({ ...prev, [name]: checked ? "true" : "false" }));
+    if (error?.[name as keyof VehicleRegisterError]) {
+      setError((prev) => (prev ? { ...prev, [name]: undefined } : null));
+    }
   };
 
   // 360度ビュー画像を追加する処理
@@ -177,6 +216,34 @@ const VehicleEditContainer: React.FC = () => {
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (error?.[name as keyof VehicleRegisterError]) {
+      setError((prev) => (prev ? { ...prev, [name]: undefined } : null));
+    }
+  };
+
+  const sanitizeFileName = (fileName: string): string => {
+    // Remove non-alphanumeric characters (except dots and hyphens)
+    const sanitized = fileName.replace(/[^a-zA-Z0-9.-]/g, "_");
+    // Ensure unique filename with timestamp
+    return `${Date.now()}_${sanitized}`;
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+
+      setFormData((prev) => ({ ...prev, image: file }));
+    }
+  };
+
   // 送信処理の修正部分
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -204,7 +271,6 @@ const VehicleEditContainer: React.FC = () => {
       // 360度画像の処理
       const hasNewImages = view360Files.length > 0;
 
-      // 新しい画像と既存の画像を両方処理
       // 1. まず既存の画像をview360_imagesに追加
       if (originalView360Paths.length > 0) {
         view360_images = [...originalView360Paths];
@@ -243,6 +309,10 @@ const VehicleEditContainer: React.FC = () => {
         }
       }
 
+      // チェックボックスの値を変換
+      const convertedAccidentHistory = formData.accident_history === "true";
+      const convertedRecyclingDeposit = formData.recycling_deposit === "true";
+
       // 車両データの更新
       await updateVehicle.mutateAsync({
         id,
@@ -250,6 +320,9 @@ const VehicleEditContainer: React.FC = () => {
           ...formData,
           image_path,
           view360_images,
+          // チェックボックスの値をブール値に変換
+          accident_history: formData.accident_history,
+          recycling_deposit: formData.recycling_deposit,
         },
       });
 
@@ -259,34 +332,6 @@ const VehicleEditContainer: React.FC = () => {
       setError({
         general: err instanceof Error ? err.message : "車両の更新に失敗しました",
       });
-    }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (error?.[name as keyof VehicleRegisterError]) {
-      setError((prev) => (prev ? { ...prev, [name]: undefined } : null));
-    }
-  };
-
-  const sanitizeFileName = (fileName: string): string => {
-    // Remove non-alphanumeric characters (except dots and hyphens)
-    const sanitized = fileName.replace(/[^a-zA-Z0-9.-]/g, "_");
-    // Ensure unique filename with timestamp
-    return `${Date.now()}_${sanitized}`;
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-
-      setFormData((prev) => ({ ...prev, image: file }));
     }
   };
 
@@ -318,6 +363,7 @@ const VehicleEditContainer: React.FC = () => {
       error={error}
       imagePreview={imagePreview}
       onInputChange={handleInputChange}
+      onCheckboxChange={handleCheckboxChange}
       onImageChange={handleImageChange}
       onSubmit={handleSubmit}
       onCancel={() => navigate("/vehicles")}
