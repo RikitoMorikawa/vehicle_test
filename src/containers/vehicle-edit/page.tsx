@@ -309,10 +309,6 @@ const VehicleEditContainer: React.FC = () => {
         }
       }
 
-      // チェックボックスの値を変換
-      const convertedAccidentHistory = formData.accident_history === "true";
-      const convertedRecyclingDeposit = formData.recycling_deposit === "true";
-
       // 車両データの更新
       await updateVehicle.mutateAsync({
         id,

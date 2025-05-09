@@ -27,6 +27,16 @@ export const vehicleEditSchema = z.object({
   transmission: z.string().min(1, "シフトを選択してください"),
   drive_system: z.string().min(1, "駆動方式を選択してください"),
   inspection_date: z.string().min(1, "車検満了日を入力してください"),
+  grade: z.string().max(100, "グレードは最大100文字以内で入力してください"),
+  full_model_code: z.string().max(50, "フル型式は最大50文字以内で入力してください"),
+  door_count: z.string().min(1, "ドア数は1以上で入力してください").max(10, "ドア数は10以下で入力してください"),
+  desired_number: z.string().max(10, "希望ナンバーは最大10文字以内で入力してください"),
+  // 登録番号の例: 1234-5678
+  registration_number: z.string().regex(/^[あ-んア-ン一-龥0-9-]{1,10}$/, "登録番号は正しいナンバープレート形式で入力してください"),
+  chassis_number: z
+    .string()
+    .max(30, "車台番号は最大30文字以内で入力してください")
+    .regex(/^[a-zA-Z0-9]*$/, "車台番号は英数字のみで入力してください"),
 });
 
 export type VehicleEditFormData = z.infer<typeof vehicleEditSchema>;
