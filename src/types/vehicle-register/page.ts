@@ -47,6 +47,7 @@ export interface VehicleRegisterError {
   transmission?: string;
   drive_system?: string;
   inspection_date?: string;
+  view360_images?: string;
   image?: string;
 
   // 新しく追加したフィールドのエラー
