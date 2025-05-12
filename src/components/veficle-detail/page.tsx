@@ -6,6 +6,8 @@ import Footer from "../Footer";
 import View360Viewer from "../ui-parts/View360Viewer";
 import VehicleInfo from "../ui-parts/VehicleInfo";
 import { Vehicle } from "../../types/db/vehicle";
+import { useAuth } from "../../hooks/useAuth";
+import LoanApplicationStatusView from "../ui-parts/LoanApplicationStatus";
 
 interface VehicleDetailComponentProps {
   vehicle: Vehicle | null | undefined;
@@ -15,7 +17,6 @@ interface VehicleDetailComponentProps {
   onToggleFavorite: () => void;
   onBack: () => void;
   onInquiry: () => void;
-  // 以下はContainerから受け取るState・メソッド
   selectedImage: string | null;
   setSelectedImage: (url: string | null) => void;
   activeTab: string;
@@ -45,6 +46,8 @@ const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({
   onCreateEstimate,
   onApplyLoan,
 }) => {
+  const { user } = useAuth();
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -204,12 +207,7 @@ const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({
                 {activeTab === "360°ビュー" && (
                   <div className="p-6">
                     {view360Images.length > 0 ? (
-                      <View360Viewer
-                        vehicleId={vehicle.id}
-                        images={view360Images}
-                        className="max-w-3xl mx-auto"
-                        isActive={activeTab === "360°ビュー"} // アクティブ状態を渡す
-                      />
+                      <View360Viewer vehicleId={vehicle.id} images={view360Images} className="max-w-3xl mx-auto" isActive={activeTab === "360°ビュー"} />
                     ) : (
                       <div className="p-12 flex items-center justify-center">
                         <div className="text-center">
@@ -243,8 +241,13 @@ const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({
                 {activeTab === "ローン審査申込" && (
                   <div className="p-6">
                     <div className="max-w-2xl mx-auto">
-                      <h2 className="text-xl font-semibold mb-4">ローン審査申込</h2>
-                      <p className="mb-4 text-gray-500">この機能は現在実装中です</p>
+                      {user ? (
+                        <LoanApplicationStatusView userId={user.id} vehicleId={vehicle.id} />
+                      ) : (
+                        <div className="p-6 bg-gray-50 rounded-lg">
+                          <p className="text-gray-600">ローン審査状況を確認するにはログインが必要です</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
