@@ -90,7 +90,7 @@ const VehicleDetailContainer: React.FC = () => {
 
   // ローン審査申込ボタンのハンドラ
   const handleApplyLoan = () => {
-    setActiveTab("ローン審査申込");
+    navigate(`/loan-application/${id}`);
   };
 
   return (
@@ -102,7 +102,6 @@ const VehicleDetailContainer: React.FC = () => {
       onToggleFavorite={handleToggleFavorite}
       onBack={handleBack}
       onInquiry={handleInquiry}
-      // 追加された状態とメソッド
       selectedImage={selectedImage}
       setSelectedImage={setSelectedImage}
       activeTab={activeTab}

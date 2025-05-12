@@ -12,9 +12,10 @@ import AuthPageContainer from "./containers/auth/page";
 import VehicleDetailPage from "./pages/vehicle-detail/page";
 import VehicleRegisterPage from "./pages/vehicle-register/page";
 import VehicleEditPage from "./pages/vehicle-edit/page";
+import LoanApplicationPage from "./pages/loan-application/page";
 import { JSX } from "react/jsx-runtime";
 
-// ProtectedRouteをラップするヘルパー関数
+// ProtectedRouteをラップするヘルパー関数 src/pages/loan-application/page.tsx
 const createProtectedRoute = (
   element: string | number | boolean | JSX.Element | Iterable<React.ReactNode> | null | undefined,
   allowedRoles: string[],
@@ -68,6 +69,10 @@ const routes = [
   {
     path: "/reports",
     ...createProtectedRoute(<ReportsContainer />, ["user", "admin"], true),
+  },
+  {
+    path: "/loan-application/:vehicleId",
+    ...createProtectedRoute(<LoanApplicationPage />, ["user", "admin"], true),
   },
   {
     path: "*",
