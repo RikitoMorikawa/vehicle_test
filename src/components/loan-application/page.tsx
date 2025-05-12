@@ -6,6 +6,7 @@ import Input from "../ui/Input";
 import Select from "../ui/Select";
 import Button from "../ui/Button";
 import type { LoanApplicationComponentProps } from "../../types/loan-application/page";
+import Checkbox from "../ui/Checkbox";
 
 const LoanApplicationComponent: React.FC<LoanApplicationComponentProps> = ({ formData, error, isLoading, onSubmit, onInputChange, onFileChange }) => {
   return (
@@ -126,10 +127,8 @@ const LoanApplicationComponent: React.FC<LoanApplicationComponentProps> = ({ for
                       <option value="">選択してください</option>
                       <option value="正社員">正社員</option>
                       <option value="契約社員">契約社員</option>
-                      <option value="派遣社員">派遣社員</option>
                       <option value="パート・アルバイト">パート・アルバイト</option>
                       <option value="自営業">自営業</option>
-                      <option value="その他">その他</option>
                     </Select>
                     <Input
                       label="勤続年数"
@@ -199,16 +198,62 @@ const LoanApplicationComponent: React.FC<LoanApplicationComponentProps> = ({ for
                       error={error?.down_payment}
                       required
                     />
-                    <Input
+                    <Select
                       label="支払回数"
                       name="payment_months"
-                      type="number"
                       value={formData.payment_months}
                       onChange={onInputChange}
                       error={error?.payment_months}
                       required
-                    />
-                    <Input label="ボーナス加算月" name="bonus_months" value={formData.bonus_months} onChange={onInputChange} error={error?.bonus_months} />
+                    >
+                      <option value="">選択してください</option>
+                      <option value="12">12回 (1年)</option>
+                      <option value="24">24回 (2年)</option>
+                      <option value="36">36回 (3年)</option>
+                      <option value="48">48回 (4年)</option>
+                      <option value="60">60回 (5年)</option>
+                      <option value="72">72回 (6年)</option>
+                      <option value="84">84回 (7年)</option>
+                    </Select>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">ボーナス加算月</label>
+                      <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((month) => {
+                          const monthStr = month.toString();
+                          const selectedMonths = (formData.bonus_months || "").split(",").filter(Boolean);
+                          const isChecked = selectedMonths.includes(monthStr);
+
+                          return (
+                            <Checkbox
+                              key={month}
+                              id={`bonus_month_${month}`}
+                              label={`${month}月`}
+                              name="bonus_months"
+                              value={month}
+                              checked={isChecked}
+                              onChange={(e) => {
+                                const currentMonths = selectedMonths;
+                                let newMonths: string[];
+
+                                if (e.target.checked) {
+                                  // 追加
+                                  newMonths = [...currentMonths, monthStr].sort((a, b) => Number(a) - Number(b));
+                                } else {
+                                  // 削除
+                                  newMonths = currentMonths.filter((m) => m !== monthStr);
+                                }
+
+                                const newValue = newMonths.join(",");
+                                onInputChange({
+                                  target: { name: "bonus_months", value: newValue },
+                                } as React.ChangeEvent<HTMLInputElement>);
+                              }}
+                            />
+                          );
+                        })}
+                      </div>
+                      {error?.bonus_months && <p className="mt-1 text-sm text-red-600">{error.bonus_months}</p>}
+                    </div>
                     <Input
                       label="ボーナス加算額"
                       name="bonus_amount"
@@ -269,11 +314,12 @@ const LoanApplicationComponent: React.FC<LoanApplicationComponentProps> = ({ for
                   <label className="block text-sm font-medium text-gray-700 mb-1">備考</label>
                   <textarea
                     name="notes"
-                    value={formData.notes}
+                    value={formData.notes || ""}
                     onChange={onInputChange}
                     rows={4}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
                   />
+                  {error?.notes && <p className="mt-1 text-sm text-red-600">{error.notes}</p>}
                 </div>
 
                 <div className="flex justify-end space-x-3">

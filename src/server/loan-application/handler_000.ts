@@ -25,7 +25,6 @@ export const loanApplicationHandler = {
         .insert({
           user_id: userId,
           vehicle_id: vehicleId,
-          company_name: formData.company_name,
           customer_name: formData.customer_name,
           customer_name_kana: formData.customer_name_kana,
           customer_birth_date: formData.customer_birth_date,

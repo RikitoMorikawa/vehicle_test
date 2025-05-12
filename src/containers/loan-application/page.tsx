@@ -4,6 +4,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { loanApplicationService } from "../../services/loan-application/page";
 import LoanApplicationComponent from "../../components/loan-application/page";
 import type { LoanApplicationFormData, LoanApplicationError } from "../../types/loan-application/page";
+import { validateLoanApplication } from "../../validations/loan-application/page";
 
 const LoanApplicationContainer: React.FC = () => {
   const { vehicleId } = useParams<{ vehicleId: string }>();
@@ -59,61 +60,8 @@ const LoanApplicationContainer: React.FC = () => {
     }
   };
 
-  const validateForm = (): boolean => {
-    const errors: LoanApplicationError = {};
-
-    const requiredFields = [
-      "customer_name",
-      "customer_name_kana",
-      "customer_birth_date",
-      "customer_postal_code",
-      "customer_address",
-      "customer_mobile_phone",
-      "employer_name",
-      "employer_postal_code",
-      "employer_address",
-      "employer_phone",
-      "employment_type",
-      "years_employed",
-      "annual_income",
-      "vehicle_price",
-      "down_payment",
-      "payment_months",
-    ];
-
-    requiredFields.forEach((field) => {
-      if (!formData[field as keyof LoanApplicationFormData]) {
-        errors[field] = "この項目は必須です";
-      }
-    });
-
-    if (!formData.identification_doc) {
-      errors.identification_doc = "本人確認書類を添付してください";
-    }
-    if (!formData.income_doc) {
-      errors.income_doc = "収入証明書類を添付してください";
-    }
-
-    const numericFields = ["years_employed", "annual_income", "vehicle_price", "down_payment", "payment_months", "bonus_amount"];
-    numericFields.forEach((field) => {
-      const value = formData[field as keyof LoanApplicationFormData];
-      if (value && isNaN(Number(value))) {
-        errors[field] = "数値を入力してください";
-      }
-    });
-
-    if (formData.down_payment && formData.vehicle_price && Number(formData.down_payment) >= Number(formData.vehicle_price)) {
-      errors.down_payment = "頭金は車両価格より小さい金額にしてください";
-    }
-
-    setError(Object.keys(errors).length > 0 ? errors : null);
-    return Object.keys(errors).length === 0;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
-
     if (!user) {
       setError({
         general: "ログインが必要です。再度ログインしてください。",
@@ -125,6 +73,12 @@ const LoanApplicationContainer: React.FC = () => {
       setError({
         general: "車両情報が不足しています。",
       });
+      return;
+    }
+
+    const validation = validateLoanApplication(formData);
+    if (!validation.success) {
+      setError(validation.errors);
       return;
     }
 

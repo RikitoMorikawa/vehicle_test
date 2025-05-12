@@ -1,40 +1,34 @@
-// src/components/ui/Checkbox.tsx
-import React, { forwardRef } from "react";
+import React from "react";
 
-interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> {
+interface CheckboxProps {
+  id: string;
   label: string;
-  error?: string;
+  name: string;
+  value: string | number;
+  checked: boolean;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  className?: string;
+  disabled?: boolean;
 }
 
-const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(({ label, error, className = "", onKeyDown, ...props }, ref) => {
-  // エンターキー対策を組み込んだキーダウンハンドラー
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-    }
-    // 元のonKeyDownも実行
-    if (onKeyDown) {
-      onKeyDown(e);
-    }
-  };
-
+const Checkbox: React.FC<CheckboxProps> = ({ id, label, name, value, checked, onChange, className = "", disabled = false }) => {
   return (
-    <div className="w-full py-2">
-      <div className="flex items-center">
-        <input
-          ref={ref}
-          type="checkbox"
-          className={`h-5 w-5 text-teal-500 focus:ring-teal-500 border-slate-300 rounded cursor-pointer ${className}`}
-          onKeyDown={handleKeyDown}
-          {...props}
-        />
-        <label className="ml-3 block text-sm font-medium text-slate-700 cursor-pointer">{label}</label>
-      </div>
-      {error && <p className="mt-1 text-sm text-red-600 ml-8">{error}</p>}
+    <div className={`flex items-center ${className}`}>
+      <input
+        type="checkbox"
+        id={id}
+        name={name}
+        value={value.toString()}
+        checked={checked}
+        onChange={onChange}
+        disabled={disabled}
+        className="h-4 w-4 rounded text-red-600 focus:ring-red-500 border-gray-300"
+      />
+      <label htmlFor={id} className={`ml-2 block text-sm font-medium ${disabled ? "text-gray-400" : "text-gray-700"} cursor-pointer`}>
+        {label}
+      </label>
     </div>
   );
-});
-
-Checkbox.displayName = "Checkbox";
+};
 
 export default Checkbox;
