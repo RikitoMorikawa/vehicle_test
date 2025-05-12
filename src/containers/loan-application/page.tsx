@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { loanApplicationService } from "../../services/loan-application/page";
@@ -9,7 +9,6 @@ const LoanApplicationContainer: React.FC = () => {
   const { vehicleId } = useParams<{ vehicleId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { data: userInfo, isLoading: isUserLoading } = loanApplicationService.useGetUserInfo(user?.id);
   const submitApplication = loanApplicationService.useSubmitLoanApplication();
 
   const [formData, setFormData] = useState<LoanApplicationFormData>({
@@ -45,15 +44,6 @@ const LoanApplicationContainer: React.FC = () => {
 
   const [error, setError] = useState<LoanApplicationError | null>(null);
 
-  // ユーザー情報が取得できたらフォームに初期値を設定
-  useEffect(() => {
-    if (userInfo) {
-      setFormData((prev) => ({
-        ...prev,
-      }));
-    }
-  }, [userInfo]);
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -72,7 +62,6 @@ const LoanApplicationContainer: React.FC = () => {
   const validateForm = (): boolean => {
     const errors: LoanApplicationError = {};
 
-    // 必須フィールドの検証
     const requiredFields = [
       "customer_name",
       "customer_name_kana",
@@ -98,7 +87,6 @@ const LoanApplicationContainer: React.FC = () => {
       }
     });
 
-    // ファイル検証
     if (!formData.identification_doc) {
       errors.identification_doc = "本人確認書類を添付してください";
     }
@@ -106,7 +94,6 @@ const LoanApplicationContainer: React.FC = () => {
       errors.income_doc = "収入証明書類を添付してください";
     }
 
-    // 数値フィールドの検証
     const numericFields = ["years_employed", "annual_income", "vehicle_price", "down_payment", "payment_months", "bonus_amount"];
     numericFields.forEach((field) => {
       const value = formData[field as keyof LoanApplicationFormData];
@@ -115,7 +102,6 @@ const LoanApplicationContainer: React.FC = () => {
       }
     });
 
-    // カスタム検証（例：頭金は車両価格より小さい必要がある）
     if (formData.down_payment && formData.vehicle_price && Number(formData.down_payment) >= Number(formData.vehicle_price)) {
       errors.down_payment = "頭金は車両価格より小さい金額にしてください";
     }
@@ -143,7 +129,6 @@ const LoanApplicationContainer: React.FC = () => {
     }
 
     try {
-      console.log("ローン申請を送信中...");
       const result = await submitApplication.mutateAsync({
         userId: user.id,
         vehicleId,
@@ -151,7 +136,6 @@ const LoanApplicationContainer: React.FC = () => {
       });
 
       if (result.success) {
-        console.log("ローン申請が完了しました");
         navigate("/application-complete");
       } else {
         setError({
@@ -171,7 +155,7 @@ const LoanApplicationContainer: React.FC = () => {
       vehicle={null}
       formData={formData}
       error={error}
-      isLoading={submitApplication.isPending || isUserLoading}
+      isLoading={submitApplication.isPending}
       onSubmit={handleSubmit}
       onInputChange={handleInputChange}
       onFileChange={handleFileChange}

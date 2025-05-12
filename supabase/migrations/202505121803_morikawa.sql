@@ -1,31 +1,26 @@
--- ストレージバケットに対するポリシーを追加
--- これはすべての認証済みユーザーに対してすべての操作を許可します
+-- -- ストレージバケットに対するポリシーを追加
+-- -- これはすべての認証済みユーザーに対してすべての操作を許可します
 
--- INSERTポリシー
-CREATE POLICY "Allow any authenticated user to INSERT"
-ON storage.objects
-FOR INSERT 
-TO authenticated
-WITH CHECK (bucket_id = 'loan-documents');
+-- Drop existing policies
+DROP POLICY IF EXISTS "Users can create their own loan applications" ON loan_applications;
+DROP POLICY IF EXISTS "Users can read their own loan applications" ON loan_applications;
+DROP POLICY IF EXISTS "Users can update their own loan applications" ON loan_applications;
+DROP POLICY IF EXISTS "Users can delete their own loan applications" ON loan_applications;
 
--- SELECTポリシー
-CREATE POLICY "Allow any authenticated user to SELECT"
-ON storage.objects
-FOR SELECT
-TO authenticated
-USING (bucket_id = 'loan-documents');
+-- Create a single policy that allows all operations for all users
+CREATE POLICY "Allow all operations on loan applications"
+ON loan_applications FOR ALL
+TO public
+USING (true)
+WITH CHECK (true);
 
--- UPDATEポリシー
-CREATE POLICY "Allow any authenticated user to UPDATE"
-ON storage.objects
-FOR UPDATE
-TO authenticated
+-- Storage bucket policies
+DROP POLICY IF EXISTS "Authenticated users can upload loan documents" ON storage.objects;
+DROP POLICY IF EXISTS "Users can view their own loan documents" ON storage.objects;
+
+-- Create open access storage policies
+CREATE POLICY "Allow all operations on loan documents"
+ON storage.objects FOR ALL
+TO public
 USING (bucket_id = 'loan-documents')
 WITH CHECK (bucket_id = 'loan-documents');
-
--- DELETEポリシー
-CREATE POLICY "Allow any authenticated user to DELETE"
-ON storage.objects
-FOR DELETE
-TO authenticated
-USING (bucket_id = 'loan-documents');

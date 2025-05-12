@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { loanApplicationHandler } from "../../server/loan-application/handler_000";
 import type { LoanApplicationFormData } from "../../types/loan-application/page";
 
@@ -9,18 +9,6 @@ function useSubmitLoanApplication() {
   });
 }
 
-function useGetUserInfo(userId: string | undefined) {
-  return useQuery({
-    queryKey: ["userInfo", userId],
-    queryFn: () => {
-      if (!userId) return null;
-      return loanApplicationHandler.getUserInfo(userId);
-    },
-    enabled: !!userId,
-  });
-}
-
 export const loanApplicationService = {
   useSubmitLoanApplication,
-  useGetUserInfo,
 };
