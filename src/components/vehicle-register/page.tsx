@@ -144,7 +144,7 @@ const VehicleRegisterComponent: React.FC<RegisterVehicleComponentProps> = ({
                       <div className="flex justify-center">
                         <label
                           htmlFor="view360-upload"
-                          className="cursor-pointer flex items-center gap-2 bg-white rounded-md font-medium text-red-600 hover:text-teal-600 px-4 py-2 border border-slate-300"
+                          className="cursor-pointer flex items-center gap-2 bg-white rounded-md font-medium text-red-600 hover:text-red-700 px-4 py-2 border border-slate-300"
                         >
                           <RotateCw className="h-4 w-4" />
                           360度ビュー用画像を追加

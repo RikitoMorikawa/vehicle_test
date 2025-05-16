@@ -4,17 +4,16 @@ import Sidebar from "../../Sidebar";
 import Footer from "../../Footer";
 import Button from "../../ui/Button";
 import { User } from "../../../types/auth/page";
-import { UserCog, CheckCircle, XCircle, Pencil } from "lucide-react";
+import { UserCog, Pencil } from "lucide-react";
 
 interface AdminDashboardComponentProps {
   users: User[];
   loading: boolean;
   error: string | null;
-  onApproval: (userId: string, approve: boolean) => Promise<void>;
   onEditUser: (userId: string) => void;
 }
 
-const AdminDashboardComponent: React.FC<AdminDashboardComponentProps> = ({ users, loading, error, onApproval, onEditUser }) => {
+const AdminDashboardComponent: React.FC<AdminDashboardComponentProps> = ({ users, loading, error, onEditUser }) => {
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -41,7 +40,7 @@ const AdminDashboardComponent: React.FC<AdminDashboardComponentProps> = ({ users
             <div className="bg-white shadow-sm rounded-lg overflow-hidden">
               <div className="px-6 py-5 border-b border-gray-200">
                 <div className="flex items-center">
-                  <UserCog className="h-6 w-6 text-teal-600 mr-2" />
+                  <UserCog className="h-6 w-6 text-red-600 mr-2" />
                   <h2 className="text-xl font-semibold text-gray-900">ユーザー管理</h2>
                 </div>
               </div>
@@ -90,24 +89,10 @@ const AdminDashboardComponent: React.FC<AdminDashboardComponentProps> = ({ users
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             <div className="flex space-x-2">
                               {user.role !== "admin" && (
-                                <>
-                                  <Button size="sm" variant="outline" onClick={() => onEditUser(user.id)} className="flex items-center">
-                                    <Pencil className="h-4 w-4 mr-1" />
-                                    編集
-                                  </Button>
-                                  {!user.is_approved && (
-                                    <Button size="sm" variant="primary" onClick={() => onApproval(user.id, true)} className="flex items-center">
-                                      <CheckCircle className="h-4 w-4 mr-1" />
-                                      承認
-                                    </Button>
-                                  )}
-                                  {user.is_approved && (
-                                    <Button size="sm" variant="outline" onClick={() => onApproval(user.id, false)} className="flex items-center">
-                                      <XCircle className="h-4 w-4 mr-1" />
-                                      承認取消
-                                    </Button>
-                                  )}
-                                </>
+                                <Button size="sm" variant="outline" onClick={() => onEditUser(user.id)} className="flex items-center">
+                                  <Pencil className="h-4 w-4 mr-1" />
+                                  編集
+                                </Button>
                               )}
                             </div>
                           </td>

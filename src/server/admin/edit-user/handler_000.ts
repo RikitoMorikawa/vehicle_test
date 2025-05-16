@@ -1,3 +1,4 @@
+// src/server/admin/edit-user/handler_000.ts
 import { supabase } from "../../../lib/supabase";
 import { UpdateUserData } from "../../../types/admin/edit-user/page";
 import type { User } from "../../../types/auth/page";
@@ -16,6 +17,8 @@ export const editUserHandler = {
       user_name: data.user_name,
       phone: data.phone,
       email: data.email,
+      password: data.password, 
+      is_approved: data.is_approved,
     };
 
     if (data.password) {
@@ -26,5 +29,11 @@ export const editUserHandler = {
 
     if (error) throw error;
     return updatedUser;
+  },
+
+  async updateUserApproval(userId: string, approve: boolean): Promise<void> {
+    const { error } = await supabase.from("users").update({ is_approved: approve }).eq("id", userId);
+
+    if (error) throw error;
   },
 };

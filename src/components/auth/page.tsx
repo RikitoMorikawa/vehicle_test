@@ -8,6 +8,13 @@ import { useLoginForm, useRegisterForm } from "../../hooks/useAuthForms";
 const LoginForm: React.FC = () => {
   const { formData, errors, isLoading, handleChange, handleSubmit } = useLoginForm();
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSubmit(new Event("submit") as unknown as React.FormEvent);
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {errors.general && <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">{errors.general}</div>}
@@ -17,6 +24,7 @@ const LoginForm: React.FC = () => {
         name="email"
         value={formData.email}
         onChange={handleChange}
+        onKeyDown={handleKeyDown}
         placeholder="例: example@example.com"
         error={errors.email}
         autoComplete="email"
@@ -28,6 +36,7 @@ const LoginForm: React.FC = () => {
         name="password"
         value={formData.password}
         onChange={handleChange}
+        onKeyDown={handleKeyDown}
         placeholder="••••••••"
         error={errors.password}
         autoComplete="current-password"
@@ -42,6 +51,13 @@ const LoginForm: React.FC = () => {
 
 const RegisterForm: React.FC = () => {
   const { formData, errors, isLoading, companies, registrationComplete, handleChange, handleSubmit, resetRegistration } = useRegisterForm();
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSubmit(new Event("submit") as unknown as React.FormEvent);
+    }
+  };
 
   // 登録完了時の表示
   if (registrationComplete) {
@@ -78,6 +94,7 @@ const RegisterForm: React.FC = () => {
         name="email"
         value={formData.email}
         onChange={handleChange}
+        onKeyDown={handleKeyDown}
         placeholder="例: example@example.com"
         error={errors.email}
         autoComplete="email"
@@ -89,6 +106,7 @@ const RegisterForm: React.FC = () => {
         name="password"
         value={formData.password}
         onChange={handleChange}
+        onKeyDown={handleKeyDown}
         placeholder="••••••••"
         error={errors.password}
         autoComplete="new-password"
@@ -123,6 +141,7 @@ const RegisterForm: React.FC = () => {
         name="user_name"
         value={formData.user_name}
         onChange={handleChange}
+        onKeyDown={handleKeyDown}
         placeholder="山田太郎"
         error={errors.user_name}
         disabled={isLoading}
@@ -133,6 +152,7 @@ const RegisterForm: React.FC = () => {
         name="phone"
         value={formData.phone}
         onChange={handleChange}
+        onKeyDown={handleKeyDown}
         placeholder="03-1234-5678"
         error={errors.phone}
         disabled={isLoading}

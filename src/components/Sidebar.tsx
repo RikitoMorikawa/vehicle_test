@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { Search, Heart, FileText, Users, PlusCircle } from "lucide-react";
+import { Search, Heart, FileText, Users, PlusCircle, CreditCard } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 
 const Sidebar: React.FC = () => {
@@ -14,6 +14,7 @@ const Sidebar: React.FC = () => {
     ...(isAdmin
       ? [
           { to: "/admin", icon: <Users className="w-5 h-5" />, label: "ユーザー管理", exact: true },
+          { to: "/admin/loan-review", icon: <CreditCard className="w-5 h-5" />, label: "ローン審査", exact: true },
           { to: "/admin/vehicles/new", icon: <PlusCircle className="w-5 h-5" />, label: "車両登録", exact: true },
         ]
       : []),

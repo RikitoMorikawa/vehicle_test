@@ -1,4 +1,4 @@
-// src / types / admin / edit - user / page.ts;
+// src/types/admin/edit-user/page.ts
 import { User } from "../../auth/page";
 
 export interface UserQueryResult {
@@ -12,8 +12,9 @@ export interface UserFormData {
   user_name: string;
   phone: string;
   email: string;
-  password: string;
-  currentPassword: string;
+  password?: string;
+  currentPassword?: string;
+  is_approved: boolean;
 }
 
 export interface UpdateUserData {
@@ -22,4 +23,5 @@ export interface UpdateUserData {
   phone: string;
   email: string;
   password?: string;
+  is_approved: boolean;
 }

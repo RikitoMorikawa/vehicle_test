@@ -30,7 +30,20 @@ function useUpdateUser() {
   });
 }
 
+function useUpdateUserApproval() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ userId, approve }: { userId: string; approve: boolean }) => editUserHandler.updateUserApproval(userId, approve),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USERS });
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEYS.USERS, variables.userId] });
+    },
+  });
+}
+
 export const editUserService = {
   useUser,
   useUpdateUser,
+  useUpdateUserApproval,
 };

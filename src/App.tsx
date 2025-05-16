@@ -5,6 +5,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import VehicleListPage from "./pages/vehicle-list/page";
 import AdminDashboardPage from "./pages/admin/dashboard/page";
 import EditUserPage from "./pages/admin/edit-user/page";
+import LoanReviewPage from "./pages/admin/loan-review/page";
 import AccountSettingsPage from "./pages/account-settings/page";
 import FavoritesContainer from "./containers/favorites/page";
 import ReportsContainer from "./containers/reports/page";
@@ -15,7 +16,7 @@ import VehicleEditPage from "./pages/vehicle-edit/page";
 import LoanApplicationPage from "./pages/loan-application/page";
 import { JSX } from "react/jsx-runtime";
 
-// ProtectedRouteをラップするヘルパー関数 src/pages/loan-application/page.tsx
+// ProtectedRouteをラップするヘルパー関数
 const createProtectedRoute = (
   element: string | number | boolean | JSX.Element | Iterable<React.ReactNode> | null | undefined,
   allowedRoles: string[],
@@ -57,6 +58,10 @@ const routes = [
   {
     path: "/admin/users/:id/edit",
     ...createProtectedRoute(<EditUserPage />, ["admin"], false),
+  },
+  {
+    path: "/admin/loan-review",
+    ...createProtectedRoute(<LoanReviewPage />, ["admin"], false),
   },
   {
     path: "/account-settings",

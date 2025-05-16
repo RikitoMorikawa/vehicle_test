@@ -13,10 +13,4 @@ export const adminDashboardHandler = {
       return 0;
     });
   },
-
-  async updateUserApproval(userId: string, approve: boolean): Promise<void> {
-    const { error } = await supabase.from("users").update({ is_approved: approve }).eq("id", userId);
-
-    if (error) throw error;
-  },
 };
