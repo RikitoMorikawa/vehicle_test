@@ -1,9 +1,10 @@
+// src / validations / estimate / page.ts;
 import { z } from "zod";
 import { validateForm, ValidationResult, FormData } from "../index";
 
 // 下取り車両のバリデーションスキーマ
-const tradeInSchema = z.object({
-  vehicle_name: z.string().min(1, "車名を入力してください"),
+export const tradeInSchema = z.object({
+  vehicle_name: z.string().max(1, "車名は100文字以内で入力してください"),
   registration_number: z.string().min(1, "登録番号を入力してください"),
   mileage: z.number().min(0, "走行距離は0以上で入力してください"),
   first_registration_date: z.string().min(1, "初度登録年月を入力してください"),
@@ -13,7 +14,7 @@ const tradeInSchema = z.object({
 });
 
 // 販売価格のバリデーションスキーマ
-const salesPriceSchema = z.object({
+export const salesPriceSchema = z.object({
   base_price: z.number().min(1, "本体価格は1以上で入力してください"),
   discount: z.number().min(0, "値引き額は0以上で入力してください"),
   inspection_fee: z.number().min(0, "検査費用は0以上で入力してください"),
@@ -31,7 +32,7 @@ const salesPriceSchema = z.object({
 });
 
 // ローン計算のバリデーションスキーマ
-const loanCalculationSchema = z.object({
+export const loanCalculationSchema = z.object({
   down_payment: z.number().min(0, "頭金は0以上で入力してください"),
   principal: z.number().min(0, "元金は0以上で入力してください"),
   interest_fee: z.number().min(0, "金利手数料は0以上で入力してください"),
@@ -45,7 +46,7 @@ const loanCalculationSchema = z.object({
 });
 
 // 手続代行費用のバリデーションスキーマ
-const processingFeesSchema = z.object({
+export const processingFeesSchema = z.object({
   inspection_registration_fee: z.number().min(0, "検査登録費用は0以上で入力してください"),
   parking_certificate_fee: z.number().min(0, "車庫証明費用は0以上で入力してください"),
   trade_in_processing_fee: z.number().min(0, "下取車手続費用は0以上で入力してください"),
@@ -56,7 +57,7 @@ const processingFeesSchema = z.object({
 });
 
 // 預り法定費用のバリデーションスキーマ
-const legalFeesSchema = z.object({
+export const legalFeesSchema = z.object({
   inspection_registration_stamp: z.number().min(0, "検査登録印紙代は0以上で入力してください"),
   parking_certificate_stamp: z.number().min(0, "車庫証明印紙代は0以上で入力してください"),
   trade_in_stamp: z.number().min(0, "下取車印紙代は0以上で入力してください"),
@@ -65,7 +66,7 @@ const legalFeesSchema = z.object({
 });
 
 // 税金・保険料のバリデーションスキーマ
-const taxInsuranceFeesSchema = z.object({
+export const taxInsuranceFeesSchema = z.object({
   automobile_tax: z.number().min(0, "自動車税は0以上で入力してください"),
   environmental_performance_tax: z.number().min(0, "環境性能割は0以上で入力してください"),
   weight_tax: z.number().min(0, "重量税は0以上で入力してください"),
@@ -74,7 +75,7 @@ const taxInsuranceFeesSchema = z.object({
 });
 
 // 付属品のバリデーションスキーマ
-const accessorySchema = z.object({
+export const accessorySchema = z.object({
   name: z.string().min(1, "品名を入力してください"),
   price: z.number().min(0, "価格は0以上で入力してください"),
 });

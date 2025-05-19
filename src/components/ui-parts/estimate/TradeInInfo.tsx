@@ -1,3 +1,4 @@
+// src/components/ui-parts/estimate/TradeInInfo.tsx
 import React from "react";
 import Input from "../../ui/Input";
 import { EstimateError } from "../../../types/estimate/page";
@@ -19,19 +20,23 @@ const TradeInInfo: React.FC<TradeInInfoProps> = ({ tradeIn, onInputChange, error
           value={tradeIn.vehicle_name}
           onChange={(e) => onInputChange("tradeIn", "vehicle_name", e.target.value)}
           error={errors?.vehicle_name}
+          placeholder="例: トヨタ カローラ"
         />
         <Input
           label="登録番号"
           value={tradeIn.registration_number}
           onChange={(e) => onInputChange("tradeIn", "registration_number", e.target.value)}
           error={errors?.registration_number}
+          placeholder="例: 品川 500 あ 1234"
         />
         <Input
-          label="走行距離"
+          label="走行距離 (km)"
           type="number"
           value={tradeIn.mileage}
-          onChange={(e) => onInputChange("tradeIn", "mileage", parseInt(e.target.value))}
+          onChange={(e) => onInputChange("tradeIn", "mileage", parseInt(e.target.value) || 0)}
           error={errors?.mileage}
+          min={0}
+          placeholder="0以上の数値"
         />
         <Input
           label="初度登録年月"
@@ -52,12 +57,14 @@ const TradeInInfo: React.FC<TradeInInfoProps> = ({ tradeIn, onInputChange, error
           value={tradeIn.chassis_number}
           onChange={(e) => onInputChange("tradeIn", "chassis_number", e.target.value)}
           error={errors?.chassis_number}
+          placeholder="例: ZVW50-1234567"
         />
         <Input
           label="外装色"
           value={tradeIn.exterior_color}
           onChange={(e) => onInputChange("tradeIn", "exterior_color", e.target.value)}
           error={errors?.exterior_color}
+          placeholder="例: ホワイトパールクリスタルシャイン"
         />
       </div>
     </div>

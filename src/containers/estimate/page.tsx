@@ -4,6 +4,7 @@ import EstimateComponent from "../../components/estimate/page";
 import { estimateService } from "../../services/estimate/page";
 import type { EstimateError, EstimateFormData } from "../../types/estimate/page";
 import { Accessory } from "../../types/db/accessories";
+import { validateEstimate } from "../../validations/estimate/page";
 
 const EstimateContainer: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -115,7 +116,17 @@ const EstimateContainer: React.FC = () => {
     setError(null);
     setSuccess(null);
 
+    // バリデーションを実行
+    const validationResult = validateEstimate(formData);
+
+    if (!validationResult.success) {
+      // バリデーションエラーがある場合はエラーメッセージをセット
+      setError(validationResult.errors);
+      return;
+    }
+
     try {
+      // バリデーションが成功した場合はフォームデータを送信
       await createEstimate.mutateAsync({
         vehicleId: id,
         ...formData,
