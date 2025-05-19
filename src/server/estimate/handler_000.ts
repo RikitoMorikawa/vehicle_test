@@ -1,48 +1,112 @@
-// src / server / estimate / handler_001.ts;
+// src/server/estimate/handler_000.ts
 import { supabase } from "../../lib/supabase";
-import { Vehicle } from "../../types/db/vehicle";
-import type { EstimateFormData } from "../../types/estimate/page";
+import { EstimateFormData } from "../../validations/estimate/page";
+
+// 車両情報の型定義
+export interface Vehicle {
+  id: string;
+  maker: string;
+  name: string;
+  year: number;
+  mileage: number;
+  price: number;
+  user_id?: string;
+}
 
 export const estimateHandler = {
+  // 車両情報を取得する関数
   async fetchVehicle(id: string): Promise<Vehicle> {
+    console.log("Fetching vehicle with ID:", id);
     const { data, error } = await supabase.from("vehicles").select("*").eq("id", id).single();
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error fetching vehicle:", error);
+      throw error;
+    }
+
     return data;
   },
 
+  // 見積もりを作成する関数
   async createEstimate(data: { vehicleId: string } & EstimateFormData): Promise<void> {
-    const { vehicleId, tradeIn, salesPrice, loanCalculation, processingFees, legalFees, taxInsuranceFees, accessories } = data;
+    const { vehicleId, tradeIn, loanCalculation } = data;
 
-    // Start a transaction
-    const { error: tradeInError } = await supabase.from("trade_in_vehicles").insert([tradeIn]);
+    console.log("Creating estimate with data:", {
+      vehicleId,
+      tradeIn,
+      loanCalculation,
+    });
 
-    if (tradeInError) throw tradeInError;
+    try {
+      // まず車両情報を取得して、estimate_vehicles テーブルに必要なデータをコピー
+      const { data: vehicleData, error: vehicleFetchError } = await supabase
+        .from("vehicles")
+        .select("maker, name, year, mileage, price")
+        .eq("id", vehicleId)
+        .single();
 
-    const { error: salesPriceError } = await supabase.from("sales_prices").insert([{ ...salesPrice, vehicle_id: vehicleId }]);
+      if (vehicleFetchError) {
+        console.error("Error fetching vehicle data:", vehicleFetchError);
+        throw vehicleFetchError;
+      }
 
-    if (salesPriceError) throw salesPriceError;
+      // ステップ1: 見積もりテーブルに車両情報をコピーして基本情報を作成
+      const { data: estimateData, error: estimateError } = await supabase
+        .from("estimate_vehicles")
+        .insert([
+          {
+            vehicle_id: vehicleId,
+            maker: vehicleData.maker, // 車両情報から取得したメーカー
+            name: vehicleData.name, // 車両情報から取得した車名
+            year: vehicleData.year, // 車両情報から取得した年式
+            mileage: vehicleData.mileage, // 車両情報から取得した走行距離
+            price: vehicleData.price, // 車両情報から取得した価格
+            // その他、estimate_vehicles テーブルに必要なフィールドがあれば追加
+          },
+        ])
+        .select();
 
-    const { error: loanCalcError } = await supabase.from("loan_calculations").insert([loanCalculation]);
+      if (estimateError) {
+        console.error("Estimate vehicle insert error:", estimateError);
+        throw estimateError;
+      }
 
-    if (loanCalcError) throw loanCalcError;
+      // 作成された見積もりID
+      const estimateId = estimateData[0].id;
+      console.log("Created estimate with ID:", estimateId);
 
-    const { error: processingFeesError } = await supabase.from("processing_fees").insert([processingFees]);
+      // ステップ2: 下取り車両情報の登録
+      const { error: tradeInError } = await supabase.from("trade_in_vehicles").insert([
+        {
+          ...tradeIn,
+          estimate_id: estimateId, // 見積もりIDに紐づける（テーブルにこのカラムが存在する場合）
+        },
+      ]);
 
-    if (processingFeesError) throw processingFeesError;
+      if (tradeInError) {
+        console.error("Trade-in vehicle insert error:", tradeInError);
+        throw tradeInError;
+      }
 
-    const { error: legalFeesError } = await supabase.from("legal_fees").insert([legalFees]);
+      // ステップ3: ローン計算情報の登録
+      const processedLoanCalculation = {
+        ...loanCalculation,
+        vehicle_id: vehicleId,
+        estimate_id: estimateId, // 見積もりIDに紐づける（テーブルにこのカラムが存在する場合）
+        bonus_months: Array.isArray(loanCalculation.bonus_months) ? loanCalculation.bonus_months : [],
+      };
 
-    if (legalFeesError) throw legalFeesError;
+      const { error: loanCalcError } = await supabase.from("loan_calculations").insert([processedLoanCalculation]);
 
-    const { error: taxInsuranceFeesError } = await supabase.from("tax_insurance_fees").insert([taxInsuranceFees]);
+      if (loanCalcError) {
+        console.error("Loan calculation insert error:", loanCalcError);
+        throw loanCalcError;
+      }
 
-    if (taxInsuranceFeesError) throw taxInsuranceFeesError;
-
-    if (accessories.length > 0) {
-      const { error: accessoriesError } = await supabase.from("accessories").insert(accessories);
-
-      if (accessoriesError) throw accessoriesError;
+      console.log("Estimate created successfully");
+    } catch (error) {
+      console.error("Failed to create estimate:", error);
+      throw error;
     }
   },
 };

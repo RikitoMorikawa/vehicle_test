@@ -1,21 +1,28 @@
+// src/containers/estimate/page.tsx
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import EstimateComponent from "../../components/estimate/page";
+import type { EstimateError, EstimateFormData } from "../../validations/estimate/page";
+import { getValidationErrors, validateEstimate } from "../../validations/custome_estimate";
 import { estimateService } from "../../services/estimate/page";
-import type { EstimateError, EstimateFormData } from "../../types/estimate/page";
-import { Accessory } from "../../types/db/accessories";
-import { validateEstimate } from "../../validations/estimate/page";
 
 const EstimateContainer: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams<{ id: string }>(); // URLから車両IDを取得
   const navigate = useNavigate();
-  const { vehicle, isLoading, error: apiError } = estimateService.useVehicle(id!);
+
+  // 車両情報の取得
+  const { vehicle, isLoading: vehicleLoading, error: vehicleError } = estimateService.useVehicle(id || "");
+
+  // 見積もり作成ミューテーション
   const createEstimate = estimateService.useCreateEstimate();
 
-  // ローン申込画面と同様のエラー/成功状態管理
-  const [error, setError] = useState<EstimateError | null>(null);
+  // 状態管理
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [errors, setErrors] = useState<EstimateError | null>(null);
 
+  // フォームの初期状態
   const [formData, setFormData] = useState<EstimateFormData>({
     tradeIn: {
       vehicle_name: "",
@@ -26,161 +33,150 @@ const EstimateContainer: React.FC = () => {
       chassis_number: "",
       exterior_color: "",
     },
-    salesPrice: {
-      base_price: vehicle?.price || 0,
-      discount: 0,
-      inspection_fee: 0,
-      accessories_fee: 0,
-      vehicle_price: vehicle?.price || 0,
-      tax_insurance: 0,
-      legal_fee: 0,
-      processing_fee: 0,
-      misc_fee: 0,
-      consumption_tax: 0,
-      total_price: 0,
-      trade_in_price: 0,
-      trade_in_debt: 0,
-      payment_total: 0,
-    },
     loanCalculation: {
       down_payment: 0,
       principal: 0,
       interest_fee: 0,
       total_payment: 0,
-      payment_count: 36,
-      payment_period: 36,
+      payment_count: 24,
+      payment_period: 2, // 24ヶ月 = 2年
       first_payment: 0,
       monthly_payment: 0,
-      bonus_months: [],
       bonus_amount: 0,
+      bonus_months: [],
     },
-    processingFees: {
-      inspection_registration_fee: 0,
-      parking_certificate_fee: 0,
-      trade_in_processing_fee: 0,
-      trade_in_assessment_fee: 0,
-      recycling_management_fee: 0,
-      delivery_fee: 0,
-      other_fees: 0,
-    },
-    legalFees: {
-      inspection_registration_stamp: 0,
-      parking_certificate_stamp: 0,
-      trade_in_stamp: 0,
-      recycling_deposit: 0,
-      other_nontaxable: 0,
-    },
-    taxInsuranceFees: {
-      automobile_tax: 0,
-      environmental_performance_tax: 0,
-      weight_tax: 0,
-      liability_insurance_fee: 0,
-      voluntary_insurance_fee: 0,
-    },
-    accessories: [],
   });
 
-  // src/containers/estimate/page.tsx
-  const handleInputChange = (
-    section: "tradeIn" | "salesPrice" | "loanCalculation" | "processingFees" | "legalFees" | "taxInsuranceFees",
-    name: string,
-    value: number | string
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [name]: value,
-      },
-    }));
+  // 入力値変更ハンドラ
+  const handleInputChange = (section: "tradeIn" | "loanCalculation", name: string, value: number | string | number[]) => {
+    // ローン計算の特別処理
+    if (section === "loanCalculation") {
+      if (name === "payment_count" && typeof value === "number") {
+        // 支払回数が変更されたら、支払期間も自動計算して更新（月→年の変換）
+        const paymentPeriodValue = Math.floor(value / 12);
 
-    // セクションとフィールド名から単一のエラーキーを取得
-    const errorKey = name; // 単純にフィールド名をエラーキーとして使用
+        setFormData((prev) => ({
+          ...prev,
+          loanCalculation: {
+            ...prev.loanCalculation,
+            [name]: value,
+            payment_period: paymentPeriodValue,
+          },
+        }));
+        return;
+      }
 
-    // エラーをクリア
-    if (error && error[errorKey]) {
-      setError((prev) => {
-        if (!prev) return null;
-        const newError = { ...prev };
-        delete newError[errorKey];
-        return Object.keys(newError).length > 0 ? newError : null;
-      });
+      // ボーナス月の配列処理
+      if (name === "bonus_months" && Array.isArray(value)) {
+        setFormData((prev) => ({
+          ...prev,
+          loanCalculation: {
+            ...prev.loanCalculation,
+            bonus_months: value,
+          },
+        }));
+        return;
+      }
+    }
+
+    // 数値フィールドの一般的な処理
+    if ((section === "tradeIn" && name === "mileage") || (section === "loanCalculation" && typeof value !== "object")) {
+      // 値の変換（文字列→数値）
+      const numValue = value === "" ? 0 : typeof value === "string" ? parseInt(value.replace(/[^0-9]/g, "") || "0", 10) : value;
+
+      setFormData((prev) => ({
+        ...prev,
+        [section]: {
+          ...prev[section],
+          [name]: numValue,
+        },
+      }));
+    } else {
+      // その他のテキストフィールド
+      setFormData((prev) => ({
+        ...prev,
+        [section]: {
+          ...prev[section],
+          [name]: value,
+        },
+      }));
     }
   };
 
+  // バリデーション実行
+  const validateAllFields = (): boolean => {
+    const validation = validateEstimate(formData);
+
+    if (!validation.success) {
+      const structuredErrors = getValidationErrors(validation);
+      setErrors(structuredErrors);
+      return false;
+    }
+
+    setErrors(null);
+    return true;
+  };
+
+  // フォーム送信ハンドラ
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!id) return;
 
     // エラーと成功メッセージをリセット
-    setError(null);
     setSuccess(null);
+    setApiError(null);
 
-    // バリデーションを実行
-    const validationResult = validateEstimate(formData);
+    // バリデーション実行
+    const isValid = validateAllFields();
+    if (!isValid) return;
 
-    if (!validationResult.success) {
-      // バリデーションエラーがある場合はエラーメッセージをセット
-      setError(validationResult.errors);
-      return;
-    }
+    // ローディング開始
+    setIsLoading(true);
 
     try {
-      // バリデーションが成功した場合はフォームデータを送信
+      // 見積もり作成APIを呼び出し
       await createEstimate.mutateAsync({
         vehicleId: id,
         ...formData,
       });
+
+      // 成功メッセージを表示
       setSuccess("見積書が正常に作成されました");
+
+      // 成功後に一覧画面へリダイレクト
       setTimeout(() => {
         navigate("/vehicles");
       }, 2000);
     } catch (err) {
       console.error("Failed to create estimate:", err);
-      setError({
-        general: "見積書の作成に失敗しました",
-      });
+      setApiError("見積書の作成に失敗しました");
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // キャンセルハンドラ
   const handleCancel = () => {
     navigate(-1);
   };
 
-  // アクセサリー専用のハンドラ関数
-  const handleAccessoriesChange = (action: "add" | "remove", value: Accessory | number) => {
-    if (action === "add" && typeof value !== "number") {
-      // アクセサリー追加の処理
-      // const newAccessories = [...formData.accessories, value];
-      // フォームデータの更新 (具体的な更新方法はアプリケーションによって異なります)
-      // 例: setFormData({ ...formData, accessories: newAccessories });
+  // ローディング状態の統合
+  const isPageLoading = isLoading || vehicleLoading;
 
-      // または他のロジックを実行
-      console.log("Adding accessory:", value);
-    } else if (action === "remove" && typeof value === "number") {
-      // アクセサリー削除の処理
-      const updatedAccessories = [...formData.accessories];
-      updatedAccessories.splice(value, 1);
-      // フォームデータの更新
-      // 例: setFormData({ ...formData, accessories: updatedAccessories });
-
-      // または他のロジックを実行
-      console.log("Removing accessory at index:", value);
-    }
-  };
+  // エラーメッセージの統合
+  const pageError = apiError || (vehicleError ? "車両情報の取得に失敗しました" : null);
 
   return (
     <EstimateComponent
+      loading={isPageLoading}
+      error={pageError}
       vehicle={vehicle}
-      loading={isLoading}
-      error={apiError ? "見積書の作成に失敗しました" : null}
       formData={formData}
-      errors={error}
+      errors={errors}
       success={success}
       onInputChange={handleInputChange}
       onSubmit={handleSubmit}
       onCancel={handleCancel}
-      onAccessoryChange={handleAccessoriesChange} // アクセサリー変更のハンドラを渡す
     />
   );
 };
