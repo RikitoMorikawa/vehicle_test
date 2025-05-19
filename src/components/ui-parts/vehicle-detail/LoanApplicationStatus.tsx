@@ -1,7 +1,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "../../lib/supabase";
-import { LoanApplicationStatus } from "../../types/enum";
+import { supabase } from "../../../lib/supabase";
+import { LoanApplicationStatus } from "../../../types/enum";
 
 interface LoanApplicationStatusViewProps {
   userId: string;

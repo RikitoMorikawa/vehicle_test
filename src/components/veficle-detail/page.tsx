@@ -3,11 +3,11 @@ import { ArrowLeft, Heart } from "lucide-react";
 import Header from "../Header";
 import Sidebar from "../Sidebar";
 import Footer from "../Footer";
-import View360Viewer from "../ui-parts/View360Viewer";
-import VehicleInfo from "../ui-parts/VehicleInfo";
+import View360Viewer from "../ui-parts/vehicle-detail/View360Viewer";
+import VehicleInfo from "../ui-parts/vehicle-detail/VehicleInfo";
 import { Vehicle } from "../../types/db/vehicle";
 import { useAuth } from "../../hooks/useAuth";
-import LoanApplicationStatusView from "../ui-parts/LoanApplicationStatus";
+import LoanApplicationStatusView from "../ui-parts/vehicle-detail/LoanApplicationStatus";
 
 interface VehicleDetailComponentProps {
   vehicle: Vehicle | null | undefined;

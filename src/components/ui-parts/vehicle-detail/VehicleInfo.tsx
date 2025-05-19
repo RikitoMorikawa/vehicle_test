@@ -1,6 +1,7 @@
 // src / components / ui - parts / VehicleInfo.tsx;
 import React from "react";
-import { Vehicle } from "../../types/db/vehicle";
+import { Vehicle } from "../../../types/db/vehicle";
+import { useNavigate } from "react-router-dom";
 
 interface VehicleInfoProps {
   vehicle: Vehicle;
@@ -12,17 +13,14 @@ interface VehicleInfoProps {
   onApplyLoan: () => void;
 }
 
-const VehicleInfo: React.FC<VehicleInfoProps> = ({
-  vehicle,
-  mainImageUrl,
-  otherImagesUrls,
-  selectedImage,
-  setSelectedImage,
-  onCreateEstimate,
-  onApplyLoan,
-}) => {
+const VehicleInfo: React.FC<VehicleInfoProps> = ({ vehicle, mainImageUrl, otherImagesUrls, selectedImage, setSelectedImage, onApplyLoan }) => {
+  const navigate = useNavigate();
   // 表示する画像（選択されていなければメイン画像）
   const displayImageUrl = selectedImage || mainImageUrl;
+
+  const handleEstimateClick = () => {
+    navigate(`/estimate/${vehicle.id}`);
+  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
@@ -105,7 +103,7 @@ const VehicleInfo: React.FC<VehicleInfoProps> = ({
               <div></div>
               <div className="flex space-x-4">
                 <button
-                  onClick={onCreateEstimate}
+                  onClick={handleEstimateClick}
                   className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                 >
                   見積書作成

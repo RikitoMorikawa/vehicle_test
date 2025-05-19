@@ -8,7 +8,7 @@ import Button from "../ui/Button";
 import Checkbox from "../ui/Checkbox";
 import type { VehicleFormData, VehicleRegisterError } from "../../types/vehicle-register/page";
 import { Upload, RotateCw, Info, Image } from "lucide-react";
-import SortableView360Images from "../ui-parts/SortableView360Images";
+import SortableView360Images from "../ui-parts/vehicle-detail/SortableView360Images";
 import { CarMaker } from "../../types/db/car_makers";
 import Select from "../ui/Select";
 

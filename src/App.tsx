@@ -14,6 +14,7 @@ import VehicleDetailPage from "./pages/vehicle-detail/page";
 import VehicleRegisterPage from "./pages/vehicle-register/page";
 import VehicleEditPage from "./pages/vehicle-edit/page";
 import LoanApplicationPage from "./pages/loan-application/page";
+import EstimatePage from "./pages/estimate/page";
 import { JSX } from "react/jsx-runtime";
 
 // ProtectedRouteをラップするヘルパー関数
@@ -50,6 +51,10 @@ const routes = [
   {
     path: "/vehicle/:id",
     ...createProtectedRoute(<VehicleDetailPage />, ["user", "admin"], true),
+  },
+  {
+    path: "/estimate/:id",
+    ...createProtectedRoute(<EstimatePage />, ["user", "admin"], true),
   },
   {
     path: "/admin",
