@@ -77,3 +77,26 @@ COMMENT ON COLUMN trade_in_vehicles.estimate_id IS '関連する見積もりID (
 COMMENT ON COLUMN loan_calculations.estimate_id IS '関連する見積もりID (estimate_vehicles.id)';
 
 
+
+-- 誰でも INSERT を許可するポリシー
+create policy "Allow insert for anyone"
+on trade_in_vehicles
+for insert
+to public
+with check (true);
+
+
+alter table trade_in_vehicles
+alter column first_registration_date drop not null;
+
+alter table trade_in_vehicles
+alter column inspection_expiry_date drop not null;
+
+alter table trade_in_vehicles
+alter column chassis_number drop not null;
+
+alter table loan_calculations
+add column vehicle_id uuid; -- 型は適宜修正してください
+
+ALTER TABLE trade_in_vehicles
+ADD COLUMN trade_in_available boolean NOT NULL DEFAULT false;

@@ -16,7 +16,7 @@ export interface EstimateComponentProps {
   formData: EstimateFormData; // 下取り情報とローン情報はformDataに含まれる
   errors: EstimateError | null;
   success: string | null;
-  onInputChange: (section: "tradeIn" | "loanCalculation", name: string, value: number | string | number[]) => void;
+  onInputChange: (section: "tradeIn" | "loanCalculation", name: string, value: string | number | boolean | number[]) => void;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
 }
@@ -53,28 +53,57 @@ const VehicleInfo: React.FC<{
 };
 
 // 下取り車両情報コンポーネント - 空の初期値で表示
+// TradeInInfoコンポーネント内に追加・修正
+
 const TradeInInfo: React.FC<{
   tradeIn: EstimateFormData["tradeIn"];
-  onInputChange: (section: "tradeIn", field: string, value: string | number) => void;
+  onInputChange: (section: "tradeIn", field: string, value: string | number | boolean) => void;
   errors?: EstimateError | null;
 }> = ({ tradeIn, onInputChange, errors }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
+    let finalValue: string | number | boolean = value;
+    if (type === "number") finalValue = Number(value);
+    if (type === "radio" && (value === "true" || value === "false")) finalValue = value === "true";
 
-    // 数値タイプは数値に変換、それ以外はそのまま
-    const finalValue = type === "number" ? Number(value) : value;
     onInputChange("tradeIn", name, finalValue);
   };
 
   const getFieldError = (fieldName: string): string | undefined => {
     if (!errors || !errors.tradeIn) return undefined;
-
     return typeof errors.tradeIn === "string" ? errors.tradeIn : errors.tradeIn[fieldName];
   };
 
   return (
     <div className="border-b border-gray-200 pb-6">
       <h2 className="text-lg font-medium text-gray-900 mb-4">下取り車両情報</h2>
+
+      {/* 下取りありなしラジオボタン */}
+      <div className="mb-4">
+        <label className="mr-4 font-medium">下取りの有無</label>
+        <label className="mr-4">
+          <input
+            type="radio"
+            name="trade_in_available"
+            value="true"
+            checked={tradeIn.trade_in_available === true}
+            onChange={handleChange}
+          />
+          <span className="ml-1">あり</span>
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="trade_in_available"
+            value="false"
+            checked={tradeIn.trade_in_available === false}
+            onChange={handleChange}
+          />
+          <span className="ml-1">なし</span>
+        </label>
+      </div>
+
+      {/* 下取りありの場合のみ入力必須にする */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
           label="車名"
@@ -83,6 +112,7 @@ const TradeInInfo: React.FC<{
           onChange={handleChange}
           error={getFieldError("vehicle_name")}
           placeholder="例: トヨタ カローラ"
+          required={tradeIn.trade_in_available === true}
         />
         <Input
           label="登録番号"
@@ -91,6 +121,7 @@ const TradeInInfo: React.FC<{
           onChange={handleChange}
           error={getFieldError("registration_number")}
           placeholder="例: 1234-5678"
+          required={tradeIn.trade_in_available === true}
         />
         <Input
           label="走行距離 (km)"
@@ -101,22 +132,25 @@ const TradeInInfo: React.FC<{
           onChange={handleChange}
           error={getFieldError("mileage")}
           placeholder="0以上の数値"
+          required={tradeIn.trade_in_available === true}
         />
         <Input
           label="初度登録年月"
           name="first_registration_date"
           type="date"
-          value={tradeIn.first_registration_date}
+          value={tradeIn.first_registration_date || ""}
           onChange={handleChange}
           error={getFieldError("first_registration_date")}
+          required={tradeIn.trade_in_available === true}
         />
         <Input
           label="車検満了日"
           name="inspection_expiry_date"
           type="date"
-          value={tradeIn.inspection_expiry_date}
+          value={tradeIn.inspection_expiry_date || ""}
           onChange={handleChange}
           error={getFieldError("inspection_expiry_date")}
+          required={tradeIn.trade_in_available === true}
         />
         <Input
           label="車台番号"
@@ -125,6 +159,7 @@ const TradeInInfo: React.FC<{
           onChange={handleChange}
           error={getFieldError("chassis_number")}
           placeholder="例: ZVW50-1234567"
+          required={tradeIn.trade_in_available === true}
         />
         <Input
           label="外装色"
@@ -133,13 +168,17 @@ const TradeInInfo: React.FC<{
           onChange={handleChange}
           error={getFieldError("exterior_color")}
           placeholder="例: ホワイトパールクリスタルシャイン"
+          required={tradeIn.trade_in_available === true}
         />
       </div>
 
-      {errors?.tradeIn && typeof errors.tradeIn === "string" && <div className="mt-4 text-sm text-red-600">{errors.tradeIn}</div>}
+      {errors?.tradeIn && typeof errors.tradeIn === "string" && (
+        <div className="mt-4 text-sm text-red-600">{errors.tradeIn}</div>
+      )}
     </div>
   );
 };
+
 
 // ローン計算情報コンポーネント - 空の初期値で表示
 const LoanCalculationComponent: React.FC<{

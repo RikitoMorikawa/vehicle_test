@@ -75,11 +75,17 @@ export const estimateHandler = {
       const estimateId = estimateData[0].id;
       console.log("Created estimate with ID:", estimateId);
 
-      // ステップ2: 下取り車両情報の登録
+      const sanitizedTradeIn = {
+        ...tradeIn,
+        first_registration_date: tradeIn.first_registration_date || null,
+        inspection_expiry_date: tradeIn.inspection_expiry_date || null,
+        chassis_number: tradeIn.chassis_number || null,
+      };
+
       const { error: tradeInError } = await supabase.from("trade_in_vehicles").insert([
         {
-          ...tradeIn,
-          estimate_id: estimateId, // 見積もりIDに紐づける（テーブルにこのカラムが存在する場合）
+          ...sanitizedTradeIn,
+          estimate_id: estimateId,
         },
       ]);
 

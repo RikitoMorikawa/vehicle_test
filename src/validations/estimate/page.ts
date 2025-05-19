@@ -6,17 +6,22 @@ today.setHours(0, 0, 0, 0); // 時間部分をリセット
 
 // 下取り車両のバリデーションスキーマ
 export const tradeInSchema = z.object({
+  trade_in_available: z.boolean(),
   vehicle_name: z.string().max(100, "車両名は100文字以内で入力してください"),
   // 登録番号の例: 1234-5678 (空文字も許容)
   registration_number: z.string().regex(/^[あ-んア-ン一-龥0-9-]{0,10}$/, "登録番号は正しいナンバープレート形式で入力してください"),
   mileage: z.number().nonnegative("走行距離は0以上で入力してください").int("走行距離は整数で入力してください"),
-  // 初度登録年月: 空または過去の日付を許可
+  // 初度登録年月: 過去の日付を許可
   first_registration_date: z
     .string()
-    .refine((val) => val === "" || new Date(val) <= today, "初度登録年月は現在より過去の日付を入力してください")
-    .optional()
-    .or(z.literal("")),
-  inspection_expiry_date: z.string(),
+    .transform((val) => (val === "" ? null : val))
+    .nullable()
+    .refine((val) => val === null || new Date(val) <= today, "初度登録年月は現在より過去の日付を入力してください"),
+  inspection_expiry_date: z
+    .string()
+    .transform((val) => (val === "" ? null : val))
+    .nullable()
+    .refine((val) => val === null || new Date(val) > today, "車検満了日は現在より未来の日付を入力してください"),
   chassis_number: z
     .string()
     .length(17, "車台番号は英数字17文字で入力してください")

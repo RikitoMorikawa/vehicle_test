@@ -25,6 +25,7 @@ const EstimateContainer: React.FC = () => {
   // フォームの初期状態
   const [formData, setFormData] = useState<EstimateFormData>({
     tradeIn: {
+      trade_in_available: true, // 下取り車両の有無
       vehicle_name: "",
       registration_number: "",
       mileage: 0,
@@ -48,7 +49,7 @@ const EstimateContainer: React.FC = () => {
   });
 
   // 入力値変更ハンドラ
-  const handleInputChange = (section: "tradeIn" | "loanCalculation", name: string, value: number | string | number[]) => {
+  const handleInputChange = (section: "tradeIn" | "loanCalculation", name: string, value: string | number | boolean | number[]) => {
     // ローン計算の特別処理
     if (section === "loanCalculation") {
       if (name === "payment_count" && typeof value === "number") {
