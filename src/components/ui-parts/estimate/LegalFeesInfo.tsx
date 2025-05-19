@@ -1,6 +1,7 @@
 import React from "react";
 import Input from "../../ui/Input";
-import { LegalFees, EstimateError } from "../../../types/estimate/page";
+import { EstimateError } from "../../../types/estimate/page";
+import { LegalFees } from "../../../types/db/legal_fees";
 
 interface LegalFeesInfoProps {
   legalFees: LegalFees;

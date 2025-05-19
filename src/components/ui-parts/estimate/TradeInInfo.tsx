@@ -1,6 +1,7 @@
 import React from "react";
 import Input from "../../ui/Input";
-import { TradeIn, EstimateError } from "../../../types/estimate/page";
+import { EstimateError } from "../../../types/estimate/page";
+import { TradeIn } from "../../../types/db/trade_in_vehicles";
 
 interface TradeInInfoProps {
   tradeIn: TradeIn;

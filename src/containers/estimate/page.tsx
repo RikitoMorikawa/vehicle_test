@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import EstimateComponent from "../../components/estimate/page";
 import { estimateService } from "../../services/estimate/page";
-import type { Accessory, EstimateError, EstimateFormData } from "../../types/estimate/page";
+import type { EstimateError, EstimateFormData } from "../../types/estimate/page";
+import { Accessory } from "../../types/db/accessories";
 
 const EstimateContainer: React.FC = () => {
   const { id } = useParams<{ id: string }>();

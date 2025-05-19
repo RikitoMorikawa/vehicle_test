@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import Input from "../../ui/Input";
 import Button from "../../ui/Button";
-import { Accessory, EstimateError } from "../../../types/estimate/page";
+import { EstimateError } from "../../../types/estimate/page";
 import { Plus, Trash2 } from "lucide-react";
+import { Accessory } from "../../../types/db/accessories";
 
 // AccessoriesInfo専用の型定義
 interface AccessoriesInfoProps {

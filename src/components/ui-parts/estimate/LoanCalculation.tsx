@@ -1,7 +1,7 @@
 import React from "react";
 import Input from "../../ui/Input";
-import type { LoanCalculation } from "../../../types/estimate/page";
 import type { EstimateError } from "../../../types/estimate/page";
+import { LoanCalculation } from "../../../types/db/loan_calculations";
 
 interface LoanCalculationProps {
   loanCalculation: LoanCalculation;

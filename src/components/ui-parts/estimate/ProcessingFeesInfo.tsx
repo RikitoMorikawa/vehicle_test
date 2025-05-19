@@ -1,6 +1,7 @@
 import React from "react";
 import Input from "../../ui/Input";
-import { ProcessingFees, EstimateError } from "../../../types/estimate/page";
+import { EstimateError } from "../../../types/estimate/page";
+import { ProcessingFees } from "../../../types/db/processing_fees";
 
 interface ProcessingFeesInfoProps {
   processingFees: ProcessingFees;

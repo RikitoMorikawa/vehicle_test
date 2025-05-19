@@ -1,6 +1,7 @@
 import React from "react";
 import Input from "../../ui/Input";
-import { TaxInsuranceFees, EstimateError } from "../../../types/estimate/page";
+import { EstimateError } from "../../../types/estimate/page";
+import { TaxInsuranceFees } from "../../../types/db/tax_insurance_fees";
 
 interface TaxInsuranceInfoProps {
   taxInsuranceFees: TaxInsuranceFees;

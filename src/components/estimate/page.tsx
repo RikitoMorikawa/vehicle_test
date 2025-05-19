@@ -3,7 +3,7 @@ import Header from "../Header";
 import Sidebar from "../Sidebar";
 import Footer from "../Footer";
 import Button from "../ui/Button";
-import type { EstimateError, EstimateFormData, Accessory } from "../../types/estimate/page";
+import type { EstimateError, EstimateFormData } from "../../types/estimate/page";
 // 子コンポーネントのインポート
 import VehicleInfo from "../ui-parts/estimate/VehicleInfo";
 import TradeInInfo from "../ui-parts/estimate/TradeInInfo";
@@ -15,6 +15,7 @@ import TaxInsuranceInfo from "../ui-parts/estimate/TaxInsuranceInfo";
 import LoanCalculation from "../ui-parts/estimate/LoanCalculation";
 import PaymentSummary from "../ui-parts/estimate/PaymentSummary";
 import { Vehicle } from "../../types/db/vehicle";
+import { Accessory } from "../../types/db/accessories";
 
 // onInputChange 関数の型を拡張して "accessories" セクションも含める
 export interface EstimateComponentProps {

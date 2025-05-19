@@ -1,6 +1,7 @@
 import React from "react";
 import Input from "../../ui/Input";
-import { SalesPrice, EstimateError } from "../../../types/estimate/page";
+import { EstimateError } from "../../../types/estimate/page";
+import { SalesPrice } from "../../../types/db/sales_prices";
 
 interface SalesPriceInfoProps {
   salesPrice: SalesPrice;
