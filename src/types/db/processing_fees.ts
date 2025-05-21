@@ -1,3 +1,4 @@
+// (D) 手続代行費用内訳テーブル
 export interface ProcessingFees {
   inspection_registration_fee: number;
   parking_certificate_fee: number;

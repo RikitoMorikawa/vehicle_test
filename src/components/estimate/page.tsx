@@ -1,5 +1,5 @@
 // src/components/estimate/page.tsx
-import React from "react";
+import React, { useState } from "react";
 import Header from "../Header";
 import Sidebar from "../Sidebar";
 import Footer from "../Footer";
@@ -8,20 +8,28 @@ import Input from "../ui/Input";
 import Select from "../ui/Select";
 import type { EstimateError, EstimateFormData } from "../../validations/estimate/page";
 import { Vehicle } from "../../server/estimate/handler_000";
+import { Accessory } from "../../types/db/accessories";
+import { Plus, Trash2 } from "lucide-react";
 
+// インターフェース更新
 export interface EstimateComponentProps {
   loading: boolean;
   error: string | null;
-  vehicle: Vehicle | undefined; // 車両情報
-  formData: EstimateFormData; // 下取り情報とローン情報はformDataに含まれる
+  vehicle: Vehicle | undefined;
+  formData: EstimateFormData;
   errors: EstimateError | null;
   success: string | null;
-  onInputChange: (section: "tradeIn" | "loanCalculation", name: string, value: string | number | boolean | number[]) => void;
+  onInputChange: (
+    section: "tradeIn" | "loanCalculation" | "taxInsuranceFees" | "legalFees" | "processingFees",
+    name: string,
+    value: string | number | boolean | number[]
+  ) => void;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
+  onAccessoryChange: (action: "add" | "remove", value: Accessory | number) => void;
 }
 
-// 車両情報コンポーネント - vehiclesテーブルから取得した情報のみを表示
+// 車両情報コンポーネント
 const VehicleInfo: React.FC<{
   vehicle: Vehicle;
 }> = ({ vehicle }) => {
@@ -52,9 +60,7 @@ const VehicleInfo: React.FC<{
   );
 };
 
-// 下取り車両情報コンポーネント - 空の初期値で表示
-// TradeInInfoコンポーネント内に追加・修正
-
+// 下取り車両情報コンポーネント
 const TradeInInfo: React.FC<{
   tradeIn: EstimateFormData["tradeIn"];
   onInputChange: (section: "tradeIn", field: string, value: string | number | boolean) => void;
@@ -82,23 +88,11 @@ const TradeInInfo: React.FC<{
       <div className="mb-4">
         <label className="mr-4 font-medium">下取りの有無</label>
         <label className="mr-4">
-          <input
-            type="radio"
-            name="trade_in_available"
-            value="true"
-            checked={tradeIn.trade_in_available === true}
-            onChange={handleChange}
-          />
+          <input type="radio" name="trade_in_available" value="true" checked={tradeIn.trade_in_available === true} onChange={handleChange} />
           <span className="ml-1">あり</span>
         </label>
         <label>
-          <input
-            type="radio"
-            name="trade_in_available"
-            value="false"
-            checked={tradeIn.trade_in_available === false}
-            onChange={handleChange}
-          />
+          <input type="radio" name="trade_in_available" value="false" checked={tradeIn.trade_in_available === false} onChange={handleChange} />
           <span className="ml-1">なし</span>
         </label>
       </div>
@@ -113,6 +107,7 @@ const TradeInInfo: React.FC<{
           error={getFieldError("vehicle_name")}
           placeholder="例: トヨタ カローラ"
           required={tradeIn.trade_in_available === true}
+          disabled={!tradeIn.trade_in_available}
         />
         <Input
           label="登録番号"
@@ -122,6 +117,7 @@ const TradeInInfo: React.FC<{
           error={getFieldError("registration_number")}
           placeholder="例: 1234-5678"
           required={tradeIn.trade_in_available === true}
+          disabled={!tradeIn.trade_in_available}
         />
         <Input
           label="走行距離 (km)"
@@ -133,6 +129,7 @@ const TradeInInfo: React.FC<{
           error={getFieldError("mileage")}
           placeholder="0以上の数値"
           required={tradeIn.trade_in_available === true}
+          disabled={!tradeIn.trade_in_available}
         />
         <Input
           label="初度登録年月"
@@ -142,6 +139,7 @@ const TradeInInfo: React.FC<{
           onChange={handleChange}
           error={getFieldError("first_registration_date")}
           required={tradeIn.trade_in_available === true}
+          disabled={!tradeIn.trade_in_available}
         />
         <Input
           label="車検満了日"
@@ -151,6 +149,7 @@ const TradeInInfo: React.FC<{
           onChange={handleChange}
           error={getFieldError("inspection_expiry_date")}
           required={tradeIn.trade_in_available === true}
+          disabled={!tradeIn.trade_in_available}
         />
         <Input
           label="車台番号"
@@ -160,6 +159,7 @@ const TradeInInfo: React.FC<{
           error={getFieldError("chassis_number")}
           placeholder="例: ZVW50-1234567"
           required={tradeIn.trade_in_available === true}
+          disabled={!tradeIn.trade_in_available}
         />
         <Input
           label="外装色"
@@ -169,16 +169,14 @@ const TradeInInfo: React.FC<{
           error={getFieldError("exterior_color")}
           placeholder="例: ホワイトパールクリスタルシャイン"
           required={tradeIn.trade_in_available === true}
+          disabled={!tradeIn.trade_in_available}
         />
       </div>
 
-      {errors?.tradeIn && typeof errors.tradeIn === "string" && (
-        <div className="mt-4 text-sm text-red-600">{errors.tradeIn}</div>
-      )}
+      {errors?.tradeIn && typeof errors.tradeIn === "string" && <div className="mt-4 text-sm text-red-600">{errors.tradeIn}</div>}
     </div>
   );
 };
-
 
 // ローン計算情報コンポーネント - 空の初期値で表示
 const LoanCalculationComponent: React.FC<{
@@ -363,8 +361,426 @@ const LoanCalculationComponent: React.FC<{
   );
 };
 
+// AccessoriesInfo コンポーネントを追加
+// AccessoriesInfo コンポーネントの修正版
+import { accessorySchema } from "../../validations/estimate/page";
+
+const AccessoriesInfo: React.FC<{
+  accessories: Accessory[];
+  onInputChange: (action: "add" | "remove", value: Accessory | number) => void;
+  errors?: EstimateError | null;
+}> = ({ accessories, onInputChange, errors }) => {
+  // 初期値は空文字列に設定
+  const [newAccessory, setNewAccessory] = useState<{ name: string; price: string | number }>({
+    name: "",
+    price: "", // 初期値を空文字列に変更
+  });
+  const [localErrors, setLocalErrors] = useState<{ name?: string; price?: string }>({});
+
+  // 追加ボタン押下時にaccessorySchemaを使用してバリデーション
+  const handleAddAccessory = () => {
+    // 価格を数値に変換
+    const accessoryData = {
+      name: newAccessory.name,
+      price: typeof newAccessory.price === "string" ? parseInt(newAccessory.price) || 0 : newAccessory.price,
+    };
+
+    // accessorySchemaを使ってバリデーション
+    const validationResult = accessorySchema.safeParse(accessoryData);
+
+    if (!validationResult.success) {
+      // zodのエラー形式を変換
+      const formattedErrors: { name?: string; price?: string } = {};
+
+      validationResult.error.errors.forEach((err) => {
+        const path = err.path[0] as string;
+        formattedErrors[path as keyof typeof formattedErrors] = err.message;
+      });
+
+      // エラーを表示して処理を中断
+      setLocalErrors(formattedErrors);
+      return;
+    }
+
+    // バリデーション通過後に付属品を追加
+    onInputChange("add", accessoryData as Accessory);
+
+    // 入力フィールドとエラーをリセット
+    setNewAccessory({ name: "", price: "" });
+    setLocalErrors({});
+  };
+
+  const handleRemoveAccessory = (index: number) => {
+    onInputChange("remove", index);
+  };
+
+  // 入力値変更時のハンドラ - バリデーションは行わない
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewAccessory({ ...newAccessory, name: e.target.value });
+    // バリデーションエラーがあれば消去
+    if (localErrors.name) {
+      setLocalErrors({ ...localErrors, name: undefined });
+    }
+  };
+
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // 直接入力値を設定（変換しない）
+    setNewAccessory({ ...newAccessory, price: e.target.value });
+
+    // バリデーションエラーがあれば消去
+    if (localErrors.price) {
+      setLocalErrors({ ...localErrors, price: undefined });
+    }
+  };
+
+  // サーバーサイドエラーの取得関数
+  const getServerError = (fieldName: string): string | undefined => {
+    if (!errors || !errors.accessories) return undefined;
+
+    if (typeof errors.accessories === "string") {
+      return errors.accessories;
+    } else if (typeof errors.accessories === "object") {
+      return errors.accessories[fieldName];
+    }
+
+    return undefined;
+  };
+
+  return (
+    <div className="border-b border-gray-200 pb-6">
+      <h2 className="text-lg font-medium text-gray-900 mb-4">付属品・特別仕様</h2>
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Input
+            label="品名"
+            value={newAccessory.name}
+            onChange={handleNameChange}
+            error={localErrors.name || getServerError("name")}
+            placeholder="例: ナビゲーションシステム"
+          />
+          <Input
+            label="価格"
+            type="text" // numberからtextに変更
+            inputMode="numeric" // 数字キーボードを表示
+            value={newAccessory.price}
+            onChange={handlePriceChange}
+            error={localErrors.price || getServerError("price")}
+            placeholder="0以上の数値"
+          />
+        </div>
+        <div className="flex justify-end">
+          <Button type="button" onClick={handleAddAccessory} className="flex items-center">
+            <Plus className="w-4 h-4 mr-2" />
+            追加
+          </Button>
+        </div>
+
+        {accessories.length > 0 && (
+          <div className="mt-4">
+            <h3 className="text-sm font-medium text-gray-700 mb-2">登録済み付属品</h3>
+            <div className="space-y-2">
+              {accessories.map((accessory, index) => (
+                <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-md">
+                  <div>
+                    <span className="font-medium">{accessory.name}</span>
+                    <span className="ml-4 text-gray-600">¥{Number(accessory.price).toLocaleString()}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveAccessory(index)}
+                    className="text-red-600 hover:text-red-700"
+                    aria-label={`${accessory.name}を削除`}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* サーバーサイドバリデーションエラーの表示 */}
+        {errors?.accessories && typeof errors.accessories === "string" && <div className="mt-4 text-sm text-red-600">{errors.accessories}</div>}
+
+        {/* 既に追加された付属品のサーバーサイドエラーがあれば表示 */}
+        {errors?.accessories &&
+          typeof errors.accessories === "object" &&
+          Object.entries(errors.accessories)
+            .filter(([key]) => key.includes("."))
+            .map(([key, value]) => (
+              <div key={key} className="mt-2 text-sm text-red-600">
+                付属品 {parseInt(key.split(".")[0]) + 1}: {value}
+              </div>
+            ))}
+      </div>
+    </div>
+  );
+};
+
+// TaxInsuranceInfo コンポーネント追加
+const TaxInsuranceInfo: React.FC<{
+  taxInsuranceFees: EstimateFormData["taxInsuranceFees"];
+  onInputChange: (section: "taxInsuranceFees", field: string, value: string | number) => void;
+  errors?: EstimateError | null;
+}> = ({ taxInsuranceFees, onInputChange, errors }) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    const numValue = value === "" ? 0 : parseInt(value);
+    onInputChange("taxInsuranceFees", name, numValue);
+  };
+
+  const getFieldError = (fieldName: string): string | undefined => {
+    if (!errors || !errors.taxInsuranceFees) return undefined;
+    return typeof errors.taxInsuranceFees === "string" ? errors.taxInsuranceFees : errors.taxInsuranceFees[fieldName];
+  };
+
+  return (
+    <div className="border-b border-gray-200 pb-6">
+      <h2 className="text-lg font-medium text-gray-900 mb-4">税金・保険料内訳</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Input
+          label="自動車税"
+          name="automobile_tax"
+          type="text"
+          inputMode="numeric"
+          value={taxInsuranceFees.automobile_tax || ""}
+          onChange={handleChange}
+          error={getFieldError("automobile_tax")}
+          placeholder="0"
+        />
+        <Input
+          label="環境性能割"
+          name="environmental_performance_tax"
+          type="text"
+          inputMode="numeric"
+          value={taxInsuranceFees.environmental_performance_tax || ""}
+          onChange={handleChange}
+          error={getFieldError("environmental_performance_tax")}
+          placeholder="0"
+        />
+        <Input
+          label="重量税"
+          name="weight_tax"
+          type="text"
+          inputMode="numeric"
+          value={taxInsuranceFees.weight_tax || ""}
+          onChange={handleChange}
+          error={getFieldError("weight_tax")}
+          placeholder="0"
+        />
+        <Input
+          label="自賠責保険料"
+          name="liability_insurance_fee"
+          type="text"
+          inputMode="numeric"
+          value={taxInsuranceFees.liability_insurance_fee || ""}
+          onChange={handleChange}
+          error={getFieldError("liability_insurance_fee")}
+          placeholder="0"
+        />
+        <Input
+          label="任意保険料"
+          name="voluntary_insurance_fee"
+          type="text"
+          inputMode="numeric"
+          value={taxInsuranceFees.voluntary_insurance_fee || ""}
+          onChange={handleChange}
+          error={getFieldError("voluntary_insurance_fee")}
+          placeholder="0"
+        />
+      </div>
+      {errors?.taxInsuranceFees && typeof errors.taxInsuranceFees === "string" && <div className="mt-4 text-sm text-red-600">{errors.taxInsuranceFees}</div>}
+    </div>
+  );
+};
+
+// LegalFeesInfo コンポーネント追加
+const LegalFeesInfo: React.FC<{
+  legalFees: EstimateFormData["legalFees"];
+  onInputChange: (section: "legalFees", field: string, value: string | number) => void;
+  errors?: EstimateError | null;
+}> = ({ legalFees, onInputChange, errors }) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    const numValue = value === "" ? 0 : parseInt(value);
+    onInputChange("legalFees", name, numValue);
+  };
+
+  const getFieldError = (fieldName: string): string | undefined => {
+    if (!errors || !errors.legalFees) return undefined;
+    return typeof errors.legalFees === "string" ? errors.legalFees : errors.legalFees[fieldName];
+  };
+
+  return (
+    <div className="border-b border-gray-200 pb-6">
+      <h2 className="text-lg font-medium text-gray-900 mb-4">預り法定費用内訳</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Input
+          label="検査登録印紙代"
+          name="inspection_registration_stamp"
+          type="text"
+          inputMode="numeric"
+          value={legalFees.inspection_registration_stamp || ""}
+          onChange={handleChange}
+          error={getFieldError("inspection_registration_stamp")}
+          placeholder="0"
+        />
+        <Input
+          label="車庫証明印紙代"
+          name="parking_certificate_stamp"
+          type="text"
+          inputMode="numeric"
+          value={legalFees.parking_certificate_stamp || ""}
+          onChange={handleChange}
+          error={getFieldError("parking_certificate_stamp")}
+          placeholder="0"
+        />
+        <Input
+          label="下取車印紙代"
+          name="trade_in_stamp"
+          type="text"
+          inputMode="numeric"
+          value={legalFees.trade_in_stamp || ""}
+          onChange={handleChange}
+          error={getFieldError("trade_in_stamp")}
+          placeholder="0"
+        />
+        <Input
+          label="リサイクル預託金"
+          name="recycling_deposit"
+          type="text"
+          inputMode="numeric"
+          value={legalFees.recycling_deposit || ""}
+          onChange={handleChange}
+          error={getFieldError("recycling_deposit")}
+          placeholder="0"
+        />
+        <Input
+          label="その他非課税"
+          name="other_nontaxable"
+          type="text"
+          inputMode="numeric"
+          value={legalFees.other_nontaxable || ""}
+          onChange={handleChange}
+          error={getFieldError("other_nontaxable")}
+          placeholder="0"
+        />
+      </div>
+      {errors?.legalFees && typeof errors.legalFees === "string" && <div className="mt-4 text-sm text-red-600">{errors.legalFees}</div>}
+    </div>
+  );
+};
+
+// ProcessingFeesInfo コンポーネント追加
+const ProcessingFeesInfo: React.FC<{
+  processingFees: EstimateFormData["processingFees"];
+  onInputChange: (section: "processingFees", field: string, value: string | number) => void;
+  errors?: EstimateError | null;
+}> = ({ processingFees, onInputChange, errors }) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    const numValue = value === "" ? 0 : parseInt(value);
+    onInputChange("processingFees", name, numValue);
+  };
+
+  const getFieldError = (fieldName: string): string | undefined => {
+    if (!errors || !errors.processingFees) return undefined;
+    return typeof errors.processingFees === "string" ? errors.processingFees : errors.processingFees[fieldName];
+  };
+
+  return (
+    <div className="border-b border-gray-200 pb-6">
+      <h2 className="text-lg font-medium text-gray-900 mb-4">手続代行費用内訳</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Input
+          label="検査登録費用"
+          name="inspection_registration_fee"
+          type="text"
+          inputMode="numeric"
+          value={processingFees.inspection_registration_fee || ""}
+          onChange={handleChange}
+          error={getFieldError("inspection_registration_fee")}
+          placeholder="0"
+        />
+        <Input
+          label="車庫証明費用"
+          name="parking_certificate_fee"
+          type="text"
+          inputMode="numeric"
+          value={processingFees.parking_certificate_fee || ""}
+          onChange={handleChange}
+          error={getFieldError("parking_certificate_fee")}
+          placeholder="0"
+        />
+        <Input
+          label="下取車手続費用"
+          name="trade_in_processing_fee"
+          type="text"
+          inputMode="numeric"
+          value={processingFees.trade_in_processing_fee || ""}
+          onChange={handleChange}
+          error={getFieldError("trade_in_processing_fee")}
+          placeholder="0"
+        />
+        <Input
+          label="下取車査定費用"
+          name="trade_in_assessment_fee"
+          type="text"
+          inputMode="numeric"
+          value={processingFees.trade_in_assessment_fee || ""}
+          onChange={handleChange}
+          error={getFieldError("trade_in_assessment_fee")}
+          placeholder="0"
+        />
+        <Input
+          label="リサイクル管理費用"
+          name="recycling_management_fee"
+          type="text"
+          inputMode="numeric"
+          value={processingFees.recycling_management_fee || ""}
+          onChange={handleChange}
+          error={getFieldError("recycling_management_fee")}
+          placeholder="0"
+        />
+        <Input
+          label="納車費用"
+          name="delivery_fee"
+          type="text"
+          inputMode="numeric"
+          value={processingFees.delivery_fee || ""}
+          onChange={handleChange}
+          error={getFieldError("delivery_fee")}
+          placeholder="0"
+        />
+        <Input
+          label="その他費用"
+          name="other_fees"
+          type="text"
+          inputMode="numeric"
+          value={processingFees.other_fees || ""}
+          onChange={handleChange}
+          error={getFieldError("other_fees")}
+          placeholder="0"
+        />
+      </div>
+      {errors?.processingFees && typeof errors.processingFees === "string" && <div className="mt-4 text-sm text-red-600">{errors.processingFees}</div>}
+    </div>
+  );
+};
+
 // メインコンポーネント
-const EstimateComponent: React.FC<EstimateComponentProps> = ({ loading, error, vehicle, formData, errors, success, onInputChange, onSubmit, onCancel }) => {
+const EstimateComponent: React.FC<EstimateComponentProps> = ({
+  loading,
+  error,
+  vehicle,
+  formData,
+  errors,
+  success,
+  onInputChange,
+  onSubmit,
+  onCancel,
+  onAccessoryChange,
+}) => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -426,12 +842,17 @@ const EstimateComponent: React.FC<EstimateComponentProps> = ({ loading, error, v
               <form onSubmit={onSubmit} className="p-6 space-y-8">
                 {/* 車両情報のみ外部から取得した値で表示 */}
                 {vehicle && <VehicleInfo vehicle={vehicle} />}
-
                 {/* 下取り車両情報とローン情報は空の初期値で表示 */}
                 <TradeInInfo tradeIn={formData.tradeIn} onInputChange={onInputChange} errors={errors} />
-
                 <LoanCalculationComponent loanCalculation={formData.loanCalculation} onInputChange={onInputChange} errors={errors} />
-
+                {/* 付属品情報コンポーネントを使用 */}
+                <AccessoriesInfo accessories={formData.accessories || []} onInputChange={onAccessoryChange} errors={errors} />
+                {/* ここに税金・保険料コンポーネントを追加 */}
+                <TaxInsuranceInfo taxInsuranceFees={formData.taxInsuranceFees} onInputChange={onInputChange} errors={errors} />
+                {/* 法定費用コンポーネントを追加 */}
+                <LegalFeesInfo legalFees={formData.legalFees} onInputChange={onInputChange} errors={errors} />
+                {/* 手続代行費用コンポーネントを追加 */}
+                <ProcessingFeesInfo processingFees={formData.processingFees} onInputChange={onInputChange} errors={errors} />
                 <div className="flex justify-end space-x-4">
                   <Button type="button" variant="outline" onClick={onCancel}>
                     キャンセル

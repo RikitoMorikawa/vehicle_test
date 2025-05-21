@@ -45,19 +45,62 @@ export const loanCalculationSchema = z.object({
   bonus_months: z.array(z.number()).optional(),
 });
 
+// (A)付属品・特別仕様内訳のバリデーションスキーマを追加
+export const accessorySchema = z.object({
+  name: z.string().min(1, "品名を入力してください").max(100, "品名は100文字以内で入力してください"),
+  price: z.number().nonnegative("価格は0以上で入力してください").int("価格は整数で入力してください").min(1, "価格は1以上で入力してください"),
+});
+
+// (B) 税金・保険料内訳のバリデーションスキーマを追加
+export const taxInsuranceFeesSchema = z.object({
+  automobile_tax: z.number().nonnegative("自動車税は0以上で入力してください"),
+  environmental_performance_tax: z.number().nonnegative("環境性能割は0以上で入力してください"),
+  weight_tax: z.number().nonnegative("重量税は0以上で入力してください"),
+  liability_insurance_fee: z.number().nonnegative("自賠責保険料は0以上で入力してください"),
+  voluntary_insurance_fee: z.number().nonnegative("任意保険料は0以上で入力してください"),
+});
+
+// (C)預り法定費用内訳のバリデーションスキーマを追加
+export const legalFeesSchema = z.object({
+  inspection_registration_stamp: z.number().nonnegative("検査登録印紙代は0以上で入力してください"),
+  parking_certificate_stamp: z.number().nonnegative("車庫証明印紙代は0以上で入力してください"),
+  trade_in_stamp: z.number().nonnegative("下取車印紙代は0以上で入力してください"),
+  recycling_deposit: z.number().nonnegative("リサイクル預託金は0以上で入力してください"),
+  other_nontaxable: z.number().nonnegative("その他非課税は0以上で入力してください"),
+});
+
+// (D) 手続代行費用内訳のバリデーションスキーマを追加
+export const processingFeesSchema = z.object({
+  inspection_registration_fee: z.number().nonnegative("検査登録費用は0以上で入力してください"),
+  parking_certificate_fee: z.number().nonnegative("車庫証明費用は0以上で入力してください"),
+  trade_in_processing_fee: z.number().nonnegative("下取車手続費用は0以上で入力してください"),
+  trade_in_assessment_fee: z.number().nonnegative("下取車査定費用は0以上で入力してください"),
+  recycling_management_fee: z.number().nonnegative("リサイクル管理費用は0以上で入力してください"),
+  delivery_fee: z.number().nonnegative("納車費用は0以上で入力してください"),
+  other_fees: z.number().nonnegative("その他費用は0以上で入力してください"),
+});
+
 // 型の導出
 export type TradeInFormData = z.infer<typeof tradeInSchema>;
 // フォームデータ型定義
 export interface EstimateFormData {
   tradeIn: z.infer<typeof tradeInSchema>;
   loanCalculation: z.infer<typeof loanCalculationSchema>;
+  accessories: z.infer<typeof accessorySchema>[];
+  taxInsuranceFees: z.infer<typeof taxInsuranceFeesSchema>;
+  legalFees: z.infer<typeof legalFeesSchema>;
+  processingFees: z.infer<typeof processingFeesSchema>;
 }
 
 // エラー型定義も更新
 export interface EstimateError {
   tradeIn?: { [key: string]: string } | string;
   loanCalculation?: { [key: string]: string } | string;
+  accessories?: { [key: string]: string } | string;
+  taxInsuranceFees?: { [key: string]: string } | string;
   general?: string;
+  legalFees?: { [key: string]: string } | string;
+  processingFees?: { [key: string]: string } | string;
 }
 
 // サービスパラメータ型定義

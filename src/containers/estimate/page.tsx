@@ -5,6 +5,7 @@ import EstimateComponent from "../../components/estimate/page";
 import type { EstimateError, EstimateFormData } from "../../validations/estimate/page";
 import { getValidationErrors, validateEstimate } from "../../validations/custome_estimate";
 import { estimateService } from "../../services/estimate/page";
+import { Accessory } from "../../types/db/accessories";
 
 const EstimateContainer: React.FC = () => {
   const { id } = useParams<{ id: string }>(); // URLから車両IDを取得
@@ -46,10 +47,38 @@ const EstimateContainer: React.FC = () => {
       bonus_amount: 0,
       bonus_months: [],
     },
+    accessories: [],
+    taxInsuranceFees: {
+      automobile_tax: 0,
+      environmental_performance_tax: 0,
+      weight_tax: 0,
+      liability_insurance_fee: 0,
+      voluntary_insurance_fee: 0,
+    },
+    legalFees: {
+      inspection_registration_stamp: 0,
+      parking_certificate_stamp: 0,
+      trade_in_stamp: 0,
+      recycling_deposit: 0,
+      other_nontaxable: 0,
+    },
+    processingFees: {
+      inspection_registration_fee: 0,
+      parking_certificate_fee: 0,
+      trade_in_processing_fee: 0,
+      trade_in_assessment_fee: 0,
+      recycling_management_fee: 0,
+      delivery_fee: 0,
+      other_fees: 0,
+    },
   });
 
   // 入力値変更ハンドラ
-  const handleInputChange = (section: "tradeIn" | "loanCalculation", name: string, value: string | number | boolean | number[]) => {
+  const handleInputChange = (
+    section: "tradeIn" | "loanCalculation" | "accessories" | "taxInsuranceFees" | "legalFees" | "processingFees",
+    name: string,
+    value: string | number | boolean | number[]
+  ) => {
     // ローン計算の特別処理
     if (section === "loanCalculation") {
       if (name === "payment_count" && typeof value === "number") {
@@ -167,6 +196,23 @@ const EstimateContainer: React.FC = () => {
   // エラーメッセージの統合
   const pageError = apiError || (vehicleError ? "車両情報の取得に失敗しました" : null);
 
+  // 付属品変更用の新しいハンドラを追加
+  const handleAccessoryChange = (action: "add" | "remove", value: Accessory | number) => {
+    if (action === "add" && typeof value !== "number") {
+      // 付属品を追加
+      setFormData((prev) => ({
+        ...prev,
+        accessories: [...prev.accessories, value as Accessory],
+      }));
+    } else if (action === "remove" && typeof value === "number") {
+      // インデックスで付属品を削除
+      setFormData((prev) => ({
+        ...prev,
+        accessories: prev.accessories.filter((_, index) => index !== value),
+      }));
+    }
+  };
+
   return (
     <EstimateComponent
       loading={isPageLoading}
@@ -178,6 +224,7 @@ const EstimateContainer: React.FC = () => {
       onInputChange={handleInputChange}
       onSubmit={handleSubmit}
       onCancel={handleCancel}
+      onAccessoryChange={handleAccessoryChange}
     />
   );
 };

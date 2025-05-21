@@ -1,3 +1,4 @@
+// (C)預り法定費用内訳テーブル
 export interface LegalFees {
   inspection_registration_stamp: number;
   parking_certificate_stamp: number;

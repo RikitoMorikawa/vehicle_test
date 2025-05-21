@@ -1,3 +1,4 @@
+// 下取車両テーブル
 export interface TradeIn {
   vehicle_name: string;
   registration_number: string;

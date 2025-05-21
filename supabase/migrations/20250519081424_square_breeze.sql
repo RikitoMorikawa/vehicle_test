@@ -87,3 +87,42 @@ CREATE TRIGGER update_tax_insurance_fees_updated_at
   BEFORE UPDATE ON tax_insurance_fees
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
+
+  -- accessories テーブルに estimate_id カラムを追加する
+ALTER TABLE accessories ADD COLUMN estimate_id UUID REFERENCES estimate_vehicles(id) ON DELETE CASCADE;
+
+-- インデックスを作成して検索を高速化
+CREATE INDEX accessories_estimate_id_idx ON accessories(estimate_id);
+
+-- コメントを追加（オプション）
+COMMENT ON COLUMN accessories.estimate_id IS '関連する見積もりのID';
+
+-- テーブルが既に存在する場合は、estimate_id カラムを追加
+ALTER TABLE tax_insurance_fees 
+ADD COLUMN IF NOT EXISTS estimate_id UUID REFERENCES estimate_vehicles(id) ON DELETE CASCADE;
+
+-- インデックスを作成（まだ存在していない場合）
+CREATE INDEX IF NOT EXISTS tax_insurance_fees_estimate_id_idx ON tax_insurance_fees(estimate_id);
+
+-- テーブルのキャッシュを更新（Postgrestキャッシュの更新）
+NOTIFY pgrst, 'reload schema';
+
+-- テーブルが既に存在する場合は、estimate_id カラムを追加
+ALTER TABLE legal_fees 
+ADD COLUMN IF NOT EXISTS estimate_id UUID REFERENCES estimate_vehicles(id) ON DELETE CASCADE;
+
+-- インデックスを作成（まだ存在していない場合）
+CREATE INDEX IF NOT EXISTS legal_fees_estimate_id_idx ON legal_fees(estimate_id);
+
+-- スキーマキャッシュをリロード
+NOTIFY pgrst, 'reload schema';
+
+-- テーブルが既に存在する場合は、estimate_id カラムを追加
+ALTER TABLE legal_fees 
+ADD COLUMN IF NOT EXISTS estimate_id UUID REFERENCES estimate_vehicles(id) ON DELETE CASCADE;
+
+-- インデックスを作成（まだ存在していない場合）
+CREATE INDEX IF NOT EXISTS legal_fees_estimate_id_idx ON legal_fees(estimate_id);
+
+-- スキーマキャッシュをリロード
+NOTIFY pgrst, 'reload schema';

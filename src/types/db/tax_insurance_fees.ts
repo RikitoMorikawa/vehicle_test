@@ -1,3 +1,4 @@
+// (B) 税金・保険料内訳テーブル
 export interface TaxInsuranceFees {
   automobile_tax: number;
   environmental_performance_tax: number;

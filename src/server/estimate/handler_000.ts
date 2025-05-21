@@ -29,12 +29,13 @@ export const estimateHandler = {
 
   // 見積もりを作成する関数
   async createEstimate(data: { vehicleId: string } & EstimateFormData): Promise<void> {
-    const { vehicleId, tradeIn, loanCalculation } = data;
+    const { vehicleId, tradeIn, loanCalculation, accessories, taxInsuranceFees, legalFees, processingFees } = data;
 
     console.log("Creating estimate with data:", {
       vehicleId,
       tradeIn,
       loanCalculation,
+      accessories, // ログに追加
     });
 
     try {
@@ -56,12 +57,11 @@ export const estimateHandler = {
         .insert([
           {
             vehicle_id: vehicleId,
-            maker: vehicleData.maker, // 車両情報から取得したメーカー
-            name: vehicleData.name, // 車両情報から取得した車名
-            year: vehicleData.year, // 車両情報から取得した年式
-            mileage: vehicleData.mileage, // 車両情報から取得した走行距離
-            price: vehicleData.price, // 車両情報から取得した価格
-            // その他、estimate_vehicles テーブルに必要なフィールドがあれば追加
+            maker: vehicleData.maker,
+            name: vehicleData.name,
+            year: vehicleData.year,
+            mileage: vehicleData.mileage,
+            price: vehicleData.price,
           },
         ])
         .select();
@@ -98,7 +98,7 @@ export const estimateHandler = {
       const processedLoanCalculation = {
         ...loanCalculation,
         vehicle_id: vehicleId,
-        estimate_id: estimateId, // 見積もりIDに紐づける（テーブルにこのカラムが存在する場合）
+        estimate_id: estimateId,
         bonus_months: Array.isArray(loanCalculation.bonus_months) ? loanCalculation.bonus_months : [],
       };
 
@@ -107,6 +107,61 @@ export const estimateHandler = {
       if (loanCalcError) {
         console.error("Loan calculation insert error:", loanCalcError);
         throw loanCalcError;
+      }
+
+      // 追加: ステップ4: 付属品情報の登録
+      if (accessories && accessories.length > 0) {
+        // 付属品の配列を登録用に加工
+        const accessoriesWithEstimateId = accessories.map((accessory) => ({
+          ...accessory,
+          estimate_id: estimateId,
+        }));
+
+        const { error: accessoriesError } = await supabase.from("accessories").insert(accessoriesWithEstimateId);
+
+        if (accessoriesError) {
+          console.error("Accessories insert error:", accessoriesError);
+          throw accessoriesError;
+        }
+      }
+
+      // 税金・保険料情報の登録を追加
+      const { error: taxInsuranceError } = await supabase.from("tax_insurance_fees").insert([
+        {
+          ...taxInsuranceFees,
+          estimate_id: estimateId,
+        },
+      ]);
+
+      if (taxInsuranceError) {
+        console.error("Tax insurance fees insert error:", taxInsuranceError);
+        throw taxInsuranceError;
+      }
+
+      // 法定費用情報の登録を追加
+      const { error: legalFeesError } = await supabase.from("legal_fees").insert([
+        {
+          ...legalFees,
+          estimate_id: estimateId,
+        },
+      ]);
+
+      if (legalFeesError) {
+        console.error("Legal fees insert error:", legalFeesError);
+        throw legalFeesError;
+      }
+
+      // 処理費用情報の登録を追加
+      const { error: processingFeesError } = await supabase.from("processing_fees").insert([
+        {
+          ...processingFees,
+          estimate_id: estimateId,
+        },
+      ]);
+
+      if (processingFeesError) {
+        console.error("Processing fees insert error:", processingFeesError);
+        throw processingFeesError;
       }
 
       console.log("Estimate created successfully");

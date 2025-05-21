@@ -1,3 +1,4 @@
+// ローン計算テーブル
 export interface LoanCalculation {
   down_payment: number;
   principal: number;

@@ -1,3 +1,4 @@
+// 販売価格テーブル
 export interface SalesPrice {
   base_price: number;
   discount: number;
