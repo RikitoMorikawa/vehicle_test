@@ -230,6 +230,7 @@ const LoanCalculationComponent: React.FC<{
           label="頭金"
           name="down_payment"
           type="text"
+          currency={true}
           inputMode="numeric"
           value={loanCalculation.down_payment || ""}
           onChange={handleChange}
@@ -241,6 +242,7 @@ const LoanCalculationComponent: React.FC<{
             label="現金・割賦元金"
             name="principal"
             type="text"
+            currency={true}
             inputMode="numeric"
             value={calculatedPrincipal || ""}
             error={getFieldError("principal")}
@@ -256,6 +258,7 @@ const LoanCalculationComponent: React.FC<{
           label="分割払手数料"
           name="interest_fee"
           type="text"
+          currency={true}
           inputMode="numeric"
           value={loanCalculation.interest_fee || ""}
           onChange={handleChange}
@@ -267,6 +270,7 @@ const LoanCalculationComponent: React.FC<{
             label="分割支払金合計"
             name="total_payment"
             type="text"
+            currency={true}
             inputMode="numeric"
             value={calculatedTotalPayment || ""}
             error={getFieldError("total_payment")}
@@ -314,6 +318,7 @@ const LoanCalculationComponent: React.FC<{
           label="初回支払額"
           name="first_payment"
           type="text"
+          currency={true}
           inputMode="numeric"
           value={loanCalculation.first_payment || ""}
           onChange={handleChange}
@@ -324,6 +329,7 @@ const LoanCalculationComponent: React.FC<{
           label="月々支払額"
           name="monthly_payment"
           type="text"
+          currency={true}
           inputMode="numeric"
           value={loanCalculation.monthly_payment || ""}
           onChange={handleChange}
@@ -334,6 +340,7 @@ const LoanCalculationComponent: React.FC<{
           label="ボーナス加算額"
           name="bonus_amount"
           type="text"
+          currency={true}
           inputMode="numeric"
           value={loanCalculation.bonus_amount || ""}
           onChange={handleChange}
@@ -490,6 +497,7 @@ const AccessoriesInfo: React.FC<{
           <Input
             label="価格"
             type="text" // numberからtextに変更
+            currency={true}
             inputMode="numeric" // 数字キーボードを表示
             value={newAccessory.price}
             onChange={handlePriceChange}
@@ -571,6 +579,7 @@ const TaxInsuranceInfo: React.FC<{
           label="自動車税"
           name="automobile_tax"
           type="text"
+          currency={true}
           inputMode="numeric"
           value={taxInsuranceFees.automobile_tax || ""}
           onChange={handleChange}
@@ -581,6 +590,7 @@ const TaxInsuranceInfo: React.FC<{
           label="環境性能割"
           name="environmental_performance_tax"
           type="text"
+          currency={true}
           inputMode="numeric"
           value={taxInsuranceFees.environmental_performance_tax || ""}
           onChange={handleChange}
@@ -591,6 +601,7 @@ const TaxInsuranceInfo: React.FC<{
           label="重量税"
           name="weight_tax"
           type="text"
+          currency={true}
           inputMode="numeric"
           value={taxInsuranceFees.weight_tax || ""}
           onChange={handleChange}
@@ -601,6 +612,7 @@ const TaxInsuranceInfo: React.FC<{
           label="自賠責保険料"
           name="liability_insurance_fee"
           type="text"
+          currency={true}
           inputMode="numeric"
           value={taxInsuranceFees.liability_insurance_fee || ""}
           onChange={handleChange}
@@ -611,6 +623,7 @@ const TaxInsuranceInfo: React.FC<{
           label="任意保険料"
           name="voluntary_insurance_fee"
           type="text"
+          currency={true}
           inputMode="numeric"
           value={taxInsuranceFees.voluntary_insurance_fee || ""}
           onChange={handleChange}
@@ -648,6 +661,7 @@ const LegalFeesInfo: React.FC<{
           label="検査登録印紙代"
           name="inspection_registration_stamp"
           type="text"
+          currency={true}
           inputMode="numeric"
           value={legalFees.inspection_registration_stamp || ""}
           onChange={handleChange}
@@ -658,6 +672,7 @@ const LegalFeesInfo: React.FC<{
           label="車庫証明印紙代"
           name="parking_certificate_stamp"
           type="text"
+          currency={true}
           inputMode="numeric"
           value={legalFees.parking_certificate_stamp || ""}
           onChange={handleChange}
@@ -668,6 +683,7 @@ const LegalFeesInfo: React.FC<{
           label="下取車印紙代"
           name="trade_in_stamp"
           type="text"
+          currency={true}
           inputMode="numeric"
           value={legalFees.trade_in_stamp || ""}
           onChange={handleChange}
@@ -678,6 +694,7 @@ const LegalFeesInfo: React.FC<{
           label="リサイクル預託金"
           name="recycling_deposit"
           type="text"
+          currency={true}
           inputMode="numeric"
           value={legalFees.recycling_deposit || ""}
           onChange={handleChange}
@@ -688,6 +705,7 @@ const LegalFeesInfo: React.FC<{
           label="その他非課税"
           name="other_nontaxable"
           type="text"
+          currency={true}
           inputMode="numeric"
           value={legalFees.other_nontaxable || ""}
           onChange={handleChange}
@@ -725,6 +743,7 @@ const ProcessingFeesInfo: React.FC<{
           label="検査登録費用"
           name="inspection_registration_fee"
           type="text"
+          currency={true}
           inputMode="numeric"
           value={processingFees.inspection_registration_fee || ""}
           onChange={handleChange}
@@ -735,6 +754,7 @@ const ProcessingFeesInfo: React.FC<{
           label="車庫証明費用"
           name="parking_certificate_fee"
           type="text"
+          currency={true}
           inputMode="numeric"
           value={processingFees.parking_certificate_fee || ""}
           onChange={handleChange}
@@ -745,6 +765,7 @@ const ProcessingFeesInfo: React.FC<{
           label="下取車手続費用"
           name="trade_in_processing_fee"
           type="text"
+          currency={true}
           inputMode="numeric"
           value={processingFees.trade_in_processing_fee || ""}
           onChange={handleChange}
@@ -755,6 +776,7 @@ const ProcessingFeesInfo: React.FC<{
           label="下取車査定費用"
           name="trade_in_assessment_fee"
           type="text"
+          currency={true}
           inputMode="numeric"
           value={processingFees.trade_in_assessment_fee || ""}
           onChange={handleChange}
@@ -765,6 +787,7 @@ const ProcessingFeesInfo: React.FC<{
           label="リサイクル管理費用"
           name="recycling_management_fee"
           type="text"
+          currency={true}
           inputMode="numeric"
           value={processingFees.recycling_management_fee || ""}
           onChange={handleChange}
@@ -775,6 +798,7 @@ const ProcessingFeesInfo: React.FC<{
           label="納車費用"
           name="delivery_fee"
           type="text"
+          currency={true}
           inputMode="numeric"
           value={processingFees.delivery_fee || ""}
           onChange={handleChange}
@@ -785,6 +809,7 @@ const ProcessingFeesInfo: React.FC<{
           label="その他費用"
           name="other_fees"
           type="text"
+          currency={true}
           inputMode="numeric"
           value={processingFees.other_fees || ""}
           onChange={handleChange}
@@ -953,6 +978,7 @@ const SalesPriceInfo: React.FC<{
             label="車両本体価格"
             name="base_price"
             type="text"
+            currency={true}
             inputMode="numeric"
             value={salesPrice.base_price || ""}
             onChange={handleChange}
@@ -963,6 +989,7 @@ const SalesPriceInfo: React.FC<{
             label="値引き"
             name="discount"
             type="text"
+            currency={true}
             inputMode="numeric"
             value={salesPrice.discount || ""}
             onChange={handleChange}
@@ -973,6 +1000,7 @@ const SalesPriceInfo: React.FC<{
             label="車検整備費用"
             name="inspection_fee"
             type="text"
+            currency={true}
             inputMode="numeric"
             value={salesPrice.inspection_fee || ""}
             onChange={handleChange}
@@ -983,6 +1011,7 @@ const SalesPriceInfo: React.FC<{
             label="付属品・特別仕様"
             name="accessories_fee"
             type="text"
+            currency={true}
             inputMode="numeric"
             value={totalAccessoriesFee || ""}
             error={getFieldError("accessories_fee")}
@@ -995,6 +1024,7 @@ const SalesPriceInfo: React.FC<{
               label="車両販売価格(1)"
               name="vehicle_price"
               type="text"
+              currency={true}
               inputMode="numeric"
               value={calculatedVehiclePrice || ""}
               error={getFieldError("vehicle_price")}
@@ -1017,6 +1047,7 @@ const SalesPriceInfo: React.FC<{
             label="税金・保険料"
             name="tax_insurance"
             type="text"
+            currency={true}
             inputMode="numeric"
             value={totalTaxInsurance || ""}
             error={getFieldError("tax_insurance")}
@@ -1028,6 +1059,7 @@ const SalesPriceInfo: React.FC<{
             label="預り法定費用"
             name="legal_fee"
             type="text"
+            currency={true}
             inputMode="numeric"
             value={totalLegalFee || ""}
             error={getFieldError("legal_fee")}
@@ -1039,6 +1071,7 @@ const SalesPriceInfo: React.FC<{
             label="手続代行費用"
             name="processing_fee"
             type="text"
+            currency={true}
             inputMode="numeric"
             value={totalProcessingFee || ""}
             error={getFieldError("processing_fee")}
@@ -1051,6 +1084,7 @@ const SalesPriceInfo: React.FC<{
               label="販売諸費用(2)"
               name="misc_fee"
               type="text"
+              currency={true}
               inputMode="numeric"
               value={totalMiscFee || ""}
               error={getFieldError("misc_fee")}
@@ -1073,6 +1107,7 @@ const SalesPriceInfo: React.FC<{
             label="下取車価格"
             name="trade_in_price"
             type="text"
+            currency={true}
             inputMode="numeric"
             value={salesPrice.trade_in_price || ""}
             onChange={handleChange}
@@ -1083,6 +1118,7 @@ const SalesPriceInfo: React.FC<{
             label="下取車残債"
             name="trade_in_debt"
             type="text"
+            currency={true}
             inputMode="numeric"
             value={salesPrice.trade_in_debt || ""}
             onChange={handleChange}
@@ -1101,6 +1137,7 @@ const SalesPriceInfo: React.FC<{
               label="現金販売価格(1)+(2)"
               name="total_price"
               type="text"
+              currency={true}
               inputMode="numeric"
               value={calculatedTotalBeforeTax || ""}
               error={getFieldError("total_price")}
@@ -1116,6 +1153,7 @@ const SalesPriceInfo: React.FC<{
             label="内消費税"
             name="consumption_tax"
             type="text"
+            currency={true}
             inputMode="numeric"
             value={calculatedConsumptionTax || ""}
             error={getFieldError("consumption_tax")}
@@ -1127,6 +1165,7 @@ const SalesPriceInfo: React.FC<{
             label="税込み総額"
             name="total_with_tax"
             type="text"
+            currency={true}
             inputMode="numeric"
             value={calculatedTotalPrice || ""}
             placeholder="自動計算"
@@ -1138,6 +1177,7 @@ const SalesPriceInfo: React.FC<{
               label="お支払総額"
               name="payment_total"
               type="text"
+              currency={true}
               inputMode="numeric"
               value={calculatedPaymentTotal || ""}
               error={getFieldError("payment_total")}
