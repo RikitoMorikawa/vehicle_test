@@ -181,9 +181,16 @@ const TradeInInfo: React.FC<{
 // ローン計算情報コンポーネント - 空の初期値で表示
 const LoanCalculationComponent: React.FC<{
   loanCalculation: EstimateFormData["loanCalculation"];
+  cashSalesPrice: number; // 現金販売価格を受け取る
   onInputChange: (section: "loanCalculation", name: string, value: number | string | number[]) => void;
   errors?: EstimateError | null;
-}> = ({ loanCalculation, onInputChange, errors }) => {
+}> = ({ loanCalculation, cashSalesPrice, onInputChange, errors }) => {
+  // 現金・割賦元金を自動計算（現金販売価格 - 頭金）
+  const calculatedPrincipal = (cashSalesPrice || 0) - (loanCalculation.down_payment || 0);
+
+  // 分割支払金合計を自動計算（現金・割賦元金 + 分割払手数料）
+  const calculatedTotalPayment = calculatedPrincipal + (loanCalculation.interest_fee || 0);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
 
@@ -204,6 +211,17 @@ const LoanCalculationComponent: React.FC<{
     return typeof errors.loanCalculation === "string" ? errors.loanCalculation : errors.loanCalculation[fieldName];
   };
 
+  // 現金・割賦元金と分割支払金合計の自動更新
+  React.useEffect(() => {
+    if (loanCalculation.principal !== calculatedPrincipal) {
+      onInputChange("loanCalculation", "principal", calculatedPrincipal);
+    }
+
+    if (loanCalculation.total_payment !== calculatedTotalPayment) {
+      onInputChange("loanCalculation", "total_payment", calculatedTotalPayment);
+    }
+  }, [calculatedPrincipal, loanCalculation.principal, calculatedTotalPayment, loanCalculation.total_payment, onInputChange]);
+
   return (
     <div className="border-b border-gray-200 pb-6">
       <h2 className="text-lg font-medium text-gray-900 mb-4">ローン計算情報</h2>
@@ -218,18 +236,24 @@ const LoanCalculationComponent: React.FC<{
           error={getFieldError("down_payment")}
           placeholder="0"
         />
+        <div className="md:col-span-1">
+          <Input
+            label="現金・割賦元金"
+            name="principal"
+            type="text"
+            inputMode="numeric"
+            value={calculatedPrincipal || ""}
+            error={getFieldError("principal")}
+            placeholder="自動計算"
+            disabled={true}
+            className="bg-gray-100 font-semibold"
+          />
+          <div className="text-sm text-gray-500 mt-1">
+            <p>現金販売価格 - 頭金</p>
+          </div>
+        </div>
         <Input
-          label="元金"
-          name="principal"
-          type="text"
-          inputMode="numeric"
-          value={loanCalculation.principal || ""}
-          onChange={handleChange}
-          error={getFieldError("principal")}
-          placeholder="0"
-        />
-        <Input
-          label="金利手数料"
+          label="分割払手数料"
           name="interest_fee"
           type="text"
           inputMode="numeric"
@@ -238,16 +262,22 @@ const LoanCalculationComponent: React.FC<{
           error={getFieldError("interest_fee")}
           placeholder="0"
         />
-        <Input
-          label="支払総額"
-          name="total_payment"
-          type="text"
-          inputMode="numeric"
-          value={loanCalculation.total_payment || ""}
-          onChange={handleChange}
-          error={getFieldError("total_payment")}
-          placeholder="0"
-        />
+        <div className="md:col-span-1">
+          <Input
+            label="分割支払金合計"
+            name="total_payment"
+            type="text"
+            inputMode="numeric"
+            value={calculatedTotalPayment || ""}
+            error={getFieldError("total_payment")}
+            placeholder="自動計算"
+            disabled={true}
+            className="bg-gray-100 font-semibold"
+          />
+          <div className="text-sm text-gray-500 mt-1">
+            <p>現金・割賦元金 + 分割払手数料</p>
+          </div>
+        </div>
 
         {/* 支払回数をプルダウンに変更 */}
         <Select
@@ -362,7 +392,6 @@ const LoanCalculationComponent: React.FC<{
 };
 
 // AccessoriesInfo コンポーネントを追加
-// AccessoriesInfo コンポーネントの修正版
 import { accessorySchema } from "../../validations/estimate/page";
 
 const AccessoriesInfo: React.FC<{
@@ -1120,21 +1149,6 @@ const SalesPriceInfo: React.FC<{
         </div>
       </div>
 
-      {/* 計算式の説明 */}
-      <div className="bg-blue-50 p-4 rounded-md">
-        <h4 className="text-sm font-medium text-blue-800 mb-2">計算式</h4>
-        <div className="text-xs text-blue-700 space-y-1">
-          <p>車両販売価格(1) = 車両本体価格 - 値引き + 車検整備費用 + 付属品・特別仕様</p>
-          <p>販売諸費用(2) = 税金・保険料 + 預り法定費用 + 手続代行費用</p>
-          <p>現金販売価格(1)+(2) = 車両販売価格(1) + 販売諸費用(2) （税抜き）</p>
-          <p>内消費税 = 現金販売価格(1)+(2) × 10%</p>
-          <p>税込み総額 = 現金販売価格(1)+(2) + 内消費税</p>
-          <p>
-            <strong>お支払総額 = 税込み総額 - 下取車価格 + 下取車残債</strong>
-          </p>
-        </div>
-      </div>
-
       {errors?.salesPrice && typeof errors.salesPrice === "string" && <div className="mt-4 text-sm text-red-600">{errors.salesPrice}</div>}
     </div>
   );
@@ -1153,6 +1167,42 @@ const EstimateComponent: React.FC<EstimateComponentProps> = ({
   onCancel,
   onAccessoryChange,
 }) => {
+  // 現金販売価格の計算（SalesPriceInfoと同じロジック）
+  const totalTaxInsurance =
+    (formData.taxInsuranceFees.automobile_tax || 0) +
+    (formData.taxInsuranceFees.environmental_performance_tax || 0) +
+    (formData.taxInsuranceFees.weight_tax || 0) +
+    (formData.taxInsuranceFees.liability_insurance_fee || 0) +
+    (formData.taxInsuranceFees.voluntary_insurance_fee || 0);
+
+  const totalLegalFee =
+    (formData.legalFees.inspection_registration_stamp || 0) +
+    (formData.legalFees.parking_certificate_stamp || 0) +
+    (formData.legalFees.trade_in_stamp || 0) +
+    (formData.legalFees.recycling_deposit || 0) +
+    (formData.legalFees.other_nontaxable || 0);
+
+  const totalProcessingFee =
+    (formData.processingFees.inspection_registration_fee || 0) +
+    (formData.processingFees.parking_certificate_fee || 0) +
+    (formData.processingFees.trade_in_processing_fee || 0) +
+    (formData.processingFees.trade_in_assessment_fee || 0) +
+    (formData.processingFees.recycling_management_fee || 0) +
+    (formData.processingFees.delivery_fee || 0) +
+    (formData.processingFees.other_fees || 0);
+
+  const totalAccessoriesFee = (formData.accessories || []).reduce((total, accessory) => {
+    return total + (typeof accessory.price === "number" ? accessory.price : 0);
+  }, 0);
+
+  const calculatedVehiclePrice =
+    (formData.salesPrice.base_price || 0) - (formData.salesPrice.discount || 0) + (formData.salesPrice.inspection_fee || 0) + totalAccessoriesFee;
+
+  const totalMiscFee = totalTaxInsurance + totalLegalFee + totalProcessingFee;
+
+  // 現金販売価格(1)+(2)（税抜き）
+  const cashSalesPrice = calculatedVehiclePrice + totalMiscFee;
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -1217,7 +1267,12 @@ const EstimateComponent: React.FC<EstimateComponentProps> = ({
                 {/* 下取り車両情報コンポーネントを使用 */}
                 <TradeInInfo tradeIn={formData.tradeIn} onInputChange={onInputChange} errors={errors} />
                 {/* ローン計算情報コンポーネントを使用 */}
-                <LoanCalculationComponent loanCalculation={formData.loanCalculation} onInputChange={onInputChange} errors={errors} />
+                <LoanCalculationComponent
+                  loanCalculation={formData.loanCalculation}
+                  cashSalesPrice={cashSalesPrice}
+                  onInputChange={onInputChange}
+                  errors={errors}
+                />
                 {/* (A)付属品情報コンポーネントを使用 */}
                 <AccessoriesInfo accessories={formData.accessories || []} onInputChange={onAccessoryChange} errors={errors} />
                 {/* (B)税金・保険料コンポーネントを追加 */}
