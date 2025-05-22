@@ -35,6 +35,12 @@ const EstimateContainer: React.FC = () => {
       legal_fee: 0,
       processing_fee: 0,
       misc_fee: 0,
+      // 追加されたカラム
+      consumption_tax: 0,
+      total_price: 0,
+      trade_in_price: 0,
+      trade_in_debt: 0,
+      payment_total: 0,
     },
     tradeIn: {
       trade_in_available: true, // 下取り車両の有無

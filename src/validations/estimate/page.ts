@@ -4,19 +4,6 @@ import { z } from "zod";
 const today = new Date();
 today.setHours(0, 0, 0, 0); // 時間部分をリセット
 
-// 販売価格のバリデーションスキーマを追加
-export const salesPriceSchema = z.object({
-  base_price: z.number().nonnegative("本体価格は0以上で入力してください"),
-  discount: z.number().nonnegative("値引き額は0以上で入力してください"),
-  inspection_fee: z.number().nonnegative("検査費用は0以上で入力してください"),
-  accessories_fee: z.number().nonnegative("付属品費用は0以上で入力してください"),
-  vehicle_price: z.number().nonnegative("車両価格は0以上で入力してください"),
-  tax_insurance: z.number().nonnegative("税金・保険料は0以上で入力してください"),
-  legal_fee: z.number().nonnegative("法定費用は0以上で入力してください"),
-  processing_fee: z.number().nonnegative("手続代行費用は0以上で入力してください"),
-  misc_fee: z.number().nonnegative("その他費用は0以上で入力してください"),
-});
-
 // 下取り車両のバリデーションスキーマ
 export const tradeInSchema = z.object({
   trade_in_available: z.boolean(),
@@ -26,21 +13,21 @@ export const tradeInSchema = z.object({
   mileage: z.number().nonnegative("走行距離は0以上で入力してください").int("走行距離は整数で入力してください"),
   // 初度登録年月: 過去の日付を許可
   first_registration_date: z
-    .string()
-    .transform((val) => (val === "" ? null : val))
-    .nullable()
-    .refine((val) => val === null || new Date(val) <= today, "初度登録年月は現在より過去の日付を入力してください"),
+  .string()
+  .transform((val) => (val === "" ? null : val))
+  .nullable()
+  .refine((val) => val === null || new Date(val) <= today, "初度登録年月は現在より過去の日付を入力してください"),
   inspection_expiry_date: z
-    .string()
-    .transform((val) => (val === "" ? null : val))
-    .nullable()
-    .refine((val) => val === null || new Date(val) > today, "車検満了日は現在より未来の日付を入力してください"),
+  .string()
+  .transform((val) => (val === "" ? null : val))
+  .nullable()
+  .refine((val) => val === null || new Date(val) > today, "車検満了日は現在より未来の日付を入力してください"),
   chassis_number: z
-    .string()
-    .length(17, "車台番号は英数字17文字で入力してください")
-    .regex(/^[a-zA-Z0-9]+$/, "車台番号は英数字のみで入力してください")
-    .optional()
-    .or(z.literal("")),
+  .string()
+  .length(17, "車台番号は英数字17文字で入力してください")
+  .regex(/^[a-zA-Z0-9]+$/, "車台番号は英数字のみで入力してください")
+  .optional()
+  .or(z.literal("")),
   exterior_color: z.string().max(50, "外装色は50文字以内で入力してください"),
 });
 
@@ -91,6 +78,24 @@ export const processingFeesSchema = z.object({
   recycling_management_fee: z.number().nonnegative("リサイクル管理費用は0以上で入力してください"),
   delivery_fee: z.number().nonnegative("納車費用は0以上で入力してください"),
   other_fees: z.number().nonnegative("その他費用は0以上で入力してください"),
+});
+
+// 販売価格のバリデーションスキーマを追加
+export const salesPriceSchema = z.object({
+  base_price: z.number().nonnegative("本体価格は0以上で入力してください"),
+  discount: z.number().nonnegative("値引き額は0以上で入力してください"),
+  inspection_fee: z.number().nonnegative("検査費用は0以上で入力してください"),
+  accessories_fee: z.number().nonnegative("付属品費用は0以上で入力してください"),
+  vehicle_price: z.number().nonnegative("車両価格は0以上で入力してください"),
+  tax_insurance: z.number().nonnegative("税金・保険料は0以上で入力してください"),
+  legal_fee: z.number().nonnegative("法定費用は0以上で入力してください"),
+  processing_fee: z.number().nonnegative("手続代行費用は0以上で入力してください"),
+  misc_fee: z.number().nonnegative("その他費用は0以上で入力してください"),
+  consumption_tax: z.number().nonnegative("消費税は0以上で入力してください"),
+  total_price: z.number().nonnegative("総額は0以上で入力してください"),
+  trade_in_price: z.number().nonnegative("下取り価格は0以上で入力してください"),
+  trade_in_debt: z.number().nonnegative("下取り債務は0以上で入力してください"),
+  payment_total: z.number().nonnegative("支払総額は0以上で入力してください"),
 });
 
 // 型の導出

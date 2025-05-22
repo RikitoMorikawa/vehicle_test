@@ -768,7 +768,7 @@ const ProcessingFeesInfo: React.FC<{
   );
 };
 
-// SalesPriceInfo コンポーネント改善
+// SalesPriceInfo コンポーネント改善（不足カラム追加版）
 const SalesPriceInfo: React.FC<{
   salesPrice: EstimateFormData["salesPrice"];
   taxInsuranceFees: EstimateFormData["taxInsuranceFees"];
@@ -817,8 +817,26 @@ const SalesPriceInfo: React.FC<{
 
   // 付属品費用の合計を計算
   const totalAccessoriesFee = accessories.reduce((total, accessory) => {
-    return total + (typeof accessory.price === 'number' ? accessory.price : 0);
+    return total + (typeof accessory.price === "number" ? accessory.price : 0);
   }, 0);
+
+  // 車両販売価格(1)の合計を計算（車両本体価格 - 値引き + 車検整備費用 + 付属品・特別仕様）
+  const calculatedVehiclePrice = (salesPrice.base_price || 0) - (salesPrice.discount || 0) + (salesPrice.inspection_fee || 0) + totalAccessoriesFee;
+
+  // 販売諸費用(2)の合計を計算（税金・保険料 + 預り法定費用 + 手続代行費用）
+  const totalMiscFee = totalTaxInsurance + totalLegalFee + totalProcessingFee;
+
+  // 追加計算: 現金販売価格(1)+(2)を計算（車両販売価格(1) + 販売諸費用(2)）
+  const calculatedTotalBeforeTax = calculatedVehiclePrice + totalMiscFee;
+
+  // 消費税を計算（現金販売価格(1)+(2)の10%）
+  const calculatedConsumptionTax = Math.floor(calculatedTotalBeforeTax * 0.1);
+
+  // 最終的な現金販売価格(1)+(2)を計算（税込み）
+  const calculatedTotalPrice = calculatedTotalBeforeTax + calculatedConsumptionTax;
+
+  // 支払総額を計算（総額 - 下取り価格 + 下取り債務）
+  const calculatedPaymentTotal = calculatedTotalPrice - (salesPrice.trade_in_price || 0) + (salesPrice.trade_in_debt || 0);
 
   // コンポーネントがマウントされた時や依存する値が変更された時に自動更新
   React.useEffect(() => {
@@ -826,129 +844,297 @@ const SalesPriceInfo: React.FC<{
     if (salesPrice.tax_insurance !== totalTaxInsurance) {
       onInputChange("salesPrice", "tax_insurance", totalTaxInsurance);
     }
-    
+
     // 法定費用の自動更新
     if (salesPrice.legal_fee !== totalLegalFee) {
       onInputChange("salesPrice", "legal_fee", totalLegalFee);
     }
-    
+
     // 手続代行費用の自動更新
     if (salesPrice.processing_fee !== totalProcessingFee) {
       onInputChange("salesPrice", "processing_fee", totalProcessingFee);
     }
-    
+
     // 付属品費用の自動更新
     if (salesPrice.accessories_fee !== totalAccessoriesFee) {
       onInputChange("salesPrice", "accessories_fee", totalAccessoriesFee);
     }
+
+    // 車両販売価格(1)の自動更新
+    if (salesPrice.vehicle_price !== calculatedVehiclePrice) {
+      onInputChange("salesPrice", "vehicle_price", calculatedVehiclePrice);
+    }
+
+    // 販売諸費用(2)の自動更新
+    if (salesPrice.misc_fee !== totalMiscFee) {
+      onInputChange("salesPrice", "misc_fee", totalMiscFee);
+    }
+
+    // 消費税の自動更新
+    if (salesPrice.consumption_tax !== calculatedConsumptionTax) {
+      onInputChange("salesPrice", "consumption_tax", calculatedConsumptionTax);
+    }
+
+    // 現金販売価格(1)+(2)の自動更新
+    if (salesPrice.total_price !== calculatedTotalPrice) {
+      onInputChange("salesPrice", "total_price", calculatedTotalPrice);
+    }
+
+    // 支払総額の自動更新
+    if (salesPrice.payment_total !== calculatedPaymentTotal) {
+      onInputChange("salesPrice", "payment_total", calculatedPaymentTotal);
+    }
   }, [
     // 依存関係を全て列挙
-    totalTaxInsurance, salesPrice.tax_insurance,
-    totalLegalFee, salesPrice.legal_fee,
-    totalProcessingFee, salesPrice.processing_fee,
-    totalAccessoriesFee, salesPrice.accessories_fee,
-    onInputChange
+    totalTaxInsurance,
+    salesPrice.tax_insurance,
+    totalLegalFee,
+    salesPrice.legal_fee,
+    totalProcessingFee,
+    salesPrice.processing_fee,
+    totalAccessoriesFee,
+    salesPrice.accessories_fee,
+    calculatedVehiclePrice,
+    salesPrice.vehicle_price,
+    totalMiscFee,
+    salesPrice.misc_fee,
+    calculatedConsumptionTax,
+    salesPrice.consumption_tax,
+    calculatedTotalPrice,
+    salesPrice.total_price,
+    calculatedPaymentTotal,
+    salesPrice.payment_total,
+    salesPrice.base_price,
+    salesPrice.discount,
+    salesPrice.inspection_fee,
+    salesPrice.trade_in_price,
+    salesPrice.trade_in_debt,
+    onInputChange,
   ]);
 
   return (
     <div className="border-b border-gray-200 pb-6">
       <h2 className="text-lg font-medium text-gray-900 mb-4">販売価格情報</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Input
-          label="本体価格"
-          name="base_price"
-          type="text"
-          inputMode="numeric"
-          value={salesPrice.base_price || ""}
-          onChange={handleChange}
-          error={getFieldError("base_price")}
-          placeholder="0"
-        />
-        <Input
-          label="値引き額"
-          name="discount"
-          type="text"
-          inputMode="numeric"
-          value={salesPrice.discount || ""}
-          onChange={handleChange}
-          error={getFieldError("discount")}
-          placeholder="0"
-        />
-        <Input
-          label="検査費用"
-          name="inspection_fee"
-          type="text"
-          inputMode="numeric"
-          value={salesPrice.inspection_fee || ""}
-          onChange={handleChange}
-          error={getFieldError("inspection_fee")}
-          placeholder="0"
-        />
-        <Input
-          label="付属品費用"
-          name="accessories_fee"
-          type="text"
-          inputMode="numeric"
-          value={totalAccessoriesFee || ""}
-          error={getFieldError("accessories_fee")}
-          placeholder="自動計算"
-          disabled={true}
-          className="bg-gray-100"
-        />
-        <Input
-          label="車両価格"
-          name="vehicle_price"
-          type="text"
-          inputMode="numeric"
-          value={salesPrice.vehicle_price || ""}
-          onChange={handleChange}
-          error={getFieldError("vehicle_price")}
-          placeholder="0"
-        />
-        <Input
-          label="税金・保険料"
-          name="tax_insurance"
-          type="text"
-          inputMode="numeric"
-          value={totalTaxInsurance || ""}
-          error={getFieldError("tax_insurance")}
-          placeholder="自動計算"
-          disabled={true}
-          className="bg-gray-100"
-        />
-        <Input
-          label="法定費用"
-          name="legal_fee"
-          type="text"
-          inputMode="numeric"
-          value={totalLegalFee || ""}
-          error={getFieldError("legal_fee")}
-          placeholder="自動計算"
-          disabled={true}
-          className="bg-gray-100"
-        />
-        <Input
-          label="手続代行費用"
-          name="processing_fee"
-          type="text"
-          inputMode="numeric"
-          value={totalProcessingFee || ""}
-          error={getFieldError("processing_fee")}
-          placeholder="自動計算"
-          disabled={true}
-          className="bg-gray-100"
-        />
-        <Input
-          label="その他費用"
-          name="misc_fee"
-          type="text"
-          inputMode="numeric"
-          value={salesPrice.misc_fee || ""}
-          onChange={handleChange}
-          error={getFieldError("misc_fee")}
-          placeholder="0"
-        />
+
+      {/* 基本価格情報 */}
+      <div className="mb-6">
+        <h3 className="text-md font-medium text-gray-700 mb-3">基本価格・車両販売価格(1)</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Input
+            label="車両本体価格"
+            name="base_price"
+            type="text"
+            inputMode="numeric"
+            value={salesPrice.base_price || ""}
+            onChange={handleChange}
+            error={getFieldError("base_price")}
+            placeholder="0"
+          />
+          <Input
+            label="値引き"
+            name="discount"
+            type="text"
+            inputMode="numeric"
+            value={salesPrice.discount || ""}
+            onChange={handleChange}
+            error={getFieldError("discount")}
+            placeholder="0"
+          />
+          <Input
+            label="車検整備費用"
+            name="inspection_fee"
+            type="text"
+            inputMode="numeric"
+            value={salesPrice.inspection_fee || ""}
+            onChange={handleChange}
+            error={getFieldError("inspection_fee")}
+            placeholder="0"
+          />
+          <Input
+            label="付属品・特別仕様"
+            name="accessories_fee"
+            type="text"
+            inputMode="numeric"
+            value={totalAccessoriesFee || ""}
+            error={getFieldError("accessories_fee")}
+            placeholder="自動計算"
+            disabled={true}
+            className="bg-gray-100"
+          />
+          <div className="md:col-span-2">
+            <Input
+              label="車両販売価格(1)"
+              name="vehicle_price"
+              type="text"
+              inputMode="numeric"
+              value={calculatedVehiclePrice || ""}
+              error={getFieldError("vehicle_price")}
+              placeholder="自動計算"
+              disabled={true}
+              className="bg-gray-100 font-semibold"
+            />
+            <div className="text-sm text-gray-500 mt-1">
+              <p>車両本体価格 - 値引き + 車検整備費用 + 付属品・特別仕様</p>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* 自動計算フィールド */}
+      <div className="mb-6">
+        <h3 className="text-md font-medium text-gray-700 mb-3">販売諸費用(2)の内訳</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Input
+            label="税金・保険料"
+            name="tax_insurance"
+            type="text"
+            inputMode="numeric"
+            value={totalTaxInsurance || ""}
+            error={getFieldError("tax_insurance")}
+            placeholder="自動計算"
+            disabled={true}
+            className="bg-gray-100"
+          />
+          <Input
+            label="預り法定費用"
+            name="legal_fee"
+            type="text"
+            inputMode="numeric"
+            value={totalLegalFee || ""}
+            error={getFieldError("legal_fee")}
+            placeholder="自動計算"
+            disabled={true}
+            className="bg-gray-100"
+          />
+          <Input
+            label="手続代行費用"
+            name="processing_fee"
+            type="text"
+            inputMode="numeric"
+            value={totalProcessingFee || ""}
+            error={getFieldError("processing_fee")}
+            placeholder="自動計算"
+            disabled={true}
+            className="bg-gray-100"
+          />
+          <div className="md:col-span-1">
+            <Input
+              label="販売諸費用(2)"
+              name="misc_fee"
+              type="text"
+              inputMode="numeric"
+              value={totalMiscFee || ""}
+              error={getFieldError("misc_fee")}
+              placeholder="自動計算"
+              disabled={true}
+              className="bg-gray-100 font-semibold"
+            />
+            <div className="text-sm text-gray-500 mt-1">
+              <p>上記3項目の合計</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* その他費用と下取り情報 */}
+      <div className="mb-6">
+        <h3 className="text-md font-medium text-gray-700 mb-3">販売諸費用・下取り情報</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Input
+            label="下取車価格"
+            name="trade_in_price"
+            type="text"
+            inputMode="numeric"
+            value={salesPrice.trade_in_price || ""}
+            onChange={handleChange}
+            error={getFieldError("trade_in_price")}
+            placeholder="0"
+          />
+          <Input
+            label="下取車残債"
+            name="trade_in_debt"
+            type="text"
+            inputMode="numeric"
+            value={salesPrice.trade_in_debt || ""}
+            onChange={handleChange}
+            error={getFieldError("trade_in_debt")}
+            placeholder="0"
+          />
+        </div>
+      </div>
+
+      {/* 最終計算結果 */}
+      <div className="mb-6">
+        <h3 className="text-md font-medium text-gray-700 mb-3">最終金額（自動計算）</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="md:col-span-2">
+            <Input
+              label="現金販売価格(1)+(2)"
+              name="total_price"
+              type="text"
+              inputMode="numeric"
+              value={calculatedTotalBeforeTax || ""}
+              error={getFieldError("total_price")}
+              placeholder="自動計算"
+              disabled={true}
+              className="bg-gray-100 font-semibold"
+            />
+            <div className="text-sm text-gray-500 mt-1">
+              <p>車両販売価格(1) + 販売諸費用(2)</p>
+            </div>
+          </div>
+          <Input
+            label="内消費税"
+            name="consumption_tax"
+            type="text"
+            inputMode="numeric"
+            value={calculatedConsumptionTax || ""}
+            error={getFieldError("consumption_tax")}
+            placeholder="自動計算（10%）"
+            disabled={true}
+            className="bg-gray-100"
+          />
+          <Input
+            label="税込み総額"
+            name="total_with_tax"
+            type="text"
+            inputMode="numeric"
+            value={calculatedTotalPrice || ""}
+            placeholder="自動計算"
+            disabled={true}
+            className="bg-gray-100"
+          />
+          <div className="md:col-span-2">
+            <Input
+              label="お支払総額"
+              name="payment_total"
+              type="text"
+              inputMode="numeric"
+              value={calculatedPaymentTotal || ""}
+              error={getFieldError("payment_total")}
+              placeholder="自動計算"
+              disabled={true}
+              className="bg-gray-100 text-lg font-semibold"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 計算式の説明 */}
+      <div className="bg-blue-50 p-4 rounded-md">
+        <h4 className="text-sm font-medium text-blue-800 mb-2">計算式</h4>
+        <div className="text-xs text-blue-700 space-y-1">
+          <p>車両販売価格(1) = 車両本体価格 - 値引き + 車検整備費用 + 付属品・特別仕様</p>
+          <p>販売諸費用(2) = 税金・保険料 + 預り法定費用 + 手続代行費用</p>
+          <p>現金販売価格(1)+(2) = 車両販売価格(1) + 販売諸費用(2) （税抜き）</p>
+          <p>内消費税 = 現金販売価格(1)+(2) × 10%</p>
+          <p>税込み総額 = 現金販売価格(1)+(2) + 内消費税</p>
+          <p>
+            <strong>お支払総額 = 税込み総額 - 下取車価格 + 下取車残債</strong>
+          </p>
+        </div>
+      </div>
+
       {errors?.salesPrice && typeof errors.salesPrice === "string" && <div className="mt-4 text-sm text-red-600">{errors.salesPrice}</div>}
     </div>
   );
