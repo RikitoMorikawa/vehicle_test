@@ -25,6 +25,17 @@ const EstimateContainer: React.FC = () => {
 
   // フォームの初期状態
   const [formData, setFormData] = useState<EstimateFormData>({
+    salesPrice: {
+      base_price: 0,
+      discount: 0,
+      inspection_fee: 0,
+      accessories_fee: 0,
+      vehicle_price: 0,
+      tax_insurance: 0,
+      legal_fee: 0,
+      processing_fee: 0,
+      misc_fee: 0,
+    },
     tradeIn: {
       trade_in_available: true, // 下取り車両の有無
       vehicle_name: "",
@@ -73,9 +84,73 @@ const EstimateContainer: React.FC = () => {
     },
   });
 
+  // フォームデータの各セクション変更を監視して販売価格の対応するフィールドを更新するuseEffect
+  React.useEffect(() => {
+    // 税金・保険料の合計
+    const totalTaxInsurance =
+      (formData.taxInsuranceFees.automobile_tax || 0) +
+      (formData.taxInsuranceFees.environmental_performance_tax || 0) +
+      (formData.taxInsuranceFees.weight_tax || 0) +
+      (formData.taxInsuranceFees.liability_insurance_fee || 0) +
+      (formData.taxInsuranceFees.voluntary_insurance_fee || 0);
+
+    // 法定費用の合計
+    const totalLegalFee =
+      (formData.legalFees.inspection_registration_stamp || 0) +
+      (formData.legalFees.parking_certificate_stamp || 0) +
+      (formData.legalFees.trade_in_stamp || 0) +
+      (formData.legalFees.recycling_deposit || 0) +
+      (formData.legalFees.other_nontaxable || 0);
+
+    // 手続代行費用の合計
+    const totalProcessingFee =
+      (formData.processingFees.inspection_registration_fee || 0) +
+      (formData.processingFees.parking_certificate_fee || 0) +
+      (formData.processingFees.trade_in_processing_fee || 0) +
+      (formData.processingFees.trade_in_assessment_fee || 0) +
+      (formData.processingFees.recycling_management_fee || 0) +
+      (formData.processingFees.delivery_fee || 0) +
+      (formData.processingFees.other_fees || 0);
+
+    // 付属品費用の合計
+    const totalAccessoriesFee = (formData.accessories || []).reduce((total, accessory) => {
+      return total + (typeof accessory.price === "number" ? accessory.price : 0);
+    }, 0);
+
+    // 値が異なる場合のみ更新（無限ループ防止）
+    const needsUpdate =
+      formData.salesPrice.tax_insurance !== totalTaxInsurance ||
+      formData.salesPrice.legal_fee !== totalLegalFee ||
+      formData.salesPrice.processing_fee !== totalProcessingFee ||
+      formData.salesPrice.accessories_fee !== totalAccessoriesFee;
+
+    if (needsUpdate) {
+      setFormData((prev) => ({
+        ...prev,
+        salesPrice: {
+          ...prev.salesPrice,
+          tax_insurance: totalTaxInsurance,
+          legal_fee: totalLegalFee,
+          processing_fee: totalProcessingFee,
+          accessories_fee: totalAccessoriesFee,
+        },
+      }));
+    }
+  }, [
+    // 全ての依存項目を列挙
+    formData.taxInsuranceFees,
+    formData.legalFees,
+    formData.processingFees,
+    formData.accessories,
+    formData.salesPrice.tax_insurance,
+    formData.salesPrice.legal_fee,
+    formData.salesPrice.processing_fee,
+    formData.salesPrice.accessories_fee,
+  ]);
+
   // 入力値変更ハンドラ
   const handleInputChange = (
-    section: "tradeIn" | "loanCalculation" | "accessories" | "taxInsuranceFees" | "legalFees" | "processingFees",
+    section: "salesPrice" | "tradeIn" | "loanCalculation" | "accessories" | "taxInsuranceFees" | "legalFees" | "processingFees",
     name: string,
     value: string | number | boolean | number[]
   ) => {

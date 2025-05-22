@@ -20,7 +20,7 @@ export interface EstimateComponentProps {
   errors: EstimateError | null;
   success: string | null;
   onInputChange: (
-    section: "tradeIn" | "loanCalculation" | "taxInsuranceFees" | "legalFees" | "processingFees",
+    section: "tradeIn" | "loanCalculation" | "taxInsuranceFees" | "legalFees" | "processingFees" | "salesPrice",
     name: string,
     value: string | number | boolean | number[]
   ) => void;
@@ -448,7 +448,7 @@ const AccessoriesInfo: React.FC<{
 
   return (
     <div className="border-b border-gray-200 pb-6">
-      <h2 className="text-lg font-medium text-gray-900 mb-4">付属品・特別仕様</h2>
+      <h2 className="text-lg font-medium text-gray-900 mb-4">（A）付属品・特別仕様</h2>
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input
@@ -536,7 +536,7 @@ const TaxInsuranceInfo: React.FC<{
 
   return (
     <div className="border-b border-gray-200 pb-6">
-      <h2 className="text-lg font-medium text-gray-900 mb-4">税金・保険料内訳</h2>
+      <h2 className="text-lg font-medium text-gray-900 mb-4">（B）税金・保険料内訳</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
           label="自動車税"
@@ -613,7 +613,7 @@ const LegalFeesInfo: React.FC<{
 
   return (
     <div className="border-b border-gray-200 pb-6">
-      <h2 className="text-lg font-medium text-gray-900 mb-4">預り法定費用内訳</h2>
+      <h2 className="text-lg font-medium text-gray-900 mb-4">（C）預り法定費用内訳</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
           label="検査登録印紙代"
@@ -690,7 +690,7 @@ const ProcessingFeesInfo: React.FC<{
 
   return (
     <div className="border-b border-gray-200 pb-6">
-      <h2 className="text-lg font-medium text-gray-900 mb-4">手続代行費用内訳</h2>
+      <h2 className="text-lg font-medium text-gray-900 mb-4">（D）手続代行費用内訳</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
           label="検査登録費用"
@@ -764,6 +764,192 @@ const ProcessingFeesInfo: React.FC<{
         />
       </div>
       {errors?.processingFees && typeof errors.processingFees === "string" && <div className="mt-4 text-sm text-red-600">{errors.processingFees}</div>}
+    </div>
+  );
+};
+
+// SalesPriceInfo コンポーネント改善
+const SalesPriceInfo: React.FC<{
+  salesPrice: EstimateFormData["salesPrice"];
+  taxInsuranceFees: EstimateFormData["taxInsuranceFees"];
+  legalFees: EstimateFormData["legalFees"];
+  processingFees: EstimateFormData["processingFees"];
+  accessories: Accessory[]; // 付属品情報を追加
+  onInputChange: (section: "salesPrice", field: string, value: string | number) => void;
+  errors?: EstimateError | null;
+}> = ({ salesPrice, taxInsuranceFees, legalFees, processingFees, accessories, onInputChange, errors }) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    const numValue = value === "" ? 0 : parseInt(value);
+    onInputChange("salesPrice", name, numValue);
+  };
+
+  const getFieldError = (fieldName: string): string | undefined => {
+    if (!errors || !errors.salesPrice) return undefined;
+    return typeof errors.salesPrice === "string" ? errors.salesPrice : errors.salesPrice[fieldName];
+  };
+
+  // 税金・保険料の合計を計算
+  const totalTaxInsurance =
+    (taxInsuranceFees.automobile_tax || 0) +
+    (taxInsuranceFees.environmental_performance_tax || 0) +
+    (taxInsuranceFees.weight_tax || 0) +
+    (taxInsuranceFees.liability_insurance_fee || 0) +
+    (taxInsuranceFees.voluntary_insurance_fee || 0);
+
+  // 法定費用の合計を計算
+  const totalLegalFee =
+    (legalFees.inspection_registration_stamp || 0) +
+    (legalFees.parking_certificate_stamp || 0) +
+    (legalFees.trade_in_stamp || 0) +
+    (legalFees.recycling_deposit || 0) +
+    (legalFees.other_nontaxable || 0);
+
+  // 手続代行費用の合計を計算
+  const totalProcessingFee =
+    (processingFees.inspection_registration_fee || 0) +
+    (processingFees.parking_certificate_fee || 0) +
+    (processingFees.trade_in_processing_fee || 0) +
+    (processingFees.trade_in_assessment_fee || 0) +
+    (processingFees.recycling_management_fee || 0) +
+    (processingFees.delivery_fee || 0) +
+    (processingFees.other_fees || 0);
+
+  // 付属品費用の合計を計算
+  const totalAccessoriesFee = accessories.reduce((total, accessory) => {
+    return total + (typeof accessory.price === 'number' ? accessory.price : 0);
+  }, 0);
+
+  // コンポーネントがマウントされた時や依存する値が変更された時に自動更新
+  React.useEffect(() => {
+    // 税金・保険料の自動更新
+    if (salesPrice.tax_insurance !== totalTaxInsurance) {
+      onInputChange("salesPrice", "tax_insurance", totalTaxInsurance);
+    }
+    
+    // 法定費用の自動更新
+    if (salesPrice.legal_fee !== totalLegalFee) {
+      onInputChange("salesPrice", "legal_fee", totalLegalFee);
+    }
+    
+    // 手続代行費用の自動更新
+    if (salesPrice.processing_fee !== totalProcessingFee) {
+      onInputChange("salesPrice", "processing_fee", totalProcessingFee);
+    }
+    
+    // 付属品費用の自動更新
+    if (salesPrice.accessories_fee !== totalAccessoriesFee) {
+      onInputChange("salesPrice", "accessories_fee", totalAccessoriesFee);
+    }
+  }, [
+    // 依存関係を全て列挙
+    totalTaxInsurance, salesPrice.tax_insurance,
+    totalLegalFee, salesPrice.legal_fee,
+    totalProcessingFee, salesPrice.processing_fee,
+    totalAccessoriesFee, salesPrice.accessories_fee,
+    onInputChange
+  ]);
+
+  return (
+    <div className="border-b border-gray-200 pb-6">
+      <h2 className="text-lg font-medium text-gray-900 mb-4">販売価格情報</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Input
+          label="本体価格"
+          name="base_price"
+          type="text"
+          inputMode="numeric"
+          value={salesPrice.base_price || ""}
+          onChange={handleChange}
+          error={getFieldError("base_price")}
+          placeholder="0"
+        />
+        <Input
+          label="値引き額"
+          name="discount"
+          type="text"
+          inputMode="numeric"
+          value={salesPrice.discount || ""}
+          onChange={handleChange}
+          error={getFieldError("discount")}
+          placeholder="0"
+        />
+        <Input
+          label="検査費用"
+          name="inspection_fee"
+          type="text"
+          inputMode="numeric"
+          value={salesPrice.inspection_fee || ""}
+          onChange={handleChange}
+          error={getFieldError("inspection_fee")}
+          placeholder="0"
+        />
+        <Input
+          label="付属品費用"
+          name="accessories_fee"
+          type="text"
+          inputMode="numeric"
+          value={totalAccessoriesFee || ""}
+          error={getFieldError("accessories_fee")}
+          placeholder="自動計算"
+          disabled={true}
+          className="bg-gray-100"
+        />
+        <Input
+          label="車両価格"
+          name="vehicle_price"
+          type="text"
+          inputMode="numeric"
+          value={salesPrice.vehicle_price || ""}
+          onChange={handleChange}
+          error={getFieldError("vehicle_price")}
+          placeholder="0"
+        />
+        <Input
+          label="税金・保険料"
+          name="tax_insurance"
+          type="text"
+          inputMode="numeric"
+          value={totalTaxInsurance || ""}
+          error={getFieldError("tax_insurance")}
+          placeholder="自動計算"
+          disabled={true}
+          className="bg-gray-100"
+        />
+        <Input
+          label="法定費用"
+          name="legal_fee"
+          type="text"
+          inputMode="numeric"
+          value={totalLegalFee || ""}
+          error={getFieldError("legal_fee")}
+          placeholder="自動計算"
+          disabled={true}
+          className="bg-gray-100"
+        />
+        <Input
+          label="手続代行費用"
+          name="processing_fee"
+          type="text"
+          inputMode="numeric"
+          value={totalProcessingFee || ""}
+          error={getFieldError("processing_fee")}
+          placeholder="自動計算"
+          disabled={true}
+          className="bg-gray-100"
+        />
+        <Input
+          label="その他費用"
+          name="misc_fee"
+          type="text"
+          inputMode="numeric"
+          value={salesPrice.misc_fee || ""}
+          onChange={handleChange}
+          error={getFieldError("misc_fee")}
+          placeholder="0"
+        />
+      </div>
+      {errors?.salesPrice && typeof errors.salesPrice === "string" && <div className="mt-4 text-sm text-red-600">{errors.salesPrice}</div>}
     </div>
   );
 };
@@ -842,17 +1028,28 @@ const EstimateComponent: React.FC<EstimateComponentProps> = ({
               <form onSubmit={onSubmit} className="p-6 space-y-8">
                 {/* 車両情報のみ外部から取得した値で表示 */}
                 {vehicle && <VehicleInfo vehicle={vehicle} />}
-                {/* 下取り車両情報とローン情報は空の初期値で表示 */}
+                {/* 下取り車両情報コンポーネントを使用 */}
                 <TradeInInfo tradeIn={formData.tradeIn} onInputChange={onInputChange} errors={errors} />
+                {/* ローン計算情報コンポーネントを使用 */}
                 <LoanCalculationComponent loanCalculation={formData.loanCalculation} onInputChange={onInputChange} errors={errors} />
-                {/* 付属品情報コンポーネントを使用 */}
+                {/* (A)付属品情報コンポーネントを使用 */}
                 <AccessoriesInfo accessories={formData.accessories || []} onInputChange={onAccessoryChange} errors={errors} />
-                {/* ここに税金・保険料コンポーネントを追加 */}
+                {/* (B)税金・保険料コンポーネントを追加 */}
                 <TaxInsuranceInfo taxInsuranceFees={formData.taxInsuranceFees} onInputChange={onInputChange} errors={errors} />
-                {/* 法定費用コンポーネントを追加 */}
+                {/* (C)法定費用コンポーネントを追加 */}
                 <LegalFeesInfo legalFees={formData.legalFees} onInputChange={onInputChange} errors={errors} />
-                {/* 手続代行費用コンポーネントを追加 */}
+                {/* (D)手続代行費用コンポーネントを追加 */}
                 <ProcessingFeesInfo processingFees={formData.processingFees} onInputChange={onInputChange} errors={errors} />
+                {/* 販売価格情報コンポーネントを使用 - 全ての必要な情報を渡す */}
+                <SalesPriceInfo
+                  salesPrice={formData.salesPrice}
+                  taxInsuranceFees={formData.taxInsuranceFees}
+                  legalFees={formData.legalFees}
+                  processingFees={formData.processingFees}
+                  accessories={formData.accessories || []} // 付属品情報を渡す
+                  onInputChange={onInputChange}
+                  errors={errors}
+                />
                 <div className="flex justify-end space-x-4">
                   <Button type="button" variant="outline" onClick={onCancel}>
                     キャンセル

@@ -29,7 +29,7 @@ export const estimateHandler = {
 
   // 見積もりを作成する関数
   async createEstimate(data: { vehicleId: string } & EstimateFormData): Promise<void> {
-    const { vehicleId, tradeIn, loanCalculation, accessories, taxInsuranceFees, legalFees, processingFees } = data;
+    const { vehicleId, tradeIn, loanCalculation, accessories, taxInsuranceFees, legalFees, processingFees, salesPrice } = data;
 
     console.log("Creating estimate with data:", {
       vehicleId,
@@ -162,6 +162,19 @@ export const estimateHandler = {
       if (processingFeesError) {
         console.error("Processing fees insert error:", processingFeesError);
         throw processingFeesError;
+      }
+
+      // 販売価格情報の登録を追加
+      const { error: salesPriceError } = await supabase.from("sales_prices").insert([
+        {
+          ...salesPrice,
+          estimate_id: estimateId,
+        },
+      ]);
+
+      if (salesPriceError) {
+        console.error("Sales price insert error:", salesPriceError);
+        throw salesPriceError;
       }
 
       console.log("Estimate created successfully");

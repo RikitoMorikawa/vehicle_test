@@ -4,6 +4,19 @@ import { z } from "zod";
 const today = new Date();
 today.setHours(0, 0, 0, 0); // 時間部分をリセット
 
+// 販売価格のバリデーションスキーマを追加
+export const salesPriceSchema = z.object({
+  base_price: z.number().nonnegative("本体価格は0以上で入力してください"),
+  discount: z.number().nonnegative("値引き額は0以上で入力してください"),
+  inspection_fee: z.number().nonnegative("検査費用は0以上で入力してください"),
+  accessories_fee: z.number().nonnegative("付属品費用は0以上で入力してください"),
+  vehicle_price: z.number().nonnegative("車両価格は0以上で入力してください"),
+  tax_insurance: z.number().nonnegative("税金・保険料は0以上で入力してください"),
+  legal_fee: z.number().nonnegative("法定費用は0以上で入力してください"),
+  processing_fee: z.number().nonnegative("手続代行費用は0以上で入力してください"),
+  misc_fee: z.number().nonnegative("その他費用は0以上で入力してください"),
+});
+
 // 下取り車両のバリデーションスキーマ
 export const tradeInSchema = z.object({
   trade_in_available: z.boolean(),
@@ -82,8 +95,10 @@ export const processingFeesSchema = z.object({
 
 // 型の導出
 export type TradeInFormData = z.infer<typeof tradeInSchema>;
+
 // フォームデータ型定義
 export interface EstimateFormData {
+  salesPrice: z.infer<typeof salesPriceSchema>;
   tradeIn: z.infer<typeof tradeInSchema>;
   loanCalculation: z.infer<typeof loanCalculationSchema>;
   accessories: z.infer<typeof accessorySchema>[];
@@ -94,6 +109,7 @@ export interface EstimateFormData {
 
 // エラー型定義も更新
 export interface EstimateError {
+  salesPrice?: { [key: string]: string } | string;
   tradeIn?: { [key: string]: string } | string;
   loanCalculation?: { [key: string]: string } | string;
   accessories?: { [key: string]: string } | string;

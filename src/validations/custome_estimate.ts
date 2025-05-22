@@ -1,6 +1,7 @@
 // src/validations/custome_estimate.ts
 import { z } from "zod";
 import {
+  salesPriceSchema,
   EstimateError,
   EstimateFormData,
   loanCalculationSchema,
@@ -14,8 +15,9 @@ import {
 // バリデーション関数
 export const validateEstimate = (data: unknown): z.SafeParseReturnType<EstimateFormData, EstimateFormData> => {
   const estimateSchema = z.object({
-    tradeIn: tradeInSchema,
-    loanCalculation: loanCalculationSchema,
+    salesPrice: salesPriceSchema, // 車両本体価格のバリデーションを追加
+    tradeIn: tradeInSchema, // 下取り車両情報のバリデーションを追加
+    loanCalculation: loanCalculationSchema, // ローン計算のバリデーションを追加
     accessories: z.array(accessorySchema), // 付属品配列のバリデーションを追加
     taxInsuranceFees: taxInsuranceFeesSchema, // 税金・保険料のバリデーションを追加
     legalFees: legalFeesSchema, // 法定費用のバリデーションを追加

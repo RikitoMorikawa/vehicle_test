@@ -118,11 +118,30 @@ CREATE INDEX IF NOT EXISTS legal_fees_estimate_id_idx ON legal_fees(estimate_id)
 NOTIFY pgrst, 'reload schema';
 
 -- テーブルが既に存在する場合は、estimate_id カラムを追加
-ALTER TABLE legal_fees 
+ALTER TABLE processing_fees 
 ADD COLUMN IF NOT EXISTS estimate_id UUID REFERENCES estimate_vehicles(id) ON DELETE CASCADE;
 
 -- インデックスを作成（まだ存在していない場合）
-CREATE INDEX IF NOT EXISTS legal_fees_estimate_id_idx ON legal_fees(estimate_id);
+CREATE INDEX IF NOT EXISTS processing_fees_estimate_id_idx ON processing_fees(estimate_id);
 
 -- スキーマキャッシュをリロード
 NOTIFY pgrst, 'reload schema';
+
+-- テーブルが既に存在する場合は、estimate_id カラムを追加
+ALTER TABLE sales_prices 
+ADD COLUMN IF NOT EXISTS estimate_id UUID REFERENCES estimate_vehicles(id) ON DELETE CASCADE;
+
+-- インデックスを作成（まだ存在していない場合）
+CREATE INDEX IF NOT EXISTS sales_prices_estimate_id_idx ON sales_prices(estimate_id);
+
+-- スキーマキャッシュをリロード
+NOTIFY pgrst, 'reload schema';
+
+-- 1. テーブルに対するRLSを有効化（既に有効になっている場合はスキップ可能）
+ALTER TABLE sales_prices ENABLE ROW LEVEL SECURITY;
+
+-- 2. すべての操作を許可するポリシーを追加
+CREATE POLICY sales_prices_policy
+  ON sales_prices
+  USING (true)
+  WITH CHECK (true);
