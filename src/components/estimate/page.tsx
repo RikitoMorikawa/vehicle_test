@@ -178,7 +178,7 @@ const TradeInInfo: React.FC<{
   );
 };
 
-// ローン計算情報コンポーネント - 空の初期値で表示
+// ローン計算情報コンポーネント
 const LoanCalculationComponent: React.FC<{
   loanCalculation: EstimateFormData["loanCalculation"];
   cashSalesPrice: number; // 現金販売価格を受け取る
@@ -186,7 +186,7 @@ const LoanCalculationComponent: React.FC<{
   errors?: EstimateError | null;
 }> = ({ loanCalculation, cashSalesPrice, onInputChange, errors }) => {
   // 現金・割賦元金を自動計算（現金販売価格 - 頭金）
-  const calculatedPrincipal = (cashSalesPrice || 0) - (loanCalculation.down_payment || 0);
+  const calculatedPrincipal = Math.max(0, (cashSalesPrice || 0) - (loanCalculation.down_payment || 0));
 
   // 分割支払金合計を自動計算（現金・割賦元金 + 分割払手数料）
   const calculatedTotalPayment = calculatedPrincipal + (loanCalculation.interest_fee || 0);
@@ -213,14 +213,23 @@ const LoanCalculationComponent: React.FC<{
 
   // 現金・割賦元金と分割支払金合計の自動更新
   React.useEffect(() => {
+    // 現金・割賦元金の自動更新
     if (loanCalculation.principal !== calculatedPrincipal) {
       onInputChange("loanCalculation", "principal", calculatedPrincipal);
     }
 
+    // 分割支払金合計の自動更新
     if (loanCalculation.total_payment !== calculatedTotalPayment) {
       onInputChange("loanCalculation", "total_payment", calculatedTotalPayment);
     }
-  }, [calculatedPrincipal, loanCalculation.principal, calculatedTotalPayment, loanCalculation.total_payment, onInputChange]);
+  }, [
+    calculatedPrincipal,
+    loanCalculation.principal,
+    calculatedTotalPayment,
+    loanCalculation.total_payment,
+    loanCalculation.interest_fee, // 分割払手数料の変更も監視
+    onInputChange,
+  ]);
 
   return (
     <div className="border-b border-gray-200 pb-6">
@@ -251,7 +260,7 @@ const LoanCalculationComponent: React.FC<{
             className="bg-gray-100 font-semibold"
           />
           <div className="text-sm text-gray-500 mt-1">
-            <p>現金販売価格 - 頭金</p>
+            <p>現金販売価格({cashSalesPrice?.toLocaleString() || 0}円) - 頭金</p>
           </div>
         </div>
         <Input
@@ -279,7 +288,7 @@ const LoanCalculationComponent: React.FC<{
             className="bg-gray-100 font-semibold"
           />
           <div className="text-sm text-gray-500 mt-1">
-            <p>現金・割賦元金 + 分割払手数料</p>
+            <p>現金・割賦元金({calculatedPrincipal?.toLocaleString() || 0}円) + 分割払手数料</p>
           </div>
         </div>
 
