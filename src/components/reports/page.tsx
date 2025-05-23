@@ -4,46 +4,39 @@ import Header from "../Header";
 import Sidebar from "../Sidebar";
 import Footer from "../Footer";
 import Button from "../ui/Button";
-import { FileText, Download, Calendar, Car, Building } from "lucide-react";
-
-// 見積書データの型定義
-interface EstimateReport {
-  id: string;
-  estimateNumber: string; // 見積書番号
-  vehicleInfo: {
-    maker: string;
-    name: string;
-    year: number;
-  };
-  customerName?: string; // 顧客名（オプション）
-  companyName?: string; // 加盟店名
-  totalAmount: number; // 支払総額
-  createdAt: string; // 作成日
-  status: "draft" | "completed" | "sent"; // ステータス
-}
+import { FileText, Calendar, Car, Building, Eye } from "lucide-react";
+import PDFPreviewModal from "../common/PDFPreviewModal";
+import type { EstimateReport } from "../../types/report/page";
+import type { EstimatePDFData } from "../../types/common/pdf/page";
 
 interface ReportsPageProps {
   estimates: EstimateReport[];
   loading: boolean;
   error: string | null;
-  onDownloadPDF: (estimateId: string) => void;
+  onPreviewPDF: (estimateId: string) => void;
+  // PDFプレビューモーダル用
+  isPreviewOpen: boolean;
+  previewLoading: boolean;
+  previewUrl?: string | null;
+  previewData?: EstimatePDFData | null; // この行を追加
+  previewEstimateId: string | null;
+  onClosePreview: () => void;
+  onDownloadPDF?: (estimateId: string) => void;
 }
 
-const ReportsPage: React.FC<ReportsPageProps> = ({ estimates, loading, error, onDownloadPDF }) => {
-  // ステータスの表示文字列とスタイル
-  const getStatusDisplay = (status: string) => {
-    switch (status) {
-      case "draft":
-        return { text: "下書き", className: "bg-gray-100 text-gray-800" };
-      case "completed":
-        return { text: "完成", className: "bg-green-100 text-green-800" };
-      case "sent":
-        return { text: "送信済み", className: "bg-blue-100 text-blue-800" };
-      default:
-        return { text: "不明", className: "bg-gray-100 text-gray-800" };
-    }
-  };
-
+const ReportsPage: React.FC<ReportsPageProps> = ({
+  estimates,
+  loading,
+  error,
+  onPreviewPDF,
+  isPreviewOpen,
+  previewLoading,
+  previewUrl = null,
+  previewData, // この行を追加（destructuring）
+  previewEstimateId,
+  onClosePreview,
+  onDownloadPDF,
+}) => {
   // 日付フォーマット
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -83,7 +76,6 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ estimates, loading, error, on
       <Header />
       <div className="flex-1 flex">
         <Sidebar />
-        {/* メインコンテンツエリアに overflow-auto を追加 */}
         <main className="flex-1 p-8 overflow-auto">
           <div className="max-w-full mx-auto">
             <div className="flex items-center justify-between mb-6">
@@ -116,14 +108,12 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ estimates, loading, error, on
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">加盟店</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">顧客名</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">支払総額</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ステータス</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">作成日</th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">PDF</th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">アクション</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {estimates.map((estimate) => {
-                        const statusDisplay = getStatusDisplay(estimate.status);
                         return (
                           <tr key={estimate.id} className="hover:bg-gray-50">
                             <td className="px-6 py-4 whitespace-nowrap">
@@ -156,11 +146,6 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ estimates, loading, error, on
                               <span className="text-sm font-medium text-gray-900">¥{estimate.totalAmount.toLocaleString()}</span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusDisplay.className}`}>
-                                {statusDisplay.text}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
                                 <Calendar className="w-4 h-4 text-gray-400 mr-2" />
                                 <span className="text-sm text-gray-900">{formatDate(estimate.createdAt)}</span>
@@ -170,11 +155,11 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ estimates, loading, error, on
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => onDownloadPDF(estimate.id)}
-                                className="flex items-center text-red-600 border-red-300 hover:bg-red-50"
+                                onClick={() => onPreviewPDF(estimate.id)}
+                                className="flex items-center text-blue-600 border-blue-300 hover:bg-blue-50"
                               >
-                                <Download className="w-4 h-4 mr-1" />
-                                PDF
+                                <Eye className="w-4 h-4 mr-1" />
+                                プレビュー
                               </Button>
                             </td>
                           </tr>
@@ -189,6 +174,17 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ estimates, loading, error, on
         </main>
       </div>
       <Footer />
+
+      {/* PDFプレビューモーダル */}
+      <PDFPreviewModal
+        isOpen={isPreviewOpen}
+        onClose={onClosePreview}
+        pdfUrl={previewUrl}
+        estimateId={previewEstimateId}
+        loading={previewLoading}
+        onDownload={onDownloadPDF}
+        estimateData={previewData} // currentEstimateData → previewData に変更
+      />
     </div>
   );
 };

@@ -2,27 +2,20 @@
 import React, { useState, useEffect } from "react";
 import ReportsPage from "../../components/reports/page";
 import { reportsService } from "../../services/reports/page";
-
-// 見積書データの型定義（コンポーネントと同じ）
-interface EstimateReport {
-  id: string;
-  estimateNumber: string;
-  vehicleInfo: {
-    maker: string;
-    name: string;
-    year: number;
-  };
-  customerName?: string;
-  companyName?: string;
-  totalAmount: number;
-  createdAt: string;
-  status: "draft" | "completed" | "sent";
-}
+import { pdfService } from "../../services/common/pdf/page";
+import type { EstimateReport } from "../../types/report/page";
+import type { EstimatePDFData } from "../../types/common/pdf/page";
 
 const ReportsContainer: React.FC = () => {
   const [estimates, setEstimates] = useState<EstimateReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // PDFプレビュー用の状態
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewData, setPreviewData] = useState<EstimatePDFData | null>(null);
+  const [previewEstimateId, setPreviewEstimateId] = useState<string | null>(null);
 
   // 見積書一覧を取得
   useEffect(() => {
@@ -45,20 +38,57 @@ const ReportsContainer: React.FC = () => {
     fetchEstimates();
   }, []);
 
-  // PDFダウンロードハンドラー（未実装）
-  const handleDownloadPDF = async (estimateId: string) => {
+  // PDFプレビューハンドラー
+  const handlePreviewPDF = async (estimateId: string) => {
     try {
-      console.log("PDF download requested for estimate:", estimateId);
-      // TODO: PDF生成・ダウンロード機能を実装
-      // await reportsService.downloadEstimatePDF(estimateId);
-      alert(`見積書ID: ${estimateId} のPDFダウンロード機能は準備中です`);
+      console.log("PDF preview requested for estimate:", estimateId);
+      setError(null);
+      setPreviewLoading(true);
+      setPreviewEstimateId(estimateId);
+      setIsPreviewOpen(true);
+
+      // 既存のプレビューデータをクリア
+      setPreviewData(null);
+
+      // 見積書データを取得
+      const estimateData = await pdfService.previewEstimatePDF(estimateId);
+      setPreviewData(estimateData);
     } catch (err) {
-      console.error("Failed to download PDF:", err);
-      setError("PDFのダウンロードに失敗しました");
+      console.error("Failed to generate PDF preview:", err);
+      setError("PDFプレビューの生成に失敗しました");
+      setIsPreviewOpen(false);
+    } finally {
+      setPreviewLoading(false);
     }
   };
 
-  return <ReportsPage estimates={estimates} loading={loading} error={error} onDownloadPDF={handleDownloadPDF} />;
+  // プレビューモーダルを閉じる
+  const handleClosePreview = () => {
+    setIsPreviewOpen(false);
+    setPreviewEstimateId(null);
+    setPreviewData(null);
+  };
+
+  // ダウンロードハンドラー
+  const handleDownloadPDF = (estimateId: string) => {
+    // PDFPreviewModalコンポーネント内でダウンロード処理を行う
+    console.log("Download requested for estimate:", estimateId);
+  };
+
+  return (
+    <ReportsPage
+      estimates={estimates}
+      loading={loading}
+      error={error}
+      onPreviewPDF={handlePreviewPDF}
+      isPreviewOpen={isPreviewOpen}
+      previewLoading={previewLoading}
+      previewData={previewData}
+      previewEstimateId={previewEstimateId}
+      onClosePreview={handleClosePreview}
+      onDownloadPDF={handleDownloadPDF}
+    />
+  );
 };
 
 export default ReportsContainer;

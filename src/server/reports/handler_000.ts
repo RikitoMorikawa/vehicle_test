@@ -1,21 +1,6 @@
 // src/server/reports/handler_000.ts
 import { supabase } from "../../lib/supabase";
-
-// 見積書データの型定義
-interface EstimateReport {
-  id: string;
-  estimateNumber: string;
-  vehicleInfo: {
-    maker: string;
-    name: string;
-    year: number;
-  };
-  customerName?: string;
-  companyName?: string;
-  totalAmount: number;
-  createdAt: string;
-  status: "draft" | "completed" | "sent";
-}
+import type { EstimateReport, EstimateVehicleRawData, EstimateSearchParams } from "../../types/report/page";
 
 export const reportsHandler = {
   // 見積書一覧を取得
@@ -23,8 +8,6 @@ export const reportsHandler = {
     try {
       console.log("Fetching estimates list...");
 
-      // estimate_vehiclesテーブルから見積書データを取得
-      // 関連するテーブルと結合して必要な情報を取得
       const { data, error } = await supabase
         .from("estimate_vehicles")
         .select(
@@ -50,21 +33,22 @@ export const reportsHandler = {
         throw error;
       }
 
-      // データを変換してフロントエンド用の形式に
-      const estimates: EstimateReport[] = (data || []).map((item: any, index: number) => ({
-        id: item.id,
-        estimateNumber: `EST-${String(index + 1).padStart(4, "0")}`, // 仮の見積書番号
-        vehicleInfo: {
-          maker: item.maker,
-          name: item.name,
-          year: item.year,
-        },
-        customerName: undefined, // 顧客情報テーブルがあれば結合
-        companyName: item.companies?.[0]?.name || "未設定", // 配列の最初の要素にアクセス
-        totalAmount: item.sales_prices?.[0]?.payment_total || 0, // 配列の最初の要素にアクセス
-        createdAt: item.created_at,
-        status: "completed" as const, // 仮のステータス
-      }));
+      // 型安全なデータ変換
+      const estimates: EstimateReport[] =
+        (data as EstimateVehicleRawData[])?.map((item, index) => ({
+          id: item.id,
+          estimateNumber: `EST-${String(index + 1).padStart(4, "0")}`,
+          vehicleInfo: {
+            maker: item.maker,
+            name: item.name,
+            year: item.year,
+          },
+          customerName: undefined,
+          companyName: item.companies?.[0]?.name || "未設定",
+          totalAmount: item.sales_prices?.[0]?.payment_total || 0,
+          createdAt: item.created_at,
+          status: "completed" as const,
+        })) || [];
 
       console.log(`Fetched ${estimates.length} estimates`);
       return estimates;
@@ -105,18 +89,20 @@ export const reportsHandler = {
         throw error;
       }
 
+      // 型安全なデータ変換
+      const rawData = data as EstimateVehicleRawData;
       const estimate: EstimateReport = {
-        id: data.id,
-        estimateNumber: `EST-${data.id.slice(-4).toUpperCase()}`,
+        id: rawData.id,
+        estimateNumber: `EST-${rawData.id.slice(-4).toUpperCase()}`,
         vehicleInfo: {
-          maker: data.maker,
-          name: data.name,
-          year: data.year,
+          maker: rawData.maker,
+          name: rawData.name,
+          year: rawData.year,
         },
         customerName: undefined,
-        companyName: data.companies?.[0]?.name || "未設定", // 配列の最初の要素にアクセス
-        totalAmount: data.sales_prices?.[0]?.payment_total || 0, // 配列の最初の要素にアクセス
-        createdAt: data.created_at,
+        companyName: rawData.companies?.[0]?.name || "未設定",
+        totalAmount: rawData.sales_prices?.[0]?.payment_total || 0,
+        createdAt: rawData.created_at,
         status: "completed",
       };
 
@@ -128,7 +114,7 @@ export const reportsHandler = {
   },
 
   // 見積書の検索・フィルタリング
-  async searchEstimates(params: { companyId?: string; status?: string; dateFrom?: string; dateTo?: string; searchText?: string }): Promise<EstimateReport[]> {
+  async searchEstimates(params: EstimateSearchParams): Promise<EstimateReport[]> {
     try {
       console.log("Searching estimates with params:", params);
 
@@ -174,20 +160,22 @@ export const reportsHandler = {
         throw error;
       }
 
-      const estimates: EstimateReport[] = (data || []).map((item: any, index: number) => ({
-        id: item.id,
-        estimateNumber: `EST-${String(index + 1).padStart(4, "0")}`,
-        vehicleInfo: {
-          maker: item.maker,
-          name: item.name,
-          year: item.year,
-        },
-        customerName: undefined,
-        companyName: item.companies?.[0]?.name || "未設定", // 配列の最初の要素にアクセス
-        totalAmount: item.sales_prices?.[0]?.payment_total || 0, // 配列の最初の要素にアクセス
-        createdAt: item.created_at,
-        status: "completed",
-      }));
+      // 型安全なデータ変換
+      const estimates: EstimateReport[] =
+        (data as EstimateVehicleRawData[])?.map((item, index) => ({
+          id: item.id,
+          estimateNumber: `EST-${String(index + 1).padStart(4, "0")}`,
+          vehicleInfo: {
+            maker: item.maker,
+            name: item.name,
+            year: item.year,
+          },
+          customerName: undefined,
+          companyName: item.companies?.[0]?.name || "未設定",
+          totalAmount: item.sales_prices?.[0]?.payment_total || 0,
+          createdAt: item.created_at,
+          status: "completed",
+        })) || [];
 
       return estimates;
     } catch (error) {
@@ -201,7 +189,7 @@ export const reportsHandler = {
     try {
       console.log("Generating PDF for estimate:", estimateId);
 
-      // TODO: PDF生成ライブラリ（jsPDF、Puppeteer等）を使用してPDF生成
+      // TODO: PDF生成ライブラリ（jsPDF、react-pdf等）を使用してPDF生成
       throw new Error("PDF generation not implemented yet");
     } catch (error) {
       console.error("Failed to generate PDF:", error);
