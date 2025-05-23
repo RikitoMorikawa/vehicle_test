@@ -110,7 +110,7 @@ const EditUserComponent: React.FC<EditUserComponentProps> = ({
                   <Input label="担当者名" name="user_name" value={formData.user_name} onChange={onInputChange} disabled={saving} />
                   <Input label="電話番号" name="phone" value={formData.phone} onChange={onInputChange} disabled={saving} />
                   <Input label="メールアドレス" name="email" type="email" value={formData.email} onChange={onInputChange} disabled={saving} />
-                  <Input label="現在のパスワード" name="currentPassword" type="password" value={formData.currentPassword || ""} disabled={true} />
+                  <Input label="現在のパスワード" name="currentPassword" type="password" value={formData.currentPassword || ""} disabled={saving} />
                   <Input
                     label="新しいパスワード（変更する場合のみ）"
                     name="password"

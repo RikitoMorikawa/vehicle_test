@@ -145,3 +145,10 @@ CREATE POLICY sales_prices_policy
   ON sales_prices
   USING (true)
   WITH CHECK (true);
+
+  -- estimate_vehiclesテーブルにcompany_idカラムを追加
+ALTER TABLE estimate_vehicles
+ADD COLUMN company_id UUID REFERENCES companies(id);
+
+-- インデックスを追加（検索パフォーマンス向上のため）
+CREATE INDEX idx_estimate_vehicles_company_id ON estimate_vehicles(company_id);

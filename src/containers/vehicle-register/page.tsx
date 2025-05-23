@@ -6,7 +6,7 @@ import VehicleRegisterComponent from "../../components/vehicle-register/page";
 import type { VehicleFormData, VehicleRegisterError } from "../../types/vehicle-register/page";
 import { validateVehicleRegisterForm } from "../../validations/vehicle-register/page";
 import { supabase } from "../../lib/supabase";
-import { makerService } from "../../services/custom/car_makers/page";
+import { makerService } from "../../services/common/car_makers/page";
 
 const VehicleRegisterContainer: React.FC = () => {
   const navigate = useNavigate();

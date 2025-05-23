@@ -6,7 +6,7 @@ import { vehicleEditService } from "../../services/vehicle-edit/page";
 import { validateVehicleEditForm } from "../../validations/vehicle-edit/page";
 import type { VehicleFormData, VehicleRegisterError } from "../../types/vehicle-register/page";
 import { supabase } from "../../lib/supabase";
-import { makerService } from "../../services/custom/car_makers/page";
+import { makerService } from "../../services/common/car_makers/page";
 
 const VehicleEditContainer: React.FC = () => {
   const { id } = useParams<{ id: string }>();
