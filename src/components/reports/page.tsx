@@ -18,7 +18,7 @@ interface ReportsPageProps {
   isPreviewOpen: boolean;
   previewLoading: boolean;
   previewUrl?: string | null;
-  previewData?: EstimatePDFData | null; // この行を追加
+  previewData?: EstimatePDFData | null;
   previewEstimateId: string | null;
   onClosePreview: () => void;
   onDownloadPDF?: (estimateId: string) => void;
@@ -32,7 +32,7 @@ const ReportsPage: React.FC<ReportsPageProps> = ({
   isPreviewOpen,
   previewLoading,
   previewUrl = null,
-  previewData, // この行を追加（destructuring）
+  previewData,
   previewEstimateId,
   onClosePreview,
   onDownloadPDF,
@@ -175,16 +175,22 @@ const ReportsPage: React.FC<ReportsPageProps> = ({
       </div>
       <Footer />
 
-      {/* PDFプレビューモーダル */}
-      <PDFPreviewModal
-        isOpen={isPreviewOpen}
-        onClose={onClosePreview}
-        pdfUrl={previewUrl}
-        estimateId={previewEstimateId}
-        loading={previewLoading}
-        onDownload={onDownloadPDF}
-        estimateData={previewData} // currentEstimateData → previewData に変更
-      />
+      {/* PDFプレビューモーダル - 下部マージン追加 */}
+      {isPreviewOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 pb-8">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[85vh] flex flex-col mb-4">
+            <PDFPreviewModal
+              isOpen={isPreviewOpen}
+              onClose={onClosePreview}
+              pdfUrl={previewUrl}
+              estimateId={previewEstimateId}
+              loading={previewLoading}
+              onDownload={onDownloadPDF}
+              estimateData={previewData}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

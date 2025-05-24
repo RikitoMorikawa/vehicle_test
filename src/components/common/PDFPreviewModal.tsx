@@ -79,79 +79,49 @@ const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({ isOpen, onClose, pdfU
     try {
       setIsDownloading(true);
 
-      // 非表示のiframeを作成してHTMLを読み込み
-      const iframe = document.createElement("iframe");
-      iframe.style.position = "absolute";
-      iframe.style.left = "-9999px";
-      iframe.style.width = "210mm";
-      iframe.style.height = "297mm";
-      iframe.style.border = "none";
-      document.body.appendChild(iframe);
+      const htmlContent = generateEstimateHTML(data);
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = htmlContent;
+      document.body.appendChild(tempDiv);
 
-      // HTMLコンテンツを生成
-      const htmlUrl = createHTMLBlobUrl(data);
-      iframe.src = htmlUrl;
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // iframeが読み込まれるまで待機
-      await new Promise<void>((resolve) => {
-        iframe.onload = () => {
-          setTimeout(resolve, 1000); // スタイルが適用されるまで少し待機
-        };
-      });
-
-      const iframeDocument = iframe.contentDocument || iframe.contentWindow?.document;
-      if (!iframeDocument) {
-        throw new Error("iframeのドキュメントにアクセスできません");
-      }
-
-      const content = iframeDocument.getElementById("estimate-content");
+      const content = tempDiv.querySelector("#estimate-content") as HTMLElement;
       if (!content) {
         throw new Error("見積書コンテンツが見つかりません");
       }
 
-      // html2canvasでキャンバスに変換
       const canvas = await html2canvas(content, {
         scale: 2,
         useCORS: true,
-        allowTaint: true,
         backgroundColor: "#ffffff",
-        width: 794, // A4幅 (210mm * 96dpi / 25.4)
-        height: 1123, // A4高さ (297mm * 96dpi / 25.4)
       });
 
-      // PDFを作成
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-      });
+      const pdf = new jsPDF("p", "mm", "a4");
+      const imgData = canvas.toDataURL("image/png");
 
-      const imgWidth = 210; // A4幅(mm)
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      // 修正：幅と高さを追加
+      const pdfWidth = 210; // A4の幅
+      const pdfHeight = 297; // A4の高さ
+      const imgWidth = pdfWidth;
+      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
 
-      // 複数ページに分割する場合
-      const pageHeight = 297; // A4高さ(mm)
       let heightLeft = imgHeight;
       let position = 0;
 
-      // 最初のページ
-      pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+      // 複数ページに対応
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight;
 
-      // 追加ページが必要な場合
       while (heightLeft >= 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
-        pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
       }
 
-      // PDFをダウンロード
       pdf.save(`見積書_${data.estimateNumber}.pdf`);
-
-      // クリーンアップ
-      document.body.removeChild(iframe);
-      URL.revokeObjectURL(htmlUrl);
+      document.body.removeChild(tempDiv);
     } catch (error) {
       console.error("PDF生成エラー:", error);
       alert("PDFの生成に失敗しました。もう一度お試しください。");
@@ -169,38 +139,28 @@ const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({ isOpen, onClose, pdfU
     }
   };
 
-  // 印刷ハンドラー（修正版）
+  // 印刷ハンドラー
   const handlePrint = async () => {
     if (!estimateData) return;
 
     try {
-      // 印刷用の非表示iframeを作成
       const printFrame = document.createElement("iframe");
-      printFrame.style.position = "absolute";
-      printFrame.style.left = "-9999px";
-      printFrame.style.width = "210mm";
-      printFrame.style.height = "297mm";
-      printFrame.style.border = "none";
       document.body.appendChild(printFrame);
 
-      // HTMLコンテンツを生成
       const htmlUrl = createHTMLBlobUrl(estimateData);
       printFrame.src = htmlUrl;
 
-      // iframeが読み込まれるまで待機
       await new Promise<void>((resolve) => {
         printFrame.onload = () => {
-          setTimeout(resolve, 500); // スタイルが適用されるまで少し待機
+          setTimeout(resolve, 500);
         };
       });
 
-      // 印刷実行
       const printWindow = printFrame.contentWindow;
       if (printWindow) {
         printWindow.focus();
         printWindow.print();
 
-        // 印刷ダイアログが閉じられた後にクリーンアップ
         setTimeout(() => {
           document.body.removeChild(printFrame);
           URL.revokeObjectURL(htmlUrl);
@@ -224,10 +184,10 @@ const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({ isOpen, onClose, pdfU
   const displayUrl = generatedHtmlUrl || pdfUrl;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={handleBackdropClick}>
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 pb-8" onClick={handleBackdropClick}>
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[85vh] max-h-[calc(100vh-4rem)] flex flex-col mb-4">
         {/* ヘッダー */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center">
             <Eye className="w-5 h-5 text-gray-600 mr-2" />
             <h3 className="text-lg font-semibold text-gray-900">見積書プレビュー</h3>
@@ -268,7 +228,7 @@ const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({ isOpen, onClose, pdfU
         </div>
 
         {/* コンテンツ */}
-        <div className="flex-1 relative">
+        <div className="flex-1 relative overflow-hidden">
           {loading && (
             <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
               <div className="text-center">
@@ -303,15 +263,7 @@ const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({ isOpen, onClose, pdfU
         </div>
 
         {/* フッター */}
-        <div className="p-4 border-t border-gray-200 bg-gray-50">
-          <div className="flex justify-between items-center text-sm text-gray-500">
-            <span>プレビューは実際のPDFと若干異なる場合があります</span>
-            <div className="flex items-center space-x-4">
-              <span>ESCキーでモーダルを閉じることができます</span>
-              <span>Ctrl+P で印刷できます</span>
-            </div>
-          </div>
-        </div>
+        <div className="p-4 border-t border-gray-200 bg-gray-50 flex-shrink-0"></div>
       </div>
     </div>
   );

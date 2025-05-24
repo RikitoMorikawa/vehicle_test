@@ -1,13 +1,67 @@
 // src/components/common/PDFHtmlContent.tsx
 import type { EstimatePDFData } from "../../types/common/pdf/page";
 
-export const generateEstimateHTML = (data: EstimatePDFData): string => {
+export const generateEstimateHTML = (data: EstimatePDFData, isPDF: boolean = false): string => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")}`;
   };
 
   const formatNumber = (num: number) => num.toLocaleString();
+
+  // PDF用の場合、印刷スタイルを強制適用するCSS
+  const pdfForceStyles = isPDF ? `
+    /* PDF用: 印刷スタイルを強制適用 */
+    body { 
+        padding: 8mm !important; 
+        font-size: 9px !important; 
+        width: 210mm !important;
+        margin: 0 auto !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    .container {
+        max-width: 170mm !important;
+        margin: 0 auto !important;
+    }
+    table {
+        font-size: 8px !important;
+        border-collapse: collapse !important;
+    }
+    th, td {
+        padding: 4px 8px !important;
+        border: 1px solid #000 !important;
+        vertical-align: top !important;
+        line-height: 1.5 !important;
+        word-wrap: break-word !important;
+        height: auto !important;
+        min-height: 22px !important;
+    }
+    .detail-table {
+        font-size: 7px !important;
+    }
+    .detail-table th, .detail-table td {
+        padding: 3px 6px !important;
+        line-height: 1.4 !important;
+        min-height: 18px !important;
+    }
+    .detail-header {
+        font-size: 8px !important;
+        padding: 4px 8px !important;
+        line-height: 1.4 !important;
+        min-height: 20px !important;
+    }
+    .text-xl { font-size: 14px !important; }
+    .text-lg { font-size: 12px !important; }
+    .text-sm { font-size: 10px !important; }
+    .text-xs { font-size: 8px !important; }
+    .mb-3 { margin-bottom: 0.5rem !important; }
+    .mb-4 { margin-bottom: 0.75rem !important; }
+    * {
+        -webkit-font-smoothing: antialiased !important;
+        -moz-osx-font-smoothing: grayscale !important;
+    }
+  ` : '';
 
   const htmlContent = `
 <!DOCTYPE html>
@@ -20,20 +74,36 @@ export const generateEstimateHTML = (data: EstimatePDFData): string => {
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', sans-serif;
-            font-size: 12px; line-height: 1.4; color: #000; background: white; padding: 20px;
-            width: 210mm; /* A4幅 */
+            font-size: 10px; 
+            line-height: 1.3; 
+            color: #000; 
+            background: white; 
+            padding: 15mm;
+            width: 210mm; 
+            min-height: 297mm;
+            margin: 0 auto;
         }
-        .container { max-width: 100%; margin: 0 auto; }
+        .container { 
+            max-width: 180mm; 
+            margin: 0 auto; 
+            height: 100%;
+        }
         .text-center { text-align: center; }
         .text-right { text-align: right; }
+        .text-left { text-align: left; }
         .font-bold { font-weight: 700; }
-        .text-xl { font-size: 1.25rem; }
-        .text-sm { font-size: 0.875rem; }
-        .text-xs { font-size: 0.75rem; }
+        .text-xl { font-size: 16px; }
+        .text-lg { font-size: 14px; }
+        .text-sm { font-size: 11px; }
+        .text-xs { font-size: 9px; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-3 { margin-bottom: 0.75rem; }
         .mb-4 { margin-bottom: 1rem; }
         .mb-6 { margin-bottom: 1.5rem; }
+        .p-1 { padding: 0.25rem; }
         .p-2 { padding: 0.5rem; }
         .p-3 { padding: 0.75rem; }
+        .px-1 { padding-left: 0.25rem; padding-right: 0.25rem; }
         .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
         .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
         .border { border: 1px solid #000; }
@@ -47,37 +117,123 @@ export const generateEstimateHTML = (data: EstimatePDFData): string => {
         .flex { display: flex; }
         .grid { display: grid; }
         .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        .gap-4 { gap: 1rem; }
-        .w-40 { width: 10rem; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-3 { gap: 0.75rem; }
+        .w-32 { width: 8rem; }
         .justify-between { justify-content: space-between; }
         .items-start { align-items: flex-start; }
         .flex-1 { flex: 1 1 0%; }
-        .space-y-3 > * + * { margin-top: 0.75rem; }
+        .space-y-2 > * + * { margin-top: 0.5rem; }
         
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #000; padding: 4px 8px; }
-        th { background: #f0f0f0; font-weight: bold; }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            font-size: 9px;
+        }
+        th, td { 
+            border: 1px solid #000; 
+            padding: 4px 8px;
+            vertical-align: top; 
+            line-height: 1.4;
+            word-wrap: break-word;
+            height: auto;
+            min-height: 20px;
+        }
+        th { 
+            background: #f0f0f0; 
+            font-weight: bold; 
+            font-size: 8px;
+        }
         .amount { text-align: right; }
         .highlight { background: #f0f0f0; font-weight: bold; }
         .total { background: #fef3c7; font-weight: bold; }
         
-        @media print {
-            body { padding: 0; font-size: 11px; }
-            @page { margin: 15mm; size: A4; }
+        /* 詳細テーブルのスタイル調整 */
+        .detail-table {
+            font-size: 8px;
         }
+        .detail-table th, .detail-table td {
+            padding: 3px 7px;
+            line-height: 1.4;
+            vertical-align: top;
+            word-wrap: break-word;
+            height: auto;
+            min-height: 16px;
+        }
+        .detail-header {
+            font-size: 8px;
+            padding: 4px 8px;
+            vertical-align: top;
+            line-height: 1.3;
+            min-height: 18px;
+        }
+        
+        @media print {
+            body { 
+                padding: 8mm; 
+                font-size: 9px; 
+                width: 210mm;
+                margin: 0 auto;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .container {
+                max-width: 170mm;
+                margin: 0 auto;
+            }
+            table {
+                font-size: 8px;
+                border-collapse: collapse;
+            }
+            th, td {
+                padding: 4px 8px !important;
+                border: 1px solid #000 !important;
+                vertical-align: top !important;
+                line-height: 1.5 !important;
+                word-wrap: break-word;
+                height: auto !important;
+                min-height: 22px !important;
+            }
+            .detail-table {
+                font-size: 7px;
+            }
+            .detail-table th, .detail-table td {
+                padding: 3px 6px !important;
+                line-height: 1.4 !important;
+                min-height: 18px !important;
+            }
+            .detail-header {
+                font-size: 8px;
+                padding: 4px 8px !important;
+                line-height: 1.4 !important;
+                min-height: 20px !important;
+            }
+            .text-xl { font-size: 14px; }
+            .text-lg { font-size: 12px; }
+            .text-sm { font-size: 10px; }
+            .text-xs { font-size: 8px; }
+            .mb-3 { margin-bottom: 0.5rem; }
+            .mb-4 { margin-bottom: 0.75rem; }
+            * {
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+            }
+        }
+        
+        ${pdfForceStyles}
     </style>
 </head>
 <body>
     <div class="container" id="estimate-content">
         <!-- ヘッダー -->
-        <div class="text-center mb-6">
-            <h1 class="text-xl font-bold mb-4 border-b-2 py-1">見積書</h1>
-            <div class="flex justify-between items-start mb-4">
+        <div class="text-center mb-4">
+            <h1 class="text-xl font-bold mb-3 border-b-2 py-1">見積書</h1>
+            <div class="flex justify-between items-start mb-3">
                 <div class="text-left text-xs">
                     <div>見積書番号：${data.estimateNumber}</div>
                     <div>見積日：${formatDate(data.estimateDate)}</div>
                 </div>
-                <div class="text-right border p-3 bg-gray-50">
+                <div class="text-right border p-2 bg-gray-50" style="width: 40%;">
                     <div class="font-bold text-sm">【販売店】</div>
                     <div class="text-xs">
                         <div>${data.dealerInfo.name}</div>
@@ -91,7 +247,7 @@ export const generateEstimateHTML = (data: EstimatePDFData): string => {
         </div>
 
         <!-- 顧客情報 -->
-        <div class="mb-4">
+        <div class="mb-3">
             <div class="border-b-2 py-1 mb-2">
                 <span class="font-bold text-sm">${data.customerInfo.name} 様</span>
             </div>
@@ -102,12 +258,12 @@ export const generateEstimateHTML = (data: EstimatePDFData): string => {
         </div>
 
         <!-- 見積車両情報 -->
-        <div class="mb-4">
+        <div class="mb-3">
             <div class="bg-gray-200 px-2 py-1 font-bold border text-sm">見積車両</div>
             <div class="border border-t-0">
                 <div class="flex">
                     <div class="flex-1 border-r p-2">
-                        <div class="grid grid-cols-2 gap-4 text-xs">
+                        <div class="grid grid-cols-2 gap-2 text-xs">
                             <div>車名：${data.estimateVehicle.maker} ${data.estimateVehicle.name}</div>
                             <div>グレード：${data.estimateVehicle.grade || "-"}</div>
                             <div>型式：${data.estimateVehicle.model || "-"}</div>
@@ -118,8 +274,8 @@ export const generateEstimateHTML = (data: EstimatePDFData): string => {
                             <div>装備：${data.estimateVehicle.equipment || "-"}</div>
                         </div>
                     </div>
-                    <div class="w-40 p-2 text-center">
-                        <div class="text-xl font-bold">
+                    <div class="w-32 p-2 text-center">
+                        <div class="text-lg font-bold">
                             ${formatNumber(data.salesPrices.payment_total)}円
                         </div>
                         <div class="text-xs">
@@ -131,10 +287,10 @@ export const generateEstimateHTML = (data: EstimatePDFData): string => {
         </div>
 
         <!-- 価格詳細 -->
-        <div class="grid grid-cols-2 gap-4 mb-4">
+        <div class="grid grid-cols-2 gap-3 mb-3">
             <!-- 左側：価格内訳 -->
             <div>
-                <table class="text-xs">
+                <table>
                     <tr><td>車両本体価格</td><td class="amount">${formatNumber(data.salesPrices.base_price)}円</td></tr>
                     <tr><td>値引き</td><td class="amount">${formatNumber(data.salesPrices.discount)}円</td></tr>
                     <tr><td>車検整備費用</td><td class="amount">${formatNumber(data.salesPrices.inspection_fee)}円</td></tr>
@@ -151,11 +307,11 @@ export const generateEstimateHTML = (data: EstimatePDFData): string => {
             </div>
 
             <!-- 右側：詳細内訳 -->
-            <div class="space-y-3">
+            <div class="space-y-2">
                 <!-- (A) 付属品・特別仕様 -->
                 <div>
-                    <div class="bg-gray-200 px-2 py-1 text-xs font-bold border">(A) 付属品・特別仕様 内訳</div>
-                    <table class="text-xs border border-t-0">
+                    <div class="bg-gray-200 px-1 py-1 detail-header font-bold border">(A) 付属品・特別仕様 内訳</div>
+                    <table class="detail-table border border-t-0">
                         <tr class="bg-gray-100"><th>品名</th><th>金額</th></tr>
                         ${
                           data.accessories.length > 0
@@ -169,8 +325,8 @@ export const generateEstimateHTML = (data: EstimatePDFData): string => {
 
                 <!-- (B) 税金・保険料 -->
                 <div>
-                    <div class="bg-gray-200 px-2 py-1 text-xs font-bold border">(B) 税金・保険料 内訳</div>
-                    <table class="text-xs border border-t-0">
+                    <div class="bg-gray-200 px-1 py-1 detail-header font-bold border">(B) 税金・保険料 内訳</div>
+                    <table class="detail-table border border-t-0">
                         <tr><td>自動車税</td><td class="amount">${formatNumber(data.taxInsuranceFees.automobile_tax)}円</td></tr>
                         <tr><td>環境性能割</td><td class="amount">${formatNumber(data.taxInsuranceFees.environmental_performance_tax)}円</td></tr>
                         <tr><td>重量税</td><td class="amount">${formatNumber(data.taxInsuranceFees.weight_tax)}円</td></tr>
@@ -181,8 +337,8 @@ export const generateEstimateHTML = (data: EstimatePDFData): string => {
 
                 <!-- (C) 預り法定費用 -->
                 <div>
-                    <div class="bg-gray-200 px-2 py-1 text-xs font-bold border">(C) 預り法定費用 内訳</div>
-                    <table class="text-xs border border-t-0">
+                    <div class="bg-gray-200 px-1 py-1 detail-header font-bold border">(C) 預り法定費用 内訳</div>
+                    <table class="detail-table border border-t-0">
                         <tr><td>検査登録 （印紙代）</td><td class="amount">${formatNumber(data.legalFees.inspection_registration_stamp)}円</td></tr>
                         <tr><td>車庫証明 （印紙代）</td><td class="amount">${formatNumber(data.legalFees.parking_certificate_stamp)}円</td></tr>
                         <tr><td>下取車手続・処分 （印紙代）</td><td class="amount">${formatNumber(data.legalFees.trade_in_stamp)}円</td></tr>
@@ -193,8 +349,8 @@ export const generateEstimateHTML = (data: EstimatePDFData): string => {
 
                 <!-- (D) 手続代行費用 -->
                 <div>
-                    <div class="bg-gray-200 px-2 py-1 text-xs font-bold border">(D) 手続代行費用 内訳</div>
-                    <table class="text-xs border border-t-0">
+                    <div class="bg-gray-200 px-1 py-1 detail-header font-bold border">(D) 手続代行費用 内訳</div>
+                    <table class="detail-table border border-t-0">
                         <tr><td>検査登録手続代行</td><td class="amount">${formatNumber(data.processingFees.inspection_registration_fee)}円</td></tr>
                         <tr><td>車庫証明手続代行</td><td class="amount">${formatNumber(data.processingFees.parking_certificate_fee)}円</td></tr>
                         <tr><td>下取車手続・処分手続代行</td><td class="amount">${formatNumber(data.processingFees.trade_in_processing_fee)}円</td></tr>
@@ -211,9 +367,9 @@ export const generateEstimateHTML = (data: EstimatePDFData): string => {
           data.loanCalculation
             ? `
         <!-- ローン計算 -->
-        <div class="mb-4">
+        <div class="mb-3">
             <div class="bg-gray-200 px-2 py-1 font-bold border text-sm">ローン計算</div>
-            <table class="text-xs border border-t-0">
+            <table class="border border-t-0">
                 <tr>
                     <td style="width: 25%">頭金</td>
                     <td class="amount" style="width: 25%">${formatNumber(data.loanCalculation.down_payment)}円</td>
@@ -258,7 +414,7 @@ export const generateEstimateHTML = (data: EstimatePDFData): string => {
     </div>
 </body>
 </html>
-    `;
+  `;
 
   return htmlContent;
 };
