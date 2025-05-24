@@ -27,10 +27,26 @@ export const pdfHandler = {
         throw vehicleError;
       }
 
-      // 2. 関連テーブルから詳細データを並行取得
+      console.log("Found estimate vehicle:", estimateVehicle.id);
+
+      // 2. 関連テーブルから詳細データを並行取得（デバッグログ追加）
+      console.log("Fetching related data for estimateId:", estimateId);
+
       const [tradeInResult, loanResult, accessoriesResult, taxInsuranceResult, legalFeesResult, processingFeesResult, salesPricesResult] = await Promise.all([
-        // trade_in_vehiclesテーブル
-        supabase.from("trade_in_vehicles").select("*").eq("estimate_id", estimateId).maybeSingle(),
+        // trade_in_vehiclesテーブル（デバッグ強化）
+        supabase
+          .from("trade_in_vehicles")
+          .select("*")
+          .eq("estimate_id", estimateId)
+          .maybeSingle()
+          .then((result) => {
+            console.log("Trade-in query result:", {
+              data: result.data,
+              error: result.error,
+              estimateId: estimateId,
+            });
+            return result;
+          }),
 
         // loan_calculationsテーブル
         supabase.from("loan_calculations").select("*").eq("estimate_id", estimateId).maybeSingle(),
@@ -51,6 +67,15 @@ export const pdfHandler = {
         supabase.from("sales_prices").select("*").eq("estimate_id", estimateId).maybeSingle(),
       ]);
 
+      // 追加デバッグ：trade_in_vehiclesテーブルの全データを確認
+      const { data: allTradeInData, error: allTradeInError } = await supabase
+        .from("trade_in_vehicles")
+        .select("estimate_id, vehicle_name, registration_number")
+        .limit(10);
+
+      console.log("All trade-in vehicles (sample):", allTradeInData);
+      console.log("Trade-in query error:", allTradeInError);
+
       // エラーチェック
       const errors = [
         { name: "trade-in", error: tradeInResult.error },
@@ -68,6 +93,13 @@ export const pdfHandler = {
           throw error;
         }
       }
+
+      // 下取り車両データの詳細ログ
+      console.log("Trade-in vehicle data:", {
+        found: !!tradeInResult.data,
+        data: tradeInResult.data,
+        estimateId: estimateId,
+      });
 
       // 見積書番号を生成
       const estimateNumber = `EST-${estimateVehicle.id.slice(-4).toUpperCase()}`;
@@ -124,7 +156,7 @@ export const pdfHandler = {
           created_at: estimateVehicle.created_at,
         },
 
-        // 下取り車両情報
+        // 下取り車両情報（デバッグログ追加）
         tradeInVehicle: tradeInResult.data
           ? {
               trade_in_available: tradeInResult.data.trade_in_available,
@@ -136,7 +168,10 @@ export const pdfHandler = {
               chassis_number: tradeInResult.data.chassis_number,
               exterior_color: tradeInResult.data.exterior_color,
             }
-          : undefined,
+          : (() => {
+              console.log("No trade-in vehicle data found for estimateId:", estimateId);
+              return undefined;
+            })(),
 
         // ローン計算情報
         loanCalculation: loanResult.data
@@ -208,7 +243,6 @@ export const pdfHandler = {
         },
       };
 
-      console.log("Successfully fetched estimate data for PDF generation");
       return estimateData;
     } catch (error) {
       console.error("Failed to fetch estimate data:", error);

@@ -10,7 +10,8 @@ export const generateEstimateHTML = (data: EstimatePDFData, isPDF: boolean = fal
   const formatNumber = (num: number) => num.toLocaleString();
 
   // PDF用の場合、印刷スタイルを強制適用するCSS
-  const pdfForceStyles = isPDF ? `
+  const pdfForceStyles = isPDF
+    ? `
     /* PDF用: 印刷スタイルを強制適用 */
     body { 
         padding: 8mm !important; 
@@ -30,7 +31,7 @@ export const generateEstimateHTML = (data: EstimatePDFData, isPDF: boolean = fal
     }
     th, td {
         padding: 4px 8px !important;
-        border: 1px solid #000 !important;
+        border: 0.5px solid #000 !important;
         vertical-align: top !important;
         line-height: 1.5 !important;
         word-wrap: break-word !important;
@@ -44,12 +45,17 @@ export const generateEstimateHTML = (data: EstimatePDFData, isPDF: boolean = fal
         padding: 3px 6px !important;
         line-height: 1.4 !important;
         min-height: 18px !important;
+        border: 0.5px solid #000 !important;
     }
     .detail-header {
         font-size: 8px !important;
         padding: 4px 8px !important;
         line-height: 1.4 !important;
         min-height: 20px !important;
+        border: 0.5px solid #000 !important;
+    }
+    .border {
+        border: 0.5px solid #000 !important;
     }
     .text-xl { font-size: 14px !important; }
     .text-lg { font-size: 12px !important; }
@@ -61,7 +67,8 @@ export const generateEstimateHTML = (data: EstimatePDFData, isPDF: boolean = fal
         -webkit-font-smoothing: antialiased !important;
         -moz-osx-font-smoothing: grayscale !important;
     }
-  ` : '';
+  `
+    : "";
 
   const htmlContent = `
 <!DOCTYPE html>
@@ -106,7 +113,7 @@ export const generateEstimateHTML = (data: EstimatePDFData, isPDF: boolean = fal
         .px-1 { padding-left: 0.25rem; padding-right: 0.25rem; }
         .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
         .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
-        .border { border: 1px solid #000; }
+        .border { border: 0.5px solid #000; }
         .border-b-2 { border-bottom: 2px solid #000; }
         .border-t-0 { border-top: 0; }
         .border-r { border-right: 1px solid #000; }
@@ -131,7 +138,7 @@ export const generateEstimateHTML = (data: EstimatePDFData, isPDF: boolean = fal
             font-size: 9px;
         }
         th, td { 
-            border: 1px solid #000; 
+            border: 0.5px solid #000; 
             padding: 4px 8px;
             vertical-align: top; 
             line-height: 1.4;
@@ -187,7 +194,7 @@ export const generateEstimateHTML = (data: EstimatePDFData, isPDF: boolean = fal
             }
             th, td {
                 padding: 4px 8px !important;
-                border: 1px solid #000 !important;
+                border: 0.5px solid #000 !important;
                 vertical-align: top !important;
                 line-height: 1.5 !important;
                 word-wrap: break-word;
@@ -201,12 +208,14 @@ export const generateEstimateHTML = (data: EstimatePDFData, isPDF: boolean = fal
                 padding: 3px 6px !important;
                 line-height: 1.4 !important;
                 min-height: 18px !important;
+                border: 0.5px solid #000 !important;
             }
             .detail-header {
                 font-size: 8px;
                 padding: 4px 8px !important;
                 line-height: 1.4 !important;
                 min-height: 20px !important;
+                border: 0.5px solid #000 !important;
             }
             .text-xl { font-size: 14px; }
             .text-lg { font-size: 12px; }
@@ -270,7 +279,7 @@ export const generateEstimateHTML = (data: EstimatePDFData, isPDF: boolean = fal
                             <div>初度登録年月：${data.estimateVehicle.year}年</div>
                             <div>走行距離：${formatNumber(data.estimateVehicle.mileage)}km</div>
                             <div>修復歴：${data.estimateVehicle.repairHistory ? "有" : "無"}</div>
-                            <div>外装色：${data.estimateVehicle.exteriorColor}</div>
+                            <div>外装色：${data.estimateVehicle.exteriorColor || "-"}</div>
                             <div>装備：${data.estimateVehicle.equipment || "-"}</div>
                         </div>
                     </div>
@@ -288,22 +297,44 @@ export const generateEstimateHTML = (data: EstimatePDFData, isPDF: boolean = fal
 
         <!-- 価格詳細 -->
         <div class="grid grid-cols-2 gap-3 mb-3">
-            <!-- 左側：価格内訳 -->
-            <div>
-                <table>
-                    <tr><td>車両本体価格</td><td class="amount">${formatNumber(data.salesPrices.base_price)}円</td></tr>
-                    <tr><td>値引き</td><td class="amount">${formatNumber(data.salesPrices.discount)}円</td></tr>
-                    <tr><td>車検整備費用</td><td class="amount">${formatNumber(data.salesPrices.inspection_fee)}円</td></tr>
-                    <tr><td>付属品・特別仕様 ・・・(A)</td><td class="amount">${formatNumber(data.salesPrices.accessories_fee)}円</td></tr>
-                    <tr class="highlight"><td>車両販売価格①</td><td class="amount">${formatNumber(data.salesPrices.vehicle_price)}円</td></tr>
-                    <tr><td>税金・保険料 ・・・(B)</td><td class="amount">${formatNumber(data.salesPrices.tax_insurance)}円</td></tr>
-                    <tr><td>預り法定費用 ・・・(C)</td><td class="amount">${formatNumber(data.salesPrices.legal_fee)}円</td></tr>
-                    <tr><td>手続代行費用 ・・・(D)</td><td class="amount">${formatNumber(data.salesPrices.processing_fee)}円</td></tr>
-                    <tr class="highlight"><td>販売諸費用②</td><td class="amount">${formatNumber(data.salesPrices.misc_fee)}円</td></tr>
-                    <tr><td>現金販売価格①＋②</td><td class="amount">${formatNumber(data.salesPrices.total_price)}円</td></tr>
-                    <tr><td>下取車価格</td><td class="amount">${formatNumber(data.salesPrices.trade_in_price)}円</td></tr>
-                    <tr class="total"><td>販売価格</td><td class="amount">${formatNumber(data.salesPrices.payment_total)}円</td></tr>
-                </table>
+            <!-- 左側：価格内訳 + 下取車両情報 -->
+            <div class="space-y-2">
+                <!-- 販売価格内訳 -->
+                <div>
+                    <div class="bg-gray-200 px-1 py-1 detail-header font-bold border">販売価格内訳</div>
+                    <table class="border border-t-0">
+                        <tr><td>車両本体価格</td><td class="amount">${formatNumber(data.salesPrices.base_price)}円</td></tr>
+                        <tr><td>値引き</td><td class="amount">${formatNumber(data.salesPrices.discount)}円</td></tr>
+                        <tr><td>車検整備費用</td><td class="amount">${formatNumber(data.salesPrices.inspection_fee)}円</td></tr>
+                        <tr><td>付属品・特別仕様 ・・・(A)</td><td class="amount">${formatNumber(data.salesPrices.accessories_fee)}円</td></tr>
+                        <tr class="highlight"><td>車両販売価格①</td><td class="amount">${formatNumber(data.salesPrices.vehicle_price)}円</td></tr>
+                        <tr><td>税金・保険料 ・・・(B)</td><td class="amount">${formatNumber(data.salesPrices.tax_insurance)}円</td></tr>
+                        <tr><td>預り法定費用 ・・・(C)</td><td class="amount">${formatNumber(data.salesPrices.legal_fee)}円</td></tr>
+                        <tr><td>手続代行費用 ・・・(D)</td><td class="amount">${formatNumber(data.salesPrices.processing_fee)}円</td></tr>
+                        <tr class="highlight"><td>販売諸費用②</td><td class="amount">${formatNumber(data.salesPrices.misc_fee)}円</td></tr>
+                        <tr><td>現金販売価格①＋②</td><td class="amount">${formatNumber(data.salesPrices.total_price)}円</td></tr>
+                        <tr><td>下取車価格</td><td class="amount">${formatNumber(data.salesPrices.trade_in_price)}円</td></tr>
+                        <tr class="total"><td>販売価格</td><td class="amount">${formatNumber(data.salesPrices.payment_total)}円</td></tr>
+                    </table>
+                </div>
+
+                <!-- 下取車両情報 -->
+                <div>
+                    <div class="bg-gray-200 px-1 py-1 detail-header font-bold border">下取車両情報</div>
+                    <table class="detail-table border border-t-0">
+                        <tr><td>車名</td><td>${data.tradeInVehicle?.vehicle_name || ""}</td></tr>
+                        <tr><td>登録番号</td><td>${data.tradeInVehicle?.registration_number || ""}</td></tr>
+                        <tr><td>走行距離</td><td>${data.tradeInVehicle?.mileage ? formatNumber(data.tradeInVehicle.mileage) + "km" : ""}</td></tr>
+                        <tr><td>初度登録年月</td><td>${
+                          data.tradeInVehicle?.first_registration_date ? formatDate(data.tradeInVehicle.first_registration_date) : ""
+                        }</td></tr>
+                        <tr><td>車検満了日</td><td>${
+                          data.tradeInVehicle?.inspection_expiry_date ? formatDate(data.tradeInVehicle.inspection_expiry_date) : ""
+                        }</td></tr>
+                        <tr><td>車台番号</td><td>${data.tradeInVehicle?.chassis_number || ""}</td></tr>
+                        <tr><td>外装色</td><td>${data.tradeInVehicle?.exterior_color || ""}</td></tr>
+                    </table>
+                </div>
             </div>
 
             <!-- 右側：詳細内訳 -->

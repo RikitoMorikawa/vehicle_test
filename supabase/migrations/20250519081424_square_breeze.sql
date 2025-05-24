@@ -152,3 +152,9 @@ ADD COLUMN company_id UUID REFERENCES companies(id);
 
 -- インデックスを追加（検索パフォーマンス向上のため）
 CREATE INDEX idx_estimate_vehicles_company_id ON estimate_vehicles(company_id);
+
+-- 1. テーブルに対するRLSを有効化
+CREATE POLICY "Allow public read access for PDF generation" ON trade_in_vehicles
+FOR SELECT
+TO public
+USING (true);
