@@ -17,7 +17,15 @@ interface PDFPreviewModalProps {
   estimateData?: EstimatePDFData | null;
 }
 
-const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({ isOpen, onClose, pdfUrl, estimateId, loading = false, onDownload, estimateData }) => {
+const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  pdfUrl, 
+  estimateId, 
+  loading = false, 
+  onDownload, 
+  estimateData 
+}) => {
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [generatedHtmlUrl, setGeneratedHtmlUrl] = useState<string | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -74,54 +82,85 @@ const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({ isOpen, onClose, pdfU
     return URL.createObjectURL(htmlBlob);
   };
 
-  // PDF生成とダウンロード関数
+  // PDF生成とダウンロード関数（1ページに強制収める）
   const generateAndDownloadPDF = async (data: EstimatePDFData) => {
     try {
       setIsDownloading(true);
 
-      const htmlContent = generateEstimateHTML(data);
+      // PDF用のHTMLを生成（isPDF: trueで印刷スタイル強制適用）
+      const htmlContent = generateEstimateHTML(data, true);
       const tempDiv = document.createElement("div");
       tempDiv.innerHTML = htmlContent;
+      
+      // PDF生成用の隠し要素としてbodyに追加
+      tempDiv.style.position = "fixed";
+      tempDiv.style.top = "-9999px";
+      tempDiv.style.left = "-9999px";
+      tempDiv.style.width = "210mm";
+      tempDiv.style.height = "297mm";
+      tempDiv.style.overflow = "hidden";
       document.body.appendChild(tempDiv);
 
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // 少し待ってからcanvas生成
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       const content = tempDiv.querySelector("#estimate-content") as HTMLElement;
       if (!content) {
         throw new Error("見積書コンテンツが見つかりません");
       }
 
+      // コンテンツの実際のサイズを取得
+      const contentRect = content.getBoundingClientRect();
+      console.log("Content size:", contentRect.width, contentRect.height);
+
+      // Canvas生成の設定を調整（固定幅でキャプチャ）
       const canvas = await html2canvas(content, {
-        scale: 2,
+        scale: 2, // 高解像度
         useCORS: true,
         backgroundColor: "#ffffff",
+        logging: false,
+        allowTaint: true,
+        windowWidth: 794, // A4幅に固定
+        windowHeight: Math.max(1123, contentRect.height), // 必要な高さを確保
       });
 
+      // PDF設定
       const pdf = new jsPDF("p", "mm", "a4");
-      const imgData = canvas.toDataURL("image/png");
-
-      // 修正：幅と高さを追加
-      const pdfWidth = 210; // A4の幅
-      const pdfHeight = 297; // A4の高さ
-      const imgWidth = pdfWidth;
-      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      // 複数ページに対応
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pdfHeight;
-
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-        heightLeft -= pdfHeight;
+      const imgData = canvas.toDataURL("image/png", 1.0);
+      
+      // A4サイズの寸法（mm）
+      const pdfWidth = 210;
+      const pdfHeight = 297;
+      
+      // キャンバスの縦横比を維持しながら、A4ページに収める
+      const canvasAspectRatio = canvas.width / canvas.height;
+      const pageAspectRatio = pdfWidth / pdfHeight;
+      
+      let finalWidth, finalHeight, offsetX, offsetY;
+      
+      if (canvasAspectRatio > pageAspectRatio) {
+        // 横長：幅をページ幅に合わせて、高さを調整
+        finalWidth = pdfWidth;
+        finalHeight = pdfWidth / canvasAspectRatio;
+        offsetX = 0;
+        offsetY = (pdfHeight - finalHeight) / 2;
+      } else {
+        // 縦長：高さをページ高さに合わせて、幅を調整
+        finalHeight = pdfHeight;
+        finalWidth = pdfHeight * canvasAspectRatio;
+        offsetX = (pdfWidth - finalWidth) / 2;
+        offsetY = 0;
       }
+      
+      // 画像を中央配置で追加
+      pdf.addImage(imgData, "PNG", offsetX, offsetY, finalWidth, finalHeight);
 
+      // PDFをダウンロード
       pdf.save(`見積書_${data.estimateNumber}.pdf`);
+      
+      // 一時要素を削除
       document.body.removeChild(tempDiv);
+      
     } catch (error) {
       console.error("PDF生成エラー:", error);
       alert("PDFの生成に失敗しました。もう一度お試しください。");
