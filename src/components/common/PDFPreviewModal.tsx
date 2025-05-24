@@ -83,84 +83,114 @@ const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
   };
 
   // PDF生成とダウンロード関数（1ページに強制収める）
+  // 改善されたPDF生成関数
   const generateAndDownloadPDF = async (data: EstimatePDFData) => {
     try {
       setIsDownloading(true);
 
-      // PDF用のHTMLを生成（isPDF: trueで印刷スタイル強制適用）
+      // 高解像度PDF用のHTMLを生成
       const htmlContent = generateEstimateHTML(data, true);
       const tempDiv = document.createElement("div");
       tempDiv.innerHTML = htmlContent;
-      
-      // PDF生成用の隠し要素としてbodyに追加
+
+      // PDF生成用の隠し要素設定（より高解像度対応）
       tempDiv.style.position = "fixed";
       tempDiv.style.top = "-9999px";
       tempDiv.style.left = "-9999px";
       tempDiv.style.width = "210mm";
       tempDiv.style.height = "297mm";
       tempDiv.style.overflow = "hidden";
+      tempDiv.style.transform = "scale(1)"; // スケール固定
       document.body.appendChild(tempDiv);
 
-      // 少し待ってからcanvas生成
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // レンダリング待機時間を延長
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
       const content = tempDiv.querySelector("#estimate-content") as HTMLElement;
       if (!content) {
         throw new Error("見積書コンテンツが見つかりません");
       }
 
-      // コンテンツの実際のサイズを取得
-      const contentRect = content.getBoundingClientRect();
-      console.log("Content size:", contentRect.width, contentRect.height);
-
-      // Canvas生成の設定を調整（固定幅でキャプチャ）
+      // 高解像度Canvas生成（TypeScriptエラー修正版）
       const canvas = await html2canvas(content, {
-        scale: 2, // 高解像度
+        scale: 4, // 高解像度（2→4）
         useCORS: true,
         backgroundColor: "#ffffff",
         logging: false,
         allowTaint: true,
-        windowWidth: 794, // A4幅に固定
-        windowHeight: Math.max(1123, contentRect.height), // 必要な高さを確保
+        windowWidth: 794,
+        windowHeight: Math.max(1123, content.scrollHeight),
+        // 追加オプション
+        imageTimeout: 15000,
+        onclone: (clonedDoc) => {
+          // クローンドキュメントで追加のスタイル調整
+          const style = clonedDoc.createElement("style");
+          style.textContent = `
+          * {
+            -webkit-font-smoothing: antialiased !important;
+            -moz-osx-font-smoothing: grayscale !important;
+            text-rendering: optimizeLegibility !important;
+          }
+          table, th, td {
+            border-width: 1px !important;
+            border-color: #000 !important;
+          }
+        `;
+          clonedDoc.head.appendChild(style);
+        },
       });
 
-      // PDF設定
-      const pdf = new jsPDF("p", "mm", "a4");
-      const imgData = canvas.toDataURL("image/png", 1.0);
-      
-      // A4サイズの寸法（mm）
+      // 高品質PDF生成
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+        compress: false, // 圧縮無効化で画質保持
+      });
+
+      // 高品質画像データ（JPEG 95%品質）
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
+
+      // A4サイズ設定
       const pdfWidth = 210;
       const pdfHeight = 297;
-      
-      // キャンバスの縦横比を維持しながら、A4ページに収める
+
+      // 縦横比計算（改善版）
       const canvasAspectRatio = canvas.width / canvas.height;
       const pageAspectRatio = pdfWidth / pdfHeight;
-      
+
       let finalWidth, finalHeight, offsetX, offsetY;
-      
+
+      // より精密な配置計算
       if (canvasAspectRatio > pageAspectRatio) {
-        // 横長：幅をページ幅に合わせて、高さを調整
-        finalWidth = pdfWidth;
-        finalHeight = pdfWidth / canvasAspectRatio;
-        offsetX = 0;
+        finalWidth = pdfWidth - 10; // マージン考慮
+        finalHeight = (pdfWidth - 10) / canvasAspectRatio;
+        offsetX = 5;
         offsetY = (pdfHeight - finalHeight) / 2;
       } else {
-        // 縦長：高さをページ高さに合わせて、幅を調整
-        finalHeight = pdfHeight;
-        finalWidth = pdfHeight * canvasAspectRatio;
+        finalHeight = pdfHeight - 10; // マージン考慮
+        finalWidth = (pdfHeight - 10) * canvasAspectRatio;
         offsetX = (pdfWidth - finalWidth) / 2;
-        offsetY = 0;
+        offsetY = 5;
       }
-      
-      // 画像を中央配置で追加
-      pdf.addImage(imgData, "PNG", offsetX, offsetY, finalWidth, finalHeight);
 
-      // PDFをダウンロード
+      // 高品質画像追加
+      pdf.addImage(
+        imgData,
+        "JPEG",
+        offsetX,
+        offsetY,
+        finalWidth,
+        finalHeight,
+        undefined,
+        "FAST" // 高速圧縮アルゴリズム
+      );
+
+      // PDFダウンロード
       pdf.save(`見積書_${data.estimateNumber}.pdf`);
-      
-      // 一時要素を削除
+
+      // クリーンアップ
       document.body.removeChild(tempDiv);
-      
     } catch (error) {
       console.error("PDF生成エラー:", error);
       alert("PDFの生成に失敗しました。もう一度お試しください。");

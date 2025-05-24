@@ -12,62 +12,72 @@ export const generateEstimateHTML = (data: EstimatePDFData, isPDF: boolean = fal
   // PDF用の場合、印刷スタイルを強制適用するCSS
   const pdfForceStyles = isPDF
     ? `
-    /* PDF用: 印刷スタイルを強制適用 */
-    body { 
-        padding: 8mm !important; 
-        font-size: 9px !important; 
-        width: 210mm !important;
-        margin: 0 auto !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-    }
-    .container {
-        max-width: 170mm !important;
-        margin: 0 auto !important;
-    }
-    table {
-        font-size: 8px !important;
-        border-collapse: collapse !important;
-    }
-    th, td {
-        padding: 4px 8px !important;
-        border: 0.5px solid #000 !important;
-        vertical-align: top !important;
-        line-height: 1.5 !important;
-        word-wrap: break-word !important;
-        height: auto !important;
-        min-height: 22px !important;
-    }
-    .detail-table {
-        font-size: 7px !important;
-    }
-    .detail-table th, .detail-table td {
-        padding: 3px 6px !important;
-        line-height: 1.4 !important;
-        min-height: 18px !important;
-        border: 0.5px solid #000 !important;
-    }
-    .detail-header {
-        font-size: 8px !important;
-        padding: 4px 8px !important;
-        line-height: 1.4 !important;
-        min-height: 20px !important;
-        border: 0.5px solid #000 !important;
-    }
-    .border {
-        border: 0.5px solid #000 !important;
-    }
-    .text-xl { font-size: 14px !important; }
-    .text-lg { font-size: 12px !important; }
-    .text-sm { font-size: 10px !important; }
-    .text-xs { font-size: 8px !important; }
-    .mb-3 { margin-bottom: 0.5rem !important; }
-    .mb-4 { margin-bottom: 0.75rem !important; }
-    * {
-        -webkit-font-smoothing: antialiased !important;
-        -moz-osx-font-smoothing: grayscale !important;
-    }
-  `
+  /* PDF用: 印刷スタイルを強制適用 */
+/* PDF用: 印刷スタイルを強制適用 */
+body { 
+    padding: 8mm !important; 
+    font-size: 9px !important; 
+    width: 210mm !important;
+    margin: 0 auto !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+}
+
+.container {
+    max-width: 170mm !important;
+    margin: 0 auto !important;
+}
+
+table {
+    font-size: 8.5px !important;
+    border-collapse: collapse !important;
+    width: 100% !important;
+}
+
+th, td {
+    padding: 4px 6px !important;
+    border: 0.5px solid #000 !important;
+    min-height: 20px !important;
+    vertical-align: middle !important;
+    text-align: left !important;
+    line-height: 1.4 !important;
+}
+
+.amount {
+    text-align: right !important;
+}
+
+.detail-table th, .detail-table td {
+    padding: 4px 6px !important;
+    font-size: 7.5px !important;
+}
+
+.detail-header {
+    font-size: 8px !important;
+    padding: 6px 8px !important;
+    font-weight: bold !important;
+    background: #f3f4f6 !important;
+    border: 0.5px solid #000 !important;
+    text-align: left !important;
+}
+
+.text-xl { font-size: 14px !important; }
+.text-lg { font-size: 12px !important; }
+.text-sm { font-size: 10px !important; }
+.text-xs { font-size: 8px !important; }
+.mb-3 { margin-bottom: 0.5rem !important; }
+.mb-4 { margin-bottom: 0.75rem !important; }
+
+.border {
+    border: 0.5px solid #000 !important;
+}
+
+* {
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+}
+
+`
     : "";
 
   const htmlContent = `
@@ -140,7 +150,7 @@ export const generateEstimateHTML = (data: EstimatePDFData, isPDF: boolean = fal
         th, td { 
             border: 0.5px solid #000; 
             padding: 4px 8px;
-            vertical-align: top; 
+            vertical-align: middle; 
             line-height: 1.4;
             word-wrap: break-word;
             height: auto;
@@ -162,7 +172,7 @@ export const generateEstimateHTML = (data: EstimatePDFData, isPDF: boolean = fal
         .detail-table th, .detail-table td {
             padding: 3px 7px;
             line-height: 1.4;
-            vertical-align: top;
+            vertical-align: middle;
             word-wrap: break-word;
             height: auto;
             min-height: 16px;
@@ -170,7 +180,7 @@ export const generateEstimateHTML = (data: EstimatePDFData, isPDF: boolean = fal
         .detail-header {
             font-size: 8px;
             padding: 4px 8px;
-            vertical-align: top;
+            vertical-align: middle;
             line-height: 1.3;
             min-height: 18px;
         }
@@ -195,7 +205,7 @@ export const generateEstimateHTML = (data: EstimatePDFData, isPDF: boolean = fal
             th, td {
                 padding: 4px 8px !important;
                 border: 0.5px solid #000 !important;
-                vertical-align: top !important;
+                vertical-align: middle !important;
                 line-height: 1.5 !important;
                 word-wrap: break-word;
                 height: auto !important;
@@ -216,6 +226,7 @@ export const generateEstimateHTML = (data: EstimatePDFData, isPDF: boolean = fal
                 line-height: 1.4 !important;
                 min-height: 20px !important;
                 border: 0.5px solid #000 !important;
+                vertical-align: middle !important;
             }
             .text-xl { font-size: 14px; }
             .text-lg { font-size: 12px; }
@@ -445,7 +456,7 @@ export const generateEstimateHTML = (data: EstimatePDFData, isPDF: boolean = fal
     </div>
 </body>
 </html>
-  `;
+    `;
 
   return htmlContent;
 };
