@@ -310,24 +310,26 @@ th, td {
         <div class="grid grid-cols-2 gap-3 mb-3">
             <!-- 左側：価格内訳 + 下取車両情報 -->
             <div class="space-y-2">
-                <!-- 販売価格内訳 -->
-                <div>
-                    <div class="bg-gray-200 px-1 py-1 detail-header font-bold border">販売価格内訳</div>
-                    <table class="border border-t-0">
-                        <tr><td>車両本体価格</td><td class="amount">${formatNumber(data.salesPrices.base_price)}円</td></tr>
-                        <tr><td>値引き</td><td class="amount">${formatNumber(data.salesPrices.discount)}円</td></tr>
-                        <tr><td>車検整備費用</td><td class="amount">${formatNumber(data.salesPrices.inspection_fee)}円</td></tr>
-                        <tr><td>付属品・特別仕様 ・・・(A)</td><td class="amount">${formatNumber(data.salesPrices.accessories_fee)}円</td></tr>
-                        <tr class="highlight"><td>車両販売価格①</td><td class="amount">${formatNumber(data.salesPrices.vehicle_price)}円</td></tr>
-                        <tr><td>税金・保険料 ・・・(B)</td><td class="amount">${formatNumber(data.salesPrices.tax_insurance)}円</td></tr>
-                        <tr><td>預り法定費用 ・・・(C)</td><td class="amount">${formatNumber(data.salesPrices.legal_fee)}円</td></tr>
-                        <tr><td>手続代行費用 ・・・(D)</td><td class="amount">${formatNumber(data.salesPrices.processing_fee)}円</td></tr>
-                        <tr class="highlight"><td>販売諸費用②</td><td class="amount">${formatNumber(data.salesPrices.misc_fee)}円</td></tr>
-                        <tr><td>現金販売価格①＋②</td><td class="amount">${formatNumber(data.salesPrices.total_price)}円</td></tr>
-                        <tr><td>下取車価格</td><td class="amount">${formatNumber(data.salesPrices.trade_in_price)}円</td></tr>
-                        <tr class="total"><td>販売価格</td><td class="amount">${formatNumber(data.salesPrices.payment_total)}円</td></tr>
-                    </table>
-                </div>
+            <!-- 販売価格内訳 -->
+            <div>
+                <div class="bg-gray-200 px-1 py-1 detail-header font-bold border">販売価格内訳</div>
+                <table class="border border-t-0">
+                    <tr><td>車両本体価格</td><td class="amount">${formatNumber(data.salesPrices.base_price)}円</td></tr>
+                    <tr><td>値引き</td><td class="amount">${formatNumber(data.salesPrices.discount)}円</td></tr>
+                    <tr><td>車検整備費用</td><td class="amount">${formatNumber(data.salesPrices.inspection_fee)}円</td></tr>
+                    <tr><td>付属品・特別仕様 ・・・(A)</td><td class="amount">${formatNumber(data.salesPrices.accessories_fee)}円</td></tr>
+                    <tr class="highlight"><td>車両販売価格①</td><td class="amount">${formatNumber(data.salesPrices.vehicle_price)}円</td></tr>
+                    <tr><td>税金・保険料 ・・・(B)</td><td class="amount">${formatNumber(data.salesPrices.tax_insurance)}円</td></tr>
+                    <tr><td>預り法定費用 ・・・(C)</td><td class="amount">${formatNumber(data.salesPrices.legal_fee)}円</td></tr>
+                    <tr><td>手続代行費用 ・・・(D)</td><td class="amount">${formatNumber(data.salesPrices.processing_fee)}円</td></tr>
+                    <tr class="highlight"><td>販売諸費用②</td><td class="amount">${formatNumber(data.salesPrices.misc_fee)}円</td></tr>
+                    <tr><td>現金販売価格①＋②</td><td class="amount">${formatNumber(data.salesPrices.total_price)}円</td></tr>
+                    <tr><td>内消費税</td><td class="amount">${formatNumber(data.salesPrices.consumption_tax)}円</td></tr>
+                    <tr><td>下取車価格</td><td class="amount">${formatNumber(data.salesPrices.trade_in_price)}円</td></tr>
+                    <tr><td>下取車残債</td><td class="amount">${formatNumber(data.salesPrices.trade_in_debt)}円</td></tr>
+                    <tr class="total"><td>販売価格</td><td class="amount">${formatNumber(data.salesPrices.payment_total)}円</td></tr>
+                </table>
+            </div>
 
                 <!-- 下取車両情報 -->
                 <div>
