@@ -2,6 +2,7 @@
 
 // 見積書レポートの基本型（修正版）
 export interface EstimateReport {
+  document_type?: string;
   id: string;
   estimateNumber: string;
   user_id: string; // ★追加: 作成したユーザーID
@@ -26,6 +27,7 @@ export interface EstimateVehicleRawData {
   maker: string;
   name: string;
   year: number;
+  document_type?: string;
   created_at: string;
   company_id: string;
   sales_prices: Array<{
