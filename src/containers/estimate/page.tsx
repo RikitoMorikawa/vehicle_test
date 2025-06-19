@@ -5,14 +5,16 @@ import EstimateComponent from "../../components/estimate/page";
 import type { EstimateError, EstimateFormData } from "../../validations/estimate/page";
 import { getValidationErrors, validateEstimate } from "../../validations/custome_estimate";
 import { estimateService } from "../../services/estimate/page";
+import { useAuth } from "../../hooks/useAuth"; // ★追加
 import { Accessory } from "../../types/db/accessories";
 
 const EstimateContainer: React.FC = () => {
-  const { id } = useParams<{ id: string }>(); // URLから車両IDを取得
+  const { id: vehicleId } = useParams<{ id: string }>(); // ★変数名をvehicleIdに変更
   const navigate = useNavigate();
+  const { user } = useAuth(); // ★追加：認証情報を取得
 
   // 車両情報の取得
-  const { vehicle, isLoading: vehicleLoading, error: vehicleError } = estimateService.useVehicle(id || "");
+  const { vehicle, isLoading: vehicleLoading, error: vehicleError } = estimateService.useVehicle(vehicleId || "");
 
   // 見積もり作成ミューテーション
   const createEstimate = estimateService.useCreateEstimate();
@@ -231,35 +233,42 @@ const EstimateContainer: React.FC = () => {
   // フォーム送信ハンドラ
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!id) return;
 
-    // エラーと成功メッセージをリセット
-    setSuccess(null);
-    setApiError(null);
+    if (!user) {
+      setErrors({ general: "ログインが必要です" }); // ★修正：setError → setErrors
+      return;
+    }
 
-    // バリデーション実行
-    const isValid = validateAllFields();
-    if (!isValid) return;
+    if (!vehicleId) {
+      setErrors({ general: "車両情報が不足しています" }); // ★修正：setError → setErrors
+      return;
+    }
 
-    // ローディング開始
-    setIsLoading(true);
+    // バリデーション処理
+    if (!validateAllFields()) {
+      return;
+    }
 
     try {
-      // 見積もり作成APIを呼び出し
+      setIsLoading(true);
+      setApiError(null);
+
+      // user.idを追加して見積書作成
       await createEstimate.mutateAsync({
-        vehicleId: id,
+        vehicleId,
+        userId: user.id, // ★ログインユーザーIDを渡す
         ...formData,
       });
 
-      // 成功メッセージを表示
-      setSuccess("見積書が正常に作成されました");
+      // 成功時の処理
+      setSuccess("見積書を作成しました");
 
-      // 成功後に一覧画面へリダイレクト
+      // 少し待ってから遷移（成功メッセージを見せるため）
       setTimeout(() => {
-        navigate("/vehicles");
-      }, 2000);
+        navigate("/reports"); // 帳票管理画面に遷移
+      }, 1000);
     } catch (err) {
-      console.error("Failed to create estimate:", err);
+      console.error("見積書作成エラー:", err);
       setApiError("見積書の作成に失敗しました");
     } finally {
       setIsLoading(false);

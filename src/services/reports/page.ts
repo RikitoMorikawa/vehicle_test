@@ -1,21 +1,6 @@
 // src/services/reports/page.ts
 import { reportsHandler } from "../../server/reports/handler_000";
-
-// 見積書データの型定義
-interface EstimateReport {
-  id: string;
-  estimateNumber: string;
-  vehicleInfo: {
-    maker: string;
-    name: string;
-    year: number;
-  };
-  customerName?: string;
-  companyName?: string;
-  totalAmount: number;
-  createdAt: string;
-  status: "draft" | "completed" | "sent";
-}
+import type { EstimateReport } from "../../types/report/page";
 
 export const reportsService = {
   // 見積書一覧を取得
@@ -25,6 +10,33 @@ export const reportsService = {
       return estimates;
     } catch (error) {
       console.error("Error fetching estimates list:", error);
+      throw error;
+    }
+  },
+
+  // 特定ユーザー・特定車両の見積書一覧を取得
+  async getEstimatesForVehicleAndUser(vehicleId: string, userId: string): Promise<EstimateReport[]> {
+    try {
+      const estimates = await reportsHandler.searchEstimates({
+        vehicleId,
+        userId,
+      });
+      return estimates;
+    } catch (error) {
+      console.error("Error fetching estimates for vehicle and user:", error);
+      throw error;
+    }
+  },
+
+  // 特定ユーザーの見積書一覧を取得
+  async getEstimatesForUser(userId: string): Promise<EstimateReport[]> {
+    try {
+      const estimates = await reportsHandler.searchEstimates({
+        userId,
+      });
+      return estimates;
+    } catch (error) {
+      console.error("Error fetching estimates for user:", error);
       throw error;
     }
   },
@@ -53,7 +65,15 @@ export const reportsService = {
   },
 
   // 見積書の検索・フィルタリング
-  async searchEstimates(params: { companyId?: string; status?: string; dateFrom?: string; dateTo?: string; searchText?: string }): Promise<EstimateReport[]> {
+  async searchEstimates(params: {
+    companyId?: string;
+    status?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    searchText?: string;
+    userId?: string; // ★追加
+    vehicleId?: string; // ★追加
+  }): Promise<EstimateReport[]> {
     try {
       const estimates = await reportsHandler.searchEstimates(params);
       return estimates;

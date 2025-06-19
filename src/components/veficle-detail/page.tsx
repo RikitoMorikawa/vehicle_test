@@ -1,10 +1,11 @@
-import React from "react";
+// src/components/vehicle-detail/page.tsx
 import { ArrowLeft, Heart } from "lucide-react";
 import Header from "../Header";
 import Sidebar from "../Sidebar";
 import Footer from "../Footer";
 import View360Viewer from "../ui-parts/vehicle-detail/View360Viewer";
 import VehicleInfo from "../ui-parts/vehicle-detail/VehicleInfo";
+import VehicleDocuments from "../ui-parts/vehicle-detail/VehicleDocuments";
 import { Vehicle } from "../../types/db/vehicle";
 import { useAuth } from "../../hooks/useAuth";
 import LoanApplicationStatusView from "../ui-parts/vehicle-detail/LoanApplicationStatus";
@@ -177,12 +178,12 @@ const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({
                   </button>
                   {!isAdmin && (
                     <button
-                      onClick={() => onTabChange("見積書作成")}
+                      onClick={() => onTabChange("各種資料")}
                       className={`px-6 py-4 text-center text-sm font-medium ${
-                        activeTab === "見積書作成" ? "border-b-2 border-red-600 text-red-600" : "text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        activeTab === "各種資料" ? "border-b-2 border-red-600 text-red-600" : "text-gray-500 hover:text-gray-700 hover:border-gray-300"
                       }`}
                     >
-                      見積書作成
+                      各種資料
                     </button>
                   )}
                   {!isAdmin && (
@@ -237,12 +238,9 @@ const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({
                   </div>
                 )}
 
-                {activeTab === "見積書作成" && (
+                {activeTab === "各種資料" && user && (
                   <div className="p-6">
-                    <div className="max-w-2xl mx-auto">
-                      <h2 className="text-xl font-semibold mb-4">見積書作成</h2>
-                      <p className="mb-4 text-gray-500">この機能は現在実装中です</p>
-                    </div>
+                    <VehicleDocuments vehicleId={vehicle.id} userId={user.id} />
                   </div>
                 )}
 

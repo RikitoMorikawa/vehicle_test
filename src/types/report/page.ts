@@ -1,9 +1,11 @@
 // src/types/report/page.ts
 
-// 見積書レポートの基本型
+// 見積書レポートの基本型（修正版）
 export interface EstimateReport {
   id: string;
   estimateNumber: string;
+  user_id: string; // ★追加: 作成したユーザーID
+  vehicle_id: string; // ★追加: 車両ID
   vehicleInfo: {
     maker: string;
     name: string;
@@ -16,9 +18,11 @@ export interface EstimateReport {
   status: "draft" | "completed" | "sent";
 }
 
-// データベースから取得される生データの型定義
+// データベースから取得される生データの型定義（修正版）
 export interface EstimateVehicleRawData {
   id: string;
+  user_id: string; // ★追加
+  vehicle_id: string; // ★追加
   maker: string;
   name: string;
   year: number;
@@ -39,6 +43,8 @@ export interface EstimateSearchParams {
   dateFrom?: string;
   dateTo?: string;
   searchText?: string;
+  userId?: string; // ★追加: ユーザーIDでフィルタリング
+  vehicleId?: string; // ★追加: 車両IDでフィルタリング
 }
 
 // レポート関連のエラー型
@@ -56,6 +62,8 @@ export interface ReportFilters {
   dateFrom: string;
   dateTo: string;
   searchText: string;
+  userId?: string; // ★追加
+  vehicleId?: string; // ★追加
 }
 
 // レポート表示用のソート設定

@@ -1,59 +1,63 @@
 // src/server/reports/handler_000.ts
 import { supabase } from "../../lib/supabase";
-import type { EstimateReport, EstimateVehicleRawData, EstimateSearchParams } from "../../types/report/page";
+import type { EstimateReport, EstimateVehicleRawData } from "../../types/report/page";
 
 export const reportsHandler = {
-  // 見積書一覧を取得
+  // 見積書一覧を取得（user_idとvehicle_idを含む）
   async fetchEstimatesList(): Promise<EstimateReport[]> {
     try {
-      console.log("Fetching estimates list...");
-
       const { data, error } = await supabase
         .from("estimate_vehicles")
         .select(
           `
           id,
+          user_id,
+          vehicle_id,
           maker,
           name,
           year,
           created_at,
           company_id,
-          sales_prices(
-            payment_total
-          ),
-          companies(
-            name
-          )
+          sales_prices!inner(payment_total),
+          companies(name)
         `
         )
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("Error fetching estimates:", error);
-        throw error;
+        console.error("Database query error:", error);
+        throw new Error(`見積書の取得に失敗しました: ${error.message}`);
       }
 
-      // 型安全なデータ変換
-      const estimates: EstimateReport[] =
-        (data as EstimateVehicleRawData[])?.map((item, index) => ({
+      if (!data) {
+        return [];
+      }
+
+      // データを EstimateReport 形式に変換
+      const estimates: EstimateReport[] = data.map((item: EstimateVehicleRawData) => {
+        const totalAmount = item.sales_prices?.[0]?.payment_total || 0;
+        const companyName = item.companies?.[0]?.name || "";
+
+        return {
           id: item.id,
-          estimateNumber: `EST-${String(index + 1).padStart(4, "0")}`,
+          estimateNumber: `EST-${item.id.slice(0, 8).toUpperCase()}`,
+          user_id: item.user_id, // ★追加
+          vehicle_id: item.vehicle_id, // ★追加
           vehicleInfo: {
             maker: item.maker,
             name: item.name,
             year: item.year,
           },
-          customerName: undefined,
-          companyName: item.companies?.[0]?.name || "未設定",
-          totalAmount: item.sales_prices?.[0]?.payment_total || 0,
+          companyName,
+          totalAmount,
           createdAt: item.created_at,
           status: "completed" as const,
-        })) || [];
+        };
+      });
 
-      console.log(`Fetched ${estimates.length} estimates`);
       return estimates;
     } catch (error) {
-      console.error("Failed to fetch estimates list:", error);
+      console.error("Error in fetchEstimatesList:", error);
       throw error;
     }
   },
@@ -61,92 +65,103 @@ export const reportsHandler = {
   // 特定の見積書を取得
   async fetchEstimateById(id: string): Promise<EstimateReport> {
     try {
-      console.log("Fetching estimate with ID:", id);
-
       const { data, error } = await supabase
         .from("estimate_vehicles")
         .select(
           `
           id,
+          user_id,
+          vehicle_id,
           maker,
           name,
           year,
           created_at,
           company_id,
-          sales_prices(
-            payment_total
-          ),
-          companies(
-            name
-          )
+          sales_prices!inner(payment_total),
+          companies(name)
         `
         )
         .eq("id", id)
         .single();
 
       if (error) {
-        console.error("Error fetching estimate:", error);
-        throw error;
+        console.error("Database query error:", error);
+        throw new Error(`見積書の取得に失敗しました: ${error.message}`);
       }
 
-      // 型安全なデータ変換
-      const rawData = data as EstimateVehicleRawData;
-      const estimate: EstimateReport = {
-        id: rawData.id,
-        estimateNumber: `EST-${rawData.id.slice(-4).toUpperCase()}`,
-        vehicleInfo: {
-          maker: rawData.maker,
-          name: rawData.name,
-          year: rawData.year,
-        },
-        customerName: undefined,
-        companyName: rawData.companies?.[0]?.name || "未設定",
-        totalAmount: rawData.sales_prices?.[0]?.payment_total || 0,
-        createdAt: rawData.created_at,
-        status: "completed",
-      };
+      if (!data) {
+        throw new Error("見積書が見つかりません");
+      }
 
-      return estimate;
+      const totalAmount = data.sales_prices?.[0]?.payment_total || 0;
+      const companyName = data.companies?.[0]?.name || "";
+
+      return {
+        id: data.id,
+        estimateNumber: `EST-${data.id.slice(0, 8).toUpperCase()}`,
+        user_id: data.user_id, // ★追加
+        vehicle_id: data.vehicle_id, // ★追加
+        vehicleInfo: {
+          maker: data.maker,
+          name: data.name,
+          year: data.year,
+        },
+        companyName,
+        totalAmount,
+        createdAt: data.created_at,
+        status: "completed" as const,
+      };
     } catch (error) {
-      console.error("Failed to fetch estimate:", error);
+      console.error("Error in fetchEstimateById:", error);
       throw error;
     }
   },
 
-  // 見積書の検索・フィルタリング
-  async searchEstimates(params: EstimateSearchParams): Promise<EstimateReport[]> {
+  // フィルタリング対応の検索機能
+  async searchEstimates(params: {
+    companyId?: string;
+    status?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    searchText?: string;
+    userId?: string; // ★追加
+    vehicleId?: string; // ★追加
+  }): Promise<EstimateReport[]> {
     try {
-      console.log("Searching estimates with params:", params);
-
       let query = supabase.from("estimate_vehicles").select(`
           id,
+          user_id,
+          vehicle_id,
           maker,
           name,
           year,
           created_at,
           company_id,
-          sales_prices(
-            payment_total
-          ),
-          companies(
-            name
-          )
+          sales_prices!inner(payment_total),
+          companies(name)
         `);
 
-      // 加盟店フィルター
+      // フィルタリング条件を追加
+      if (params.userId) {
+        query = query.eq("user_id", params.userId);
+      }
+
+      if (params.vehicleId) {
+        query = query.eq("vehicle_id", params.vehicleId);
+      }
+
       if (params.companyId) {
         query = query.eq("company_id", params.companyId);
       }
 
-      // 日付範囲フィルター
       if (params.dateFrom) {
         query = query.gte("created_at", params.dateFrom);
       }
+
       if (params.dateTo) {
         query = query.lte("created_at", params.dateTo);
       }
 
-      // テキスト検索（車名またはメーカー）
       if (params.searchText) {
         query = query.or(`maker.ilike.%${params.searchText}%,name.ilike.%${params.searchText}%`);
       }
@@ -156,44 +171,46 @@ export const reportsHandler = {
       const { data, error } = await query;
 
       if (error) {
-        console.error("Error searching estimates:", error);
-        throw error;
+        console.error("Database query error:", error);
+        throw new Error(`見積書の検索に失敗しました: ${error.message}`);
       }
 
-      // 型安全なデータ変換
-      const estimates: EstimateReport[] =
-        (data as EstimateVehicleRawData[])?.map((item, index) => ({
+      if (!data) {
+        return [];
+      }
+
+      // データを EstimateReport 形式に変換
+      const estimates: EstimateReport[] = data.map((item: EstimateVehicleRawData) => {
+        const totalAmount = item.sales_prices?.[0]?.payment_total || 0;
+        const companyName = item.companies?.[0]?.name || "";
+
+        return {
           id: item.id,
-          estimateNumber: `EST-${String(index + 1).padStart(4, "0")}`,
+          estimateNumber: `EST-${item.id.slice(0, 8).toUpperCase()}`,
+          user_id: item.user_id,
+          vehicle_id: item.vehicle_id,
           vehicleInfo: {
             maker: item.maker,
             name: item.name,
             year: item.year,
           },
-          customerName: undefined,
-          companyName: item.companies?.[0]?.name || "未設定",
-          totalAmount: item.sales_prices?.[0]?.payment_total || 0,
+          companyName,
+          totalAmount,
           createdAt: item.created_at,
-          status: "completed",
-        })) || [];
+          status: "completed" as const,
+        };
+      });
 
       return estimates;
     } catch (error) {
-      console.error("Failed to search estimates:", error);
+      console.error("Error in searchEstimates:", error);
       throw error;
     }
   },
 
-  // PDF生成（未実装）
+  // PDF生成（既存）
   async generateEstimatePDF(estimateId: string): Promise<Blob> {
-    try {
-      console.log("Generating PDF for estimate:", estimateId);
-
-      // TODO: PDF生成ライブラリ（jsPDF、react-pdf等）を使用してPDF生成
-      throw new Error("PDF generation not implemented yet");
-    } catch (error) {
-      console.error("Failed to generate PDF:", error);
-      throw error;
-    }
+    // TODO: PDF生成機能を実装
+    throw new Error("PDF生成機能は未実装です");
   },
 };

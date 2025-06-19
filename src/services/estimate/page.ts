@@ -24,10 +24,10 @@ function useVehicle(id: string) {
   };
 }
 
-// 見積もりを作成するフック
+// 見積もりを作成するフック（user_id対応版）
 function useCreateEstimate() {
   return useMutation({
-    mutationFn: (data: { vehicleId: string } & EstimateFormData) => estimateHandler.createEstimate(data),
+    mutationFn: (data: { vehicleId: string; userId: string } & EstimateFormData) => estimateHandler.createEstimate(data),
   });
 }
 

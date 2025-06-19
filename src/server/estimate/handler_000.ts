@@ -27,15 +27,16 @@ export const estimateHandler = {
     return data;
   },
 
-  // 見積もりを作成する関数
-  async createEstimate(data: { vehicleId: string } & EstimateFormData): Promise<void> {
-    const { vehicleId, tradeIn, loanCalculation, accessories, taxInsuranceFees, legalFees, processingFees, salesPrice } = data;
+  // 見積もりを作成する関数（user_id対応版）
+  async createEstimate(data: { vehicleId: string; userId: string } & EstimateFormData): Promise<void> {
+    const { vehicleId, userId, tradeIn, loanCalculation, accessories, taxInsuranceFees, legalFees, processingFees, salesPrice } = data;
 
     console.log("Creating estimate with data:", {
       vehicleId,
+      userId, // ★追加
       tradeIn,
       loanCalculation,
-      accessories, // ログに追加
+      accessories,
     });
 
     try {
@@ -51,11 +52,12 @@ export const estimateHandler = {
         throw vehicleFetchError;
       }
 
-      // ステップ1: 見積もりテーブルに車両情報をコピーして基本情報を作成
+      // ステップ1: 見積もりテーブルに車両情報をコピーして基本情報を作成（user_id追加）
       const { data: estimateData, error: estimateError } = await supabase
         .from("estimate_vehicles")
         .insert([
           {
+            user_id: userId, // ★追加：ログインユーザーIDを設定
             vehicle_id: vehicleId,
             maker: vehicleData.maker,
             name: vehicleData.name,
@@ -73,7 +75,7 @@ export const estimateHandler = {
 
       // 作成された見積もりID
       const estimateId = estimateData[0].id;
-      console.log("Created estimate with ID:", estimateId);
+      console.log("Created estimate with ID:", estimateId, "for user:", userId);
 
       const sanitizedTradeIn = {
         ...tradeIn,
@@ -109,9 +111,8 @@ export const estimateHandler = {
         throw loanCalcError;
       }
 
-      // 追加: ステップ4: 付属品情報の登録
+      // ステップ4: 付属品情報の登録
       if (accessories && accessories.length > 0) {
-        // 付属品の配列を登録用に加工
         const accessoriesWithEstimateId = accessories.map((accessory) => ({
           ...accessory,
           estimate_id: estimateId,
@@ -125,7 +126,7 @@ export const estimateHandler = {
         }
       }
 
-      // 税金・保険料情報の登録を追加
+      // 税金・保険料情報の登録
       const { error: taxInsuranceError } = await supabase.from("tax_insurance_fees").insert([
         {
           ...taxInsuranceFees,
@@ -138,7 +139,7 @@ export const estimateHandler = {
         throw taxInsuranceError;
       }
 
-      // 法定費用情報の登録を追加
+      // 法定費用情報の登録
       const { error: legalFeesError } = await supabase.from("legal_fees").insert([
         {
           ...legalFees,
@@ -151,7 +152,7 @@ export const estimateHandler = {
         throw legalFeesError;
       }
 
-      // 処理費用情報の登録を追加
+      // 処理費用情報の登録
       const { error: processingFeesError } = await supabase.from("processing_fees").insert([
         {
           ...processingFees,
@@ -164,7 +165,7 @@ export const estimateHandler = {
         throw processingFeesError;
       }
 
-      // 販売価格情報の登録を追加
+      // 販売価格情報の登録
       const { error: salesPriceError } = await supabase.from("sales_prices").insert([
         {
           ...salesPrice,
@@ -177,7 +178,7 @@ export const estimateHandler = {
         throw salesPriceError;
       }
 
-      console.log("Estimate created successfully");
+      console.log("Estimate created successfully for user:", userId);
     } catch (error) {
       console.error("Failed to create estimate:", error);
       throw error;
