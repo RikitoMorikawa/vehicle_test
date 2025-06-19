@@ -9,10 +9,10 @@ const Sidebar: React.FC = () => {
 
   const navItems = [
     { to: "/vehicles", icon: <Search className="w-5 h-5" />, label: "車両検索", exact: false },
-    { to: "/favorites", icon: <Heart className="w-5 h-5" />, label: "お気に入り一覧", exact: true },
-    { to: "/reports", icon: <FileText className="w-5 h-5" />, label: "帳票管理", exact: true },
+    ...(!isAdmin ? [{ to: "/favorites", icon: <Heart className="w-5 h-5" />, label: "お気に入り一覧", exact: true }] : []),
     ...(isAdmin
       ? [
+          { to: "/reports", icon: <FileText className="w-5 h-5" />, label: "帳票管理", exact: true },
           { to: "/admin", icon: <Users className="w-5 h-5" />, label: "ユーザー管理", exact: true },
           { to: "/admin/loan-review", icon: <CreditCard className="w-5 h-5" />, label: "ローン審査", exact: true },
           { to: "/admin/vehicles/new", icon: <PlusCircle className="w-5 h-5" />, label: "車両登録", exact: true },

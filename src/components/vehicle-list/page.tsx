@@ -162,16 +162,19 @@ const VehicleListComponent: React.FC<VehicleListComponentProps> = ({
                       <img src={vehicle.imageUrl} alt={vehicle.name} className="w-full h-48 object-cover" />
                     </Link>
                     <div className="absolute top-2 right-2 flex gap-2">
-                      <button
-                        onClick={(e) => {
-                          onToggleFavorite(vehicle.id);
-                        }}
-                        className={`p-2 rounded-full bg-white/80 hover:bg-white transition-colors ${
-                          favoriteVehicleIds.includes(vehicle.id) ? "text-red-600" : ""
-                        }`}
-                      >
-                        <Heart className="h-5 w-5" fill={favoriteVehicleIds.includes(vehicle.id) ? "currentColor" : "none"} />
-                      </button>
+                      {/* adminでない場合のみお気に入りボタンを表示 */}
+                      {!isAdmin && (
+                        <button
+                          onClick={(e) => {
+                            onToggleFavorite(vehicle.id);
+                          }}
+                          className={`p-2 rounded-full bg-white/80 hover:bg-white transition-colors ${
+                            favoriteVehicleIds.includes(vehicle.id) ? "text-red-600" : ""
+                          }`}
+                        >
+                          <Heart className="h-5 w-5" fill={favoriteVehicleIds.includes(vehicle.id) ? "currentColor" : "none"} />
+                        </button>
+                      )}
                       {isAdmin && (
                         <Link to={`/admin/vehicles/${vehicle.id}/edit`} className="p-2 rounded-full bg-white/80 hover:bg-white transition-colors text-blue-600">
                           <Pencil className="h-5 w-5" />

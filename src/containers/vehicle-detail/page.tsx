@@ -10,6 +10,7 @@ const VehicleDetailContainer: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
 
   // 表示する画像を管理するステート
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -111,6 +112,7 @@ const VehicleDetailContainer: React.FC = () => {
       view360Images={view360Images}
       onCreateEstimate={handleCreateEstimate}
       onApplyLoan={handleApplyLoan}
+      isAdmin={isAdmin}
     />
   );
 };

@@ -26,6 +26,7 @@ interface VehicleDetailComponentProps {
   view360Images: string[];
   onCreateEstimate: () => void;
   onApplyLoan: () => void;
+  isAdmin?: boolean;
 }
 
 const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({
@@ -45,6 +46,7 @@ const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({
   view360Images,
   onCreateEstimate,
   onApplyLoan,
+  isAdmin,
 }) => {
   const { user } = useAuth();
 
@@ -131,6 +133,7 @@ const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({
                     >
                       今すぐ注文
                     </button>
+                    {!isAdmin && (
                     <button
                       onClick={onToggleFavorite}
                       className={`flex items-center gap-1 px-4 py-2 rounded-md border ${
@@ -140,6 +143,7 @@ const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({
                       <Heart className="h-5 w-5" fill={isFavorite ? "currentColor" : "none"} />
                       {isFavorite ? "お気に入り" : "お気に入り"}
                     </button>
+                    )}
                   </div>
                 </div>
               </div>
