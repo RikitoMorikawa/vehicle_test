@@ -32,6 +32,21 @@ export const pdfHandler = {
       // 2. 関連テーブルから詳細データを並行取得（デバッグログ追加）
       console.log("Fetching related data for estimateId:", estimateId);
 
+      // ★追加: user_idから販売店情報（ユーザー情報）を取得
+      const { data: userData, error: userError } = await supabase
+        .from("users")
+        .select("company_name, user_name, phone, email, address")
+        .eq("id", estimateVehicle.user_id)
+        .single();
+
+      if (userError) {
+        console.error("Error fetching user data:", userError);
+        // エラーでも続行（デフォルト値を使用）
+      }
+
+      console.log("Found estimate vehicle:", estimateVehicle.id);
+      console.log("Found user data:", userData);
+
       const [tradeInResult, loanResult, accessoriesResult, taxInsuranceResult, legalFeesResult, processingFeesResult, salesPricesResult] = await Promise.all([
         // trade_in_vehiclesテーブル（デバッグ強化）
         supabase
@@ -102,19 +117,16 @@ export const pdfHandler = {
       });
 
       // 書類番号を生成
-      const estimateNumber = `EST-${estimateVehicle.id.slice(-4).toUpperCase()}`;
+      const estimateNumber = `EST-${estimateVehicle.id.slice(0, 8).toUpperCase()}`;
 
       // 作成日をフォーマット
       const estimateDate = new Date(estimateVehicle.created_at).toISOString().split("T")[0];
 
-      // 会社情報の取得（デフォルト値を設定）
-      const companyInfo = estimateVehicle.companies || {};
-
       // 顧客情報（現在は仮データ、将来的にはcustomersテーブルから取得）
       const customerInfo = {
-        name: estimateVehicle.customer_name || "お客様",
-        address: estimateVehicle.customer_address || "住所未設定",
-        phone: estimateVehicle.customer_phone || "電話番号未設定",
+        name: estimateVehicle.customer_name || "",
+        address: estimateVehicle.customer_address || "",
+        phone: estimateVehicle.customer_phone || "",
       };
 
       // データを統合してEstimatePDFData形式に変換
@@ -122,14 +134,15 @@ export const pdfHandler = {
         // 基本情報
         estimateNumber,
         estimateDate,
+        document_type: estimateVehicle.document_type,
 
         // 販売店情報
         dealerInfo: {
-          name: companyInfo.name || "販売店名未設定",
-          address: companyInfo.address || "住所未設定",
-          phone: companyInfo.phone || "電話番号未設定",
-          representative: companyInfo.representative || "担当者未設定",
-          taxNumber: companyInfo.tax_number || "登録番号未設定",
+          name: userData?.company_name || "販売店名未設定",
+          address: userData?.address || "住所未設定", // 住所はusersテーブルにないため、後で追加するか固定値
+          phone: userData?.phone || "電話番号未設定",
+          representative: userData?.user_name || "担当者未設定",
+          email: userData?.email || "メールアドレス未設定",
         },
 
         // 顧客情報

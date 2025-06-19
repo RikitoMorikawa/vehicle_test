@@ -253,17 +253,36 @@ th, td {
             <div class="flex justify-between items-start mb-3">
                 <div class="text-left text-xs">
                     <div>書類番号：${data.estimateNumber}</div>
-                    <div>見積日：${formatDate(data.estimateDate)}</div>
+                    <div>日付：${formatDate(data.estimateDate)}</div>
                 </div>
                 <div class="text-right border p-2 bg-gray-50" style="width: 40%;">
-                    <div class="font-bold text-sm">【販売店】</div>
-                    <div class="text-xs">
-                        <div>${data.dealerInfo.name}</div>
-                        <div>${data.dealerInfo.address}</div>
-                        <div>電話番号：${data.dealerInfo.phone}</div>
-                        <div>担当者：${data.dealerInfo.representative}</div>
-                        <div>登録番号：${data.dealerInfo.taxNumber}</div>
+                <!-- 販売店情報 -->
+                    <div class="dealer-info">
+                    <h3>販売店情報</h3>
+                    <table class="info-table">
+                        <tr>
+                        <td>販売店名</td>
+                        <td>${data.dealerInfo.name}</td>
+                        </tr>
+                        <tr>
+                        <td>担当者</td>
+                        <td>${data.dealerInfo.representative}</td>
+                        </tr>
+                        <tr>
+                        <td>電話番号</td>
+                        <td>${data.dealerInfo.phone}</td>
+                        </tr>
+                        <tr>
+                        <td>住所</td>
+                        <td>${data.dealerInfo.address}</td>
+                        </tr>
+                        <tr>
+                        <td>Email</td>
+                        <td>${data.dealerInfo.email}</td>
+                        </tr>
+                    </table>
                     </div>
+                
                 </div>
             </div>
         </div>

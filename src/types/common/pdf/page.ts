@@ -10,10 +10,10 @@ export interface EstimatePDFData {
   // 販売店情報
   dealerInfo: {
     name: string;
-    address: string;
+    address?: string;
     phone: string;
     representative: string;
-    taxNumber: string;
+    email?: string;
   };
 
   // 顧客情報
