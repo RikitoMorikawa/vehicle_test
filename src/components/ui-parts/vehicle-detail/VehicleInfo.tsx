@@ -18,7 +18,7 @@ const VehicleInfo: React.FC<VehicleInfoProps> = ({ vehicle, mainImageUrl, otherI
   // 表示する画像（選択されていなければメイン画像）
   const displayImageUrl = selectedImage || mainImageUrl;
 
-  const handleEstimateClick = () => {
+  const onCreateEstimate = () => {
     navigate(`/estimate/${vehicle.id}`);
   };
 
@@ -103,10 +103,10 @@ const VehicleInfo: React.FC<VehicleInfoProps> = ({ vehicle, mainImageUrl, otherI
               <div></div>
               <div className="flex space-x-4">
                 <button
-                  onClick={handleEstimateClick}
+                  onClick={onCreateEstimate}
                   className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                 >
-                  見積書作成
+                  各種書類作成
                 </button>
                 <button
                   onClick={onApplyLoan}

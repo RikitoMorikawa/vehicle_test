@@ -64,6 +64,7 @@ export const estimateHandler = {
             year: vehicleData.year,
             mileage: vehicleData.mileage,
             price: vehicleData.price,
+            document_type: data.document_type || "estimate",
           },
         ])
         .select();

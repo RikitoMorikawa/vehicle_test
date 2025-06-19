@@ -27,6 +27,7 @@ const EstimateContainer: React.FC = () => {
 
   // フォームの初期状態
   const [formData, setFormData] = useState<EstimateFormData>({
+    document_type: "estimate",
     salesPrice: {
       base_price: 0,
       discount: 0,
@@ -158,10 +159,18 @@ const EstimateContainer: React.FC = () => {
 
   // 入力値変更ハンドラ
   const handleInputChange = (
-    section: "salesPrice" | "tradeIn" | "loanCalculation" | "accessories" | "taxInsuranceFees" | "legalFees" | "processingFees",
+    section: "salesPrice" | "tradeIn" | "loanCalculation" | "accessories" | "taxInsuranceFees" | "legalFees" | "processingFees" | "document_type", // document_type追加
     name: string,
     value: string | number | boolean | number[]
   ) => {
+    // document_typeの処理を追加
+    if (section === "document_type") {
+      setFormData((prev) => ({
+        ...prev,
+        document_type: value as string,
+      }));
+      return;
+    }
     // ローン計算の特別処理
     if (section === "loanCalculation") {
       if (name === "payment_count" && typeof value === "number") {

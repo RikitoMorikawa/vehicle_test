@@ -103,6 +103,7 @@ export type TradeInFormData = z.infer<typeof tradeInSchema>;
 
 // フォームデータ型定義
 export interface EstimateFormData {
+  document_type?: string;
   salesPrice: z.infer<typeof salesPriceSchema>;
   tradeIn: z.infer<typeof tradeInSchema>;
   loanCalculation: z.infer<typeof loanCalculationSchema>;
@@ -114,6 +115,7 @@ export interface EstimateFormData {
 
 // エラー型定義も更新
 export interface EstimateError {
+  document_type?: string;
   salesPrice?: { [key: string]: string } | string;
   tradeIn?: { [key: string]: string } | string;
   loanCalculation?: { [key: string]: string } | string;

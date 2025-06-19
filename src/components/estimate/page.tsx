@@ -20,7 +20,7 @@ export interface EstimateComponentProps {
   errors: EstimateError | null;
   success: string | null;
   onInputChange: (
-    section: "tradeIn" | "loanCalculation" | "taxInsuranceFees" | "legalFees" | "processingFees" | "salesPrice",
+    section: "tradeIn" | "loanCalculation" | "taxInsuranceFees" | "legalFees" | "processingFees" | "salesPrice" | "document_type",
     name: string,
     value: string | number | boolean | number[]
   ) => void;
@@ -1294,8 +1294,25 @@ const EstimateComponent: React.FC<EstimateComponentProps> = ({
         <main className="flex-1 p-8">
           <div className="max-w-4xl mx-auto">
             <div className="bg-white shadow rounded-lg">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h1 className="text-xl font-semibold text-gray-900">見積書作成</h1>
+              {/* 書類種別選択 - 追加 */}
+              <div className="ml-4 border-b border-gray-200 pb-6 pt-4">
+                <h2 className="text-lg font-medium text-gray-900 my-4">書類種別</h2>
+                <div className="max-w-xs">
+                  {" "}
+                  {/* ★横幅を制限 */}
+                  <Select
+                    label="作成する書類"
+                    name="document_type"
+                    value={formData.document_type || "estimate"}
+                    onChange={(e) => onInputChange("document_type", "document_type", e.target.value)}
+                    error={errors?.document_type}
+                    required
+                  >
+                    <option value="estimate">見積書</option>
+                    <option value="invoice">請求書</option>
+                    <option value="order">注文書</option>
+                  </Select>
+                </div>
               </div>
 
               {errors?.general && (
