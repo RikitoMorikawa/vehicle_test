@@ -3,7 +3,7 @@ import { supabase } from "../../../lib/supabase";
 import { EstimatePDFData } from "../../../types/common/pdf/page";
 
 export const pdfHandler = {
-  // 見積書データを取得（全ての関連テーブルから）
+  // 書類データを取得（全ての関連テーブルから）
   async fetchEstimateData(estimateId: string): Promise<EstimatePDFData> {
     try {
       console.log("Fetching estimate data for PDF generation:", estimateId);
@@ -101,7 +101,7 @@ export const pdfHandler = {
         estimateId: estimateId,
       });
 
-      // 見積書番号を生成
+      // 書類番号を生成
       const estimateNumber = `EST-${estimateVehicle.id.slice(-4).toUpperCase()}`;
 
       // 作成日をフォーマット
@@ -250,7 +250,7 @@ export const pdfHandler = {
     }
   },
 
-  // 見積書番号を生成するヘルパー関数
+  // 書類番号を生成するヘルパー関数
   generateEstimateNumber(vehicleId: string): string {
     const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     const idSuffix = vehicleId.slice(-4).toUpperCase();
@@ -265,6 +265,7 @@ export const pdfHandler = {
       phone: "03-1234-5678",
       representative: "営業部 田中太郎",
       taxNumber: "T1234567890123",
+
     };
   },
 };

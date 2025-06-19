@@ -358,12 +358,28 @@ create table public.estimate_vehicles (
   updated_at timestamp with time zone not null default now(),
   vehicle_id uuid null,
   company_id uuid null,
+  document_type character varying(20) not null default 'estimate'::character varying,
   constraint estimate_vehicles_pkey primary key (id),
   constraint estimate_vehicles_company_id_fkey foreign KEY (company_id) references companies (id),
-  constraint estimate_vehicles_vehicle_id_fkey foreign KEY (vehicle_id) references vehicles (id) on delete CASCADE
+  constraint estimate_vehicles_vehicle_id_fkey foreign KEY (vehicle_id) references vehicles (id) on delete CASCADE,
+  constraint estimate_vehicles_document_type_check check (
+    (
+      (document_type)::text = any (
+        (
+          array[
+            'estimate'::character varying,
+            'invoice'::character varying,
+            'order'::character varying
+          ]
+        )::text[]
+      )
+    )
+  )
 ) TABLESPACE pg_default;
 
 create index IF not exists idx_estimate_vehicles_company_id on public.estimate_vehicles using btree (company_id) TABLESPACE pg_default;
+
+create index IF not exists idx_estimate_vehicles_document_type on public.estimate_vehicles using btree (document_type) TABLESPACE pg_default;
 
 create trigger set_timestamp_estimate_vehicles BEFORE
 update on estimate_vehicles for EACH row

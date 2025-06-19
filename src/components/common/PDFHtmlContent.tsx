@@ -6,6 +6,8 @@ export const generateEstimateHTML = (data: EstimatePDFData, isPDF: boolean = fal
     const date = new Date(dateString);
     return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")}`;
   };
+  const documentType = data.document_type || "estimate";
+  const documentLabel = documentType === "estimate" ? "見積書" : documentType === "invoice" ? "請求書" : documentType === "order" ? "注文書" : "見積書";
 
   const formatNumber = (num: number) => num.toLocaleString();
 
@@ -86,7 +88,7 @@ th, td {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>見積書 - ${data.estimateNumber}</title>
+    <title>${documentLabel} - ${data.estimateNumber}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -247,10 +249,10 @@ th, td {
     <div class="container" id="estimate-content">
         <!-- ヘッダー -->
         <div class="text-center mb-4">
-            <h1 class="text-xl font-bold mb-3 border-b-2 py-1">見積書</h1>
+            <h1 class="text-xl font-bold mb-3 border-b-2 py-1">${documentLabel}</h1>
             <div class="flex justify-between items-start mb-3">
                 <div class="text-left text-xs">
-                    <div>見積書番号：${data.estimateNumber}</div>
+                    <div>書類番号：${data.estimateNumber}</div>
                     <div>見積日：${formatDate(data.estimateDate)}</div>
                 </div>
                 <div class="text-right border p-2 bg-gray-50" style="width: 40%;">

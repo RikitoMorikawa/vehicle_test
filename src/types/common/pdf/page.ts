@@ -5,6 +5,7 @@ export interface EstimatePDFData {
   // 基本情報
   estimateNumber: string;
   estimateDate: string;
+  document_type?: string;
 
   // 販売店情報
   dealerInfo: {

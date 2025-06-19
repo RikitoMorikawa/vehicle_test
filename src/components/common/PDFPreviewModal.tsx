@@ -34,6 +34,23 @@ const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
     setIframeLoaded(false);
   }, [pdfUrl]);
 
+  // ヘルパー関数を修正
+  const getDocumentTypeLabel = (estimateData: EstimatePDFData | null | undefined): string => {
+    if (!estimateData) return "書類";
+
+    const documentType = estimateData.document_type || "estimate";
+    switch (documentType) {
+      case "estimate":
+        return "見積書";
+      case "invoice":
+        return "請求書";
+      case "order":
+        return "注文書";
+      default:
+        return "見積書";
+    }
+  };
+
   // 見積書データが更新されたらHTMLを生成
   useEffect(() => {
     if (estimateData && isOpen) {
@@ -187,7 +204,8 @@ const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
       );
 
       // PDFダウンロード
-      pdf.save(`見積書_${data.estimateNumber}.pdf`);
+      const documentLabel = getDocumentTypeLabel(data);
+      pdf.save(`${documentLabel}_${data.estimateNumber}.pdf`);
 
       // クリーンアップ
       document.body.removeChild(tempDiv);
@@ -259,7 +277,7 @@ const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
         <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center">
             <Eye className="w-5 h-5 text-gray-600 mr-2" />
-            <h3 className="text-lg font-semibold text-gray-900">見積書プレビュー</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{getDocumentTypeLabel(estimateData)}プレビュー</h3>
           </div>
           <div className="flex items-center space-x-2">
             {/* 印刷ボタン */}
@@ -302,7 +320,7 @@ const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
             <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">見積書を生成中...</p>
+                <p className="text-gray-600">{getDocumentTypeLabel(estimateData)}を生成中...</p>
               </div>
             </div>
           )}
@@ -313,7 +331,7 @@ const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
                 <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
                   <div className="text-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto mb-4"></div>
-                    <p className="text-gray-600">見積書を読み込み中...</p>
+                    <p className="text-gray-600">{getDocumentTypeLabel(estimateData)}を読み込み中...</p>
                   </div>
                 </div>
               )}
@@ -325,7 +343,7 @@ const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
             <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
               <div className="text-center">
                 <Eye className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">見積書プレビューを生成してください</p>
+                <p className="text-gray-600">{getDocumentTypeLabel(estimateData)}プレビューを生成してください</p>
               </div>
             </div>
           )}
