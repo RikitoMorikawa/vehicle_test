@@ -1,5 +1,14 @@
+// src/server/loan-application/handler_000.ts
 import { supabase } from "../../lib/supabase";
 import type { LoanApplicationFormData } from "../../types/loan-application/page";
+
+// ステータス定数を追加
+const LOAN_STATUS = {
+  PENDING: 0,
+  REVIEWING: 1,
+  APPROVED: 2,
+  REJECTED: 3,
+} as const;
 
 export const loanApplicationHandler = {
   async uploadFile(loanId: string, file: File, fileType: string): Promise<string> {
@@ -51,39 +60,58 @@ export const loanApplicationHandler = {
           guarantor_postal_code: formData.guarantor_postal_code,
           guarantor_address: formData.guarantor_address,
           notes: formData.notes,
-          status: "pending",
+          status: LOAN_STATUS.PENDING, // 文字列ではなく数値を使用
         })
         .select()
         .single();
 
       if (insertError) {
+        console.error("Database insert error:", insertError);
         throw new Error(`データベース挿入エラー: ${insertError.message}`);
       }
 
-      // 書類のアップロード
-      const uploadTasks = [];
+      // ファイルがある場合はアップロード処理
+      let identificationDocUrl = null;
+      let incomeDocUrl = null;
 
       if (formData.identification_doc) {
-        uploadTasks.push(
-          this.uploadFile(loanApplication.id, formData.identification_doc, "identification").then(async (filePath) => {
-            const { error } = await supabase.from("loan_applications").update({ identification_doc_url: filePath }).eq("id", loanApplication.id);
-            if (error) throw error;
-          })
-        );
+        try {
+          identificationDocUrl = await this.uploadFile(loanApplication.id, formData.identification_doc, "identification");
+        } catch (uploadError) {
+          console.error("Identification document upload failed:", uploadError);
+          // ファイルアップロードエラーの場合はレコードを削除
+          await supabase.from("loan_applications").delete().eq("id", loanApplication.id);
+          throw uploadError;
+        }
       }
 
       if (formData.income_doc) {
-        uploadTasks.push(
-          this.uploadFile(loanApplication.id, formData.income_doc, "income").then(async (filePath) => {
-            const { error } = await supabase.from("loan_applications").update({ income_doc_url: filePath }).eq("id", loanApplication.id);
-            if (error) throw error;
-          })
-        );
+        try {
+          incomeDocUrl = await this.uploadFile(loanApplication.id, formData.income_doc, "income");
+        } catch (uploadError) {
+          console.error("Income document upload failed:", uploadError);
+          // ファイルアップロードエラーの場合はレコードを削除
+          await supabase.from("loan_applications").delete().eq("id", loanApplication.id);
+          throw uploadError;
+        }
       }
 
-      await Promise.all(uploadTasks);
+      // ファイルURLを更新
+      if (identificationDocUrl || incomeDocUrl) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const updateData: any = {};
+        if (identificationDocUrl) updateData.identification_doc_url = identificationDocUrl;
+        if (incomeDocUrl) updateData.income_doc_url = incomeDocUrl;
 
-      return { success: true };
+        const { error: updateError } = await supabase.from("loan_applications").update(updateData).eq("id", loanApplication.id);
+
+        if (updateError) {
+          console.error("File URL update error:", updateError);
+          throw new Error(`ファイルURL更新エラー: ${updateError.message}`);
+        }
+      }
+
+      return { success: true, applicationId: loanApplication.id };
     } catch (error) {
       console.error("Application submission error:", error);
       return {

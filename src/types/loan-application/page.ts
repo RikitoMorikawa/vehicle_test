@@ -9,6 +9,14 @@ export interface Vehicle {
     price: number;
     // 他の車両関連フィールド
   }
+
+  // ローン申請ステータス定数
+export const LOAN_APPLICATION_STATUS = {
+  PENDING: 0,     // 審査待ち
+  REVIEWING: 1,   // 審査中
+  APPROVED: 2,    // 承認済み
+  REJECTED: 3,    // 否認
+} as const;
   
   // フォームデータ型定義
   export interface LoanApplicationFormData {
