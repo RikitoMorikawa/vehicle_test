@@ -18,6 +18,9 @@ const VehicleDocuments: React.FC<VehicleDocumentsProps> = ({ vehicleId, userId }
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // タブ状態管理を追加
+  const [activeTab, setActiveTab] = useState<"estimate" | "invoice" | "order">("estimate");
+
   // PDFプレビュー用の状態
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -46,6 +49,37 @@ const VehicleDocuments: React.FC<VehicleDocumentsProps> = ({ vehicleId, userId }
       fetchVehicleEstimates();
     }
   }, [vehicleId, userId]);
+
+  // タブに応じて書類をフィルタリング
+  const filteredEstimates = estimates.filter((estimate) => {
+    const documentType = estimate.document_type || "estimate";
+    return documentType === activeTab;
+  });
+
+  // タブのラベル取得
+  const getTabLabel = (tabType: "estimate" | "invoice" | "order") => {
+    switch (tabType) {
+      case "estimate":
+        return "見積書";
+      case "invoice":
+        return "請求書";
+      case "order":
+        return "注文書";
+      default:
+        return "見積書";
+    }
+  };
+
+  // 各タブの件数を計算
+  const getCounts = () => {
+    const estimateCount = estimates.filter((e) => (e.document_type || "estimate") === "estimate").length;
+    const invoiceCount = estimates.filter((e) => e.document_type === "invoice").length;
+    const orderCount = estimates.filter((e) => e.document_type === "order").length;
+
+    return { estimateCount, invoiceCount, orderCount };
+  };
+
+  const { estimateCount, invoiceCount, orderCount } = getCounts();
 
   // PDFプレビューハンドラー
   const handlePreviewPDF = async (estimateId: string) => {
@@ -104,10 +138,6 @@ const VehicleDocuments: React.FC<VehicleDocumentsProps> = ({ vehicleId, userId }
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">各種資料</h2>
-        <p className="text-sm text-gray-600">この車両に関連する見積書やその他の資料を確認できます。</p>
-      </div>
 
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
@@ -126,64 +156,106 @@ const VehicleDocuments: React.FC<VehicleDocumentsProps> = ({ vehicleId, userId }
           </div>
         ) : (
           <div>
+            {/* タブナビゲーション */}
+            <div className="border-b border-gray-200">
+              <nav className="flex" aria-label="Tabs">
+                <button
+                  onClick={() => setActiveTab("estimate")}
+                  className={`px-6 py-4 text-center text-sm font-medium ${
+                    activeTab === "estimate" ? "border-b-2 border-red-600 text-red-600" : "text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
+                >
+                  見積書 ({estimateCount})
+                </button>
+                <button
+                  onClick={() => setActiveTab("invoice")}
+                  className={`px-6 py-4 text-center text-sm font-medium ${
+                    activeTab === "invoice" ? "border-b-2 border-red-600 text-red-600" : "text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
+                >
+                  請求書 ({invoiceCount})
+                </button>
+                <button
+                  onClick={() => setActiveTab("order")}
+                  className={`px-6 py-4 text-center text-sm font-medium ${
+                    activeTab === "order" ? "border-b-2 border-red-600 text-red-600" : "text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
+                >
+                  注文書 ({orderCount})
+                </button>
+              </nav>
+            </div>
+
             <div className="px-6 py-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium text-gray-900">見積書一覧</h3>
-                <div className="text-sm text-gray-600">{estimates.length}件の資料</div>
+                <h3 className="text-lg font-medium text-gray-900">{getTabLabel(activeTab)}一覧</h3>
+                <div className="text-sm text-gray-600">
+                  {filteredEstimates.length}件の{getTabLabel(activeTab)}
+                </div>
               </div>
             </div>
 
-            <div className="divide-y divide-gray-200">
-              {estimates.map((estimate) => (
-                <div key={estimate.id} className="p-6 hover:bg-gray-50">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center mb-2">
-                        <FileText className="w-4 h-4 text-gray-400 mr-2" />
-                        <span className="text-sm font-medium text-gray-900">見積書番号: {estimate.estimateNumber}</span>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                        <div className="flex items-center">
-                          <Car className="w-4 h-4 text-gray-400 mr-2" />
-                          <span>
-                            {estimate.vehicleInfo.maker} {estimate.vehicleInfo.name} ({estimate.vehicleInfo.year}年)
-                          </span>
+            {/* タブコンテンツ */}
+            {filteredEstimates.length === 0 ? (
+              <div className="flex items-center justify-center h-32 text-gray-500">
+                <div className="text-center">
+                  <FileText className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                  <p>{getTabLabel(activeTab)}はありません</p>
+                </div>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-200">
+                {filteredEstimates.map((estimate) => (
+                  <div key={estimate.id} className="p-6 hover:bg-gray-50">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center mb-2">
+                          <FileText className="w-4 h-4 text-gray-400 mr-2" />
+                          <span className="text-sm font-medium text-gray-900">資料番号: {estimate.estimateNumber}</span>
                         </div>
 
-                        {estimate.companyName && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
                           <div className="flex items-center">
-                            <Building className="w-4 h-4 text-gray-400 mr-2" />
-                            <span>{estimate.companyName}</span>
+                            <Car className="w-4 h-4 text-gray-400 mr-2" />
+                            <span>
+                              {estimate.vehicleInfo.maker} {estimate.vehicleInfo.name} ({estimate.vehicleInfo.year}年)
+                            </span>
                           </div>
-                        )}
 
-                        <div className="flex items-center">
-                          <Calendar className="w-4 h-4 text-gray-400 mr-2" />
-                          <span>{formatDate(estimate.createdAt)}</span>
+                          {estimate.companyName && (
+                            <div className="flex items-center">
+                              <Building className="w-4 h-4 text-gray-400 mr-2" />
+                              <span>{estimate.companyName}</span>
+                            </div>
+                          )}
+
+                          <div className="flex items-center">
+                            <Calendar className="w-4 h-4 text-gray-400 mr-2" />
+                            <span>{formatDate(estimate.createdAt)}</span>
+                          </div>
+                        </div>
+
+                        <div className="mt-2">
+                          <span className="text-lg font-semibold text-red-600">¥{estimate.totalAmount.toLocaleString()}</span>
                         </div>
                       </div>
 
-                      <div className="mt-2">
-                        <span className="text-lg font-semibold text-red-600">¥{estimate.totalAmount.toLocaleString()}</span>
+                      <div className="ml-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handlePreviewPDF(estimate.id)}
+                          className="flex items-center text-blue-600 border-blue-300 hover:bg-blue-50"
+                        >
+                          <Eye className="w-4 h-4 mr-1" />
+                          プレビュー
+                        </Button>
                       </div>
-                    </div>
-
-                    <div className="ml-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handlePreviewPDF(estimate.id)}
-                        className="flex items-center text-blue-600 border-blue-300 hover:bg-blue-50"
-                      >
-                        <Eye className="w-4 h-4 mr-1" />
-                        プレビュー
-                      </Button>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
