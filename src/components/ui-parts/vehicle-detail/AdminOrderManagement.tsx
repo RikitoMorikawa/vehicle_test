@@ -99,7 +99,7 @@ const AdminOrderManagement: React.FC<AdminOrderManagementProps> = ({ orders, onA
                   <div className="flex-1">
                     <div className="flex items-center mb-2">
                       <User className="w-4 h-4 mr-2 text-gray-500" />
-                      <span className="font-medium">{order.user_name || `ユーザーID: ${order.user_id}`}</span>
+                      <span className="font-medium">{order.user_name ? `ユーザー名：${order.user_name}` : `ユーザーID:${order.user_id}`}</span>
                       {getStatusBadge(order.status)}
                     </div>
                     <div className="flex items-center text-sm text-gray-600">
@@ -143,7 +143,7 @@ const AdminOrderManagement: React.FC<AdminOrderManagementProps> = ({ orders, onA
                 <div className="flex justify-between items-center">
                   <div className="flex items-center">
                     <User className="w-4 h-4 mr-2 text-gray-500" />
-                    <span className="text-sm font-medium">ユーザーID: {order.user_id}</span>
+                    <span className="text-sm font-medium">{order.user_name ? `ユーザー名：${order.user_name}` : `ユーザーID:${order.user_id}`}</span>
                     <span className="ml-2">{getStatusBadge(order.status)}</span>
                   </div>
                   <div className="text-sm text-gray-500">{formatDate(order.order_date)}</div>

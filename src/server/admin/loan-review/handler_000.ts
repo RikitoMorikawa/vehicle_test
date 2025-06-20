@@ -6,10 +6,12 @@ export const loanReviewHandler = {
   async fetchLoanApplications(): Promise<LoanApplication[]> {
     const { data, error } = await supabase
       .from("loan_applications")
-      .select(`
+      .select(
+        `
         *,
         vehicle:vehicles(name)
-      `)
+      `
+      )
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -18,6 +20,27 @@ export const loanReviewHandler = {
       ...application,
       vehicle_name: application.vehicle?.name || "Unknown",
     }));
+  },
+
+  async fetchLoanApplicationById(id: string): Promise<LoanApplication> {
+    const { data, error } = await supabase
+      .from("loan_applications")
+      .select(
+        `
+        *,
+        vehicle:vehicles(name, maker)
+      `
+      )
+      .eq("id", id)
+      .single();
+
+    if (error) throw error;
+
+    return {
+      ...data,
+      vehicle_name: data.vehicle?.name || "Unknown",
+      vehicle_maker: data.vehicle?.maker || "Unknown",
+    };
   },
 
   async updateLoanStatus(applicationId: string, status: number): Promise<void> {

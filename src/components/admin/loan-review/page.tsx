@@ -1,10 +1,11 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import Header from "../../Header";
 import Sidebar from "../../Sidebar";
 import Footer from "../../Footer";
 import Button from "../../ui/Button";
 import { LoanApplication } from "../../../types/admin/loan-review/page";
-import { FileText, CheckCircle, XCircle, Clock } from "lucide-react";
+import { FileText, CheckCircle, XCircle, Eye } from "lucide-react";
 
 interface LoanReviewComponentProps {
   applications: LoanApplication[];
@@ -50,7 +51,6 @@ const LoanReviewComponent: React.FC<LoanReviewComponentProps> = ({ applications,
       <Header />
       <div className="flex-1 flex">
         <Sidebar />
-        {/* メインコンテンツエリアに overflow-auto を追加 */}
         <main className="flex-1 p-8 overflow-auto">
           <div className="max-w-full mx-auto">
             <div className="bg-white shadow-sm rounded-lg overflow-hidden">
@@ -86,51 +86,38 @@ const LoanReviewComponent: React.FC<LoanReviewComponentProps> = ({ applications,
                             <div className="text-sm font-medium text-gray-900">{application.customer_name}</div>
                             <div className="text-sm text-gray-500">{application.customer_name_kana}</div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{application.vehicle_name}</div>
-                            <div className="text-sm text-gray-500">{application.vehicle_id}</div>
-                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{application.vehicle_name}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">¥{application.vehicle_price.toLocaleString()}</td>
                           <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(application.status)}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <div className="flex space-x-2">
-                              {application.status === 0 && (
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                            <Link
+                              to={`/admin/loan-review/${application.id}`}
+                              className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50"
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              詳細
+                            </Link>
+
+                            {application.status === 0 && (
+                              <>
                                 <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => onStatusUpdate(application.id, 1)}
-                                  isLoading={isUpdating}
-                                  className="flex items-center"
+                                  onClick={() => onStatusUpdate(application.id, 2)}
+                                  disabled={isUpdating}
+                                  className="inline-flex items-center px-3 py-1 border border-transparent rounded-md text-sm text-white bg-green-600 hover:bg-green-700"
                                 >
-                                  <Clock className="h-4 w-4 mr-1" />
-                                  審査開始
+                                  <CheckCircle className="h-4 w-4 mr-1" />
+                                  承認
                                 </Button>
-                              )}
-                              {application.status === 1 && (
-                                <>
-                                  <Button
-                                    size="sm"
-                                    variant="primary"
-                                    onClick={() => onStatusUpdate(application.id, 2)}
-                                    isLoading={isUpdating}
-                                    className="flex items-center"
-                                  >
-                                    <CheckCircle className="h-4 w-4 mr-1" />
-                                    承認
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => onStatusUpdate(application.id, 3)}
-                                    isLoading={isUpdating}
-                                    className="flex items-center"
-                                  >
-                                    <XCircle className="h-4 w-4 mr-1" />
-                                    否認
-                                  </Button>
-                                </>
-                              )}
-                            </div>
+                                <Button
+                                  onClick={() => onStatusUpdate(application.id, 3)}
+                                  disabled={isUpdating}
+                                  className="inline-flex items-center px-3 py-1 border border-transparent rounded-md text-sm text-white bg-red-600 hover:bg-red-700"
+                                >
+                                  <XCircle className="h-4 w-4 mr-1" />
+                                  否認
+                                </Button>
+                              </>
+                            )}
                           </td>
                         </tr>
                       ))}

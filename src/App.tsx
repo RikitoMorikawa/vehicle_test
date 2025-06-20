@@ -16,6 +16,7 @@ import VehicleEditPage from "./pages/vehicle-edit/page";
 import LoanApplicationPage from "./pages/loan-application/page";
 import EstimatePage from "./pages/estimate/page";
 import { JSX } from "react/jsx-runtime";
+import LoanReviewDetailPage from "./pages/admin/loan-review-detail/page";
 
 // ProtectedRouteをラップするヘルパー関数
 const createProtectedRoute = (
@@ -67,6 +68,10 @@ const routes = [
   {
     path: "/admin/loan-review",
     ...createProtectedRoute(<LoanReviewPage />, ["admin"], false),
+  },
+  {
+    path: "/admin/loan-review/:id",
+    ...createProtectedRoute(<LoanReviewDetailPage />, ["admin"], false),
   },
   {
     path: "/account-settings",
