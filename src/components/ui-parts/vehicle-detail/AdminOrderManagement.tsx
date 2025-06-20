@@ -15,6 +15,7 @@ interface AdminOrderManagementProps {
 const AdminOrderManagement: React.FC<AdminOrderManagementProps> = ({ orders, onApproveOrder, onRejectOrder, isProcessing, currentAdminId }) => {
   const [rejectReason, setRejectReason] = useState<string>("");
   const [showRejectModal, setShowRejectModal] = useState<string | null>(null);
+  const [showApproveModal, setShowApproveModal] = useState<string | null>(null);
 
   // 注文を状態別にフィルタリング
   const pendingOrders = orders.filter((order) => order.status === 0);
@@ -50,20 +51,24 @@ const AdminOrderManagement: React.FC<AdminOrderManagementProps> = ({ orders, onA
   };
 
   const handleApprove = (orderId: string) => {
-    if (confirm("この注文を承認しますか？承認すると車両は販売済みとなります。")) {
-      onApproveOrder(orderId, currentAdminId);
-    }
+    setShowApproveModal(orderId);
   };
 
   const handleReject = (orderId: string) => {
     setShowRejectModal(orderId);
   };
 
+  const confirmApprove = () => {
+    if (showApproveModal) {
+      onApproveOrder(showApproveModal, currentAdminId);
+      setShowApproveModal(null);
+    }
+  };
+
   const confirmReject = () => {
     if (showRejectModal) {
-      onRejectOrder(showRejectModal, currentAdminId, rejectReason.trim() || undefined);
+      onRejectOrder(showRejectModal, currentAdminId);
       setShowRejectModal(null);
-      setRejectReason("");
     }
   };
 
@@ -143,9 +148,32 @@ const AdminOrderManagement: React.FC<AdminOrderManagementProps> = ({ orders, onA
                   </div>
                   <div className="text-sm text-gray-500">{formatDate(order.order_date)}</div>
                 </div>
-                {order.reject_reason && <p className="text-sm text-red-600 mt-1">拒否理由: {order.reject_reason}</p>}
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* 承認確認モーダル */}
+      {showApproveModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">注文を承認</h3>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowApproveModal(null)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={confirmApprove}
+                disabled={isProcessing}
+                className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+              >
+                承認する
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -155,16 +183,6 @@ const AdminOrderManagement: React.FC<AdminOrderManagementProps> = ({ orders, onA
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h3 className="text-lg font-medium text-gray-900 mb-4">注文を拒否</h3>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">拒否理由（任意）</label>
-              <textarea
-                value={rejectReason}
-                onChange={(e) => setRejectReason(e.target.value)}
-                placeholder="拒否理由を入力してください..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                rows={3}
-              />
-            </div>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => {
