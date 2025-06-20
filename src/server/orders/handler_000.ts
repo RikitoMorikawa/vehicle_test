@@ -14,6 +14,7 @@ export interface OrderData {
   notes?: string | null;
   created_at: string;
   updated_at: string;
+  user_name?: string;
 }
 
 export interface VehicleOrderStatus {
@@ -215,10 +216,22 @@ export const orderHandler = {
   },
 
   async getAllOrders(): Promise<OrderData[]> {
-    const { data, error } = await supabase.from("orders").select("*").order("created_at", { ascending: false });
+    // まず注文を取得
+    const { data: orders, error: ordersError } = await supabase.from("orders").select("*").order("created_at", { ascending: false });
 
-    if (error) throw new Error(`注文一覧の取得に失敗しました: ${error.message}`);
-    return data || [];
+    if (ordersError) throw new Error(`注文一覧の取得に失敗しました: ${ordersError.message}`);
+
+    // 次にユーザー情報を取得
+    const userIds = [...new Set(orders?.map((order) => order.user_id))];
+    const { data: users, error: usersError } = await supabase.from("users").select("id, user_name").in("id", userIds);
+
+    if (usersError) console.error("Users fetch error:", usersError);
+
+    // データをマージ
+    return (orders || []).map((order) => ({
+      ...order,
+      user_name: users?.find((user) => user.id === order.user_id)?.user_name,
+    }));
   },
 
   async approveOrder(orderId: string, adminUserId: string): Promise<OrderData> {

@@ -94,7 +94,7 @@ const AdminOrderManagement: React.FC<AdminOrderManagementProps> = ({ orders, onA
                   <div className="flex-1">
                     <div className="flex items-center mb-2">
                       <User className="w-4 h-4 mr-2 text-gray-500" />
-                      <span className="font-medium">ユーザーID: {order.user_id}</span>
+                      <span className="font-medium">{order.user_name || `ユーザーID: ${order.user_id}`}</span>
                       {getStatusBadge(order.status)}
                     </div>
                     <div className="flex items-center text-sm text-gray-600">
