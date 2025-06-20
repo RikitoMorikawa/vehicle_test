@@ -40,6 +40,12 @@ const VehicleDetailContainer: React.FC = () => {
   // 注文状況の取得（一般ユーザー用）
   const { data: orderStatus, isLoading: orderStatusLoading } = orderService.useVehicleOrderStatus(id, user?.id);
 
+  // この直後に以下のログを追加
+  console.log("🔍 FRONTEND DEBUG: orderStatus data:", orderStatus);
+  console.log("🔍 FRONTEND DEBUG: user?.id:", user?.id);
+  console.log("🔍 FRONTEND DEBUG: vehicle id:", id);
+  console.log("🔍 FRONTEND DEBUG: orderStatusLoading:", orderStatusLoading);
+  
   // 管理者用：この車両の全注文データを取得
   const { data: allOrders } = orderService.useAllOrders();
   const vehicleOrders = allOrders?.filter((order) => order.vehicle_id === id) || [];
@@ -140,7 +146,7 @@ const VehicleDetailContainer: React.FC = () => {
           alert("注文依頼を送信しました。管理者の承認をお待ちください。");
         }
       }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       alert(error.message || "処理に失敗しました");
     }
@@ -160,7 +166,7 @@ const VehicleDetailContainer: React.FC = () => {
       });
 
       alert("注文を承認しました");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       alert(error.message || "承認処理に失敗しました");
     }
@@ -180,7 +186,7 @@ const VehicleDetailContainer: React.FC = () => {
       });
 
       alert("注文を拒否しました");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       alert(error.message || "拒否処理に失敗しました");
     }

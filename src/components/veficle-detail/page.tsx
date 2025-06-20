@@ -230,12 +230,14 @@ const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({
                     <p className="mt-1 text-sm text-gray-500">
                       {vehicle.year}年モデル｜走行距離：{vehicle.mileage.toLocaleString()}km｜車両ID: {vehicle.vehicle_id || vehicle.id}
                     </p>
-
                     {/* 注文状況表示（一般ユーザー用） */}
                     {!isAdmin && orderStatus?.userOrderStatus !== undefined && (
                       <div className="mt-2">
                         {orderStatus.userOrderStatus === 0 && (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">注文依頼中</span>
+                        )}
+                        {orderStatus.userOrderStatus === 1 && (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">注文承認済み</span>
                         )}
                         {orderStatus.userOrderStatus === 2 && (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">

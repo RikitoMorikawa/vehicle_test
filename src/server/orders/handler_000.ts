@@ -55,18 +55,6 @@ export const orderHandler = {
 
       if (approvedError) {
         console.error("🚨 DEBUG: Approved query error:", approvedError);
-        console.error("🚨 DEBUG: Error details:", {
-          message: approvedError.message,
-          details: approvedError.details,
-          hint: approvedError.hint,
-          code: approvedError.code,
-        });
-      }
-
-      const approvedOrder = approvedOrders?.[0];
-      if (approvedOrder) {
-        console.log("✅ DEBUG: Vehicle is already sold");
-        return { isAvailable: false };
       }
 
       // 2. 注文依頼中（pending）の注文があるかチェック
@@ -85,7 +73,7 @@ export const orderHandler = {
 
       const pendingOrder = pendingOrders?.[0];
 
-      // 3. ログインユーザーの注文状況をチェック（ログイン時のみ）
+      // まずユーザー自身の注文状況をチェック（ログイン時のみ）
       let userOrder = null;
       if (currentUserId) {
         console.log("🔍 DEBUG: Checking user orders...");
@@ -94,7 +82,7 @@ export const orderHandler = {
           .select("*")
           .eq("vehicle_id", vehicleId)
           .eq("user_id", currentUserId)
-          .in("status", [0, 2, 3]) // pending, rejected, cancelled
+          .in("status", [0, 1, 2, 3]) // pending, approved, rejected, cancelled
           .order("created_at", { ascending: false })
           .limit(1);
 
@@ -109,6 +97,22 @@ export const orderHandler = {
         }
 
         userOrder = userOrders?.[0];
+      }
+
+      // ユーザー自身が承認済みの場合は、その情報を返す
+      if (userOrder?.status === 1) {
+        console.log("✅ DEBUG: User's order is approved");
+        return {
+          isAvailable: false, // 承認済みなので追加注文不可
+          userOrderStatus: 1,
+          userOrderId: userOrder.id,
+        };
+      }
+
+      // 他人の承認済み注文がある場合は販売済み
+      if (approvedOrders?.[0]) {
+        console.log("✅ DEBUG: Vehicle is already sold by someone else");
+        return { isAvailable: false };
       }
 
       // 4. 結果を返す
