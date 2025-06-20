@@ -430,3 +430,44 @@ create index IF not exists accessories_estimate_id_idx on public.accessories usi
 create trigger update_accessories_updated_at BEFORE
 update on accessories for EACH row
 execute FUNCTION update_updated_at_column ();
+
+
+
+-- 注文情報を格納するテーブル
+create table public.orders (
+  id uuid not null default gen_random_uuid (),
+  user_id uuid not null,
+  vehicle_id uuid not null,
+  status integer not null default 0,
+  order_date timestamp with time zone not null default now(),
+  approved_date timestamp with time zone null,
+  rejected_date timestamp with time zone null,
+  admin_user_id uuid null,
+  reject_reason text null,
+  notes text null,
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone not null default now(),
+  constraint orders_pkey primary key (id),
+  constraint fk_orders_admin_user foreign KEY (admin_user_id) references users (id) on delete set null,
+  constraint fk_orders_user foreign KEY (user_id) references users (id) on delete CASCADE,
+  constraint fk_orders_vehicle foreign KEY (vehicle_id) references vehicles (id) on delete CASCADE,
+  constraint orders_status_check check ((status = any (array[0, 1, 2, 3])))
+) TABLESPACE pg_default;
+
+create index IF not exists idx_orders_user_id on public.orders using btree (user_id) TABLESPACE pg_default;
+
+create index IF not exists idx_orders_vehicle_id on public.orders using btree (vehicle_id) TABLESPACE pg_default;
+
+create index IF not exists idx_orders_status on public.orders using btree (status) TABLESPACE pg_default;
+
+create index IF not exists idx_orders_order_date on public.orders using btree (order_date) TABLESPACE pg_default;
+
+create index IF not exists idx_orders_created_at on public.orders using btree (created_at) TABLESPACE pg_default;
+
+create index IF not exists idx_orders_vehicle_user_status on public.orders using btree (vehicle_id, user_id, status) TABLESPACE pg_default;
+
+create index IF not exists idx_orders_vehicle_status on public.orders using btree (vehicle_id, status) TABLESPACE pg_default;
+
+create trigger orders_updated_at_trigger BEFORE
+update on orders for EACH row
+execute FUNCTION update_orders_updated_at ();

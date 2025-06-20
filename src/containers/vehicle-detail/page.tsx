@@ -1,15 +1,19 @@
 // src/containers/vehicle-detail/page.tsx
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { vehicleDetailService } from "../../services/vehicle-detail/page";
 import { favoritesService } from "../../services/favorites/page";
+import { orderService } from "../../services/orders/page";
 import { useAuth } from "../../hooks/useAuth";
+import { QUERY_KEYS } from "../../constants/queryKeys";
 import VehicleDetailComponent from "../../components/veficle-detail/page";
 
 const VehicleDetailContainer: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const isAdmin = user?.role === "admin";
 
   // 表示する画像を管理するステート
@@ -30,8 +34,17 @@ const VehicleDetailContainer: React.FC = () => {
     return null;
   }
 
-  // 車両詳細データの取得 - vehicle_imagesテーブルがないのでuseVehicleImagesは使用しない
+  // 車両詳細データの取得
   const { data: vehicle, isLoading: isVehicleLoading, error: vehicleError } = vehicleDetailService.useVehicleDetail(id);
+
+  // 注文状況の取得
+  const { data: orderStatus, isLoading: orderStatusLoading } = orderService.useVehicleOrderStatus(id, user?.id);
+
+  // 注文作成mutation
+  const createOrderMutation = orderService.useCreateOrder();
+
+  // 注文キャンセルmutation
+  const cancelOrderMutation = orderService.useCancelOrder();
 
   // お気に入り情報の取得
   const { favorites } = favoritesService.useFavorites(user?.id || "");
@@ -73,10 +86,54 @@ const VehicleDetailContainer: React.FC = () => {
     navigate(-1);
   };
 
-  // 問い合わせボタン処理
-  const handleInquiry = () => {
-    // 問い合わせフォームへのリダイレクトや問い合わせモーダルの表示など
-    navigate(`/inquiry?vehicleId=${id}`);
+  // 注文ボタンのクリックハンドラー（修正版）
+  const handleInquiry = async () => {
+    if (!user) {
+      alert("ログインが必要です");
+      return;
+    }
+
+    if (!vehicle || !id) return;
+
+    try {
+      // ユーザーの注文状況に応じて処理を分岐
+      if (orderStatus?.userOrderStatus === 0) {
+        // pending中 → キャンセル
+        if (orderStatus.userOrderId) {
+          if (confirm("注文依頼をキャンセルしますか？")) {
+            await cancelOrderMutation.mutateAsync({
+              orderId: orderStatus.userOrderId,
+              userId: user.id,
+            });
+
+            // 注文状況を再取得
+            queryClient.invalidateQueries({
+              queryKey: [...QUERY_KEYS.VEHICLE_ORDER_STATUS, id],
+            });
+
+            alert("注文をキャンセルしました");
+          }
+        }
+      } else {
+        // 新規注文 or 再注文
+        if (confirm("この車両を注文しますか？")) {
+          await createOrderMutation.mutateAsync({
+            userId: user.id,
+            vehicleId: id,
+          });
+
+          // 注文状況を再取得
+          queryClient.invalidateQueries({
+            queryKey: [...QUERY_KEYS.VEHICLE_ORDER_STATUS, id],
+          });
+
+          alert("注文依頼を送信しました。管理者の承認をお待ちください。");
+        }
+      }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      alert(error.message || "処理に失敗しました");
+    }
   };
 
   // タブ切り替え処理
@@ -113,6 +170,11 @@ const VehicleDetailContainer: React.FC = () => {
       onCreateEstimate={handleCreateEstimate}
       onApplyLoan={handleApplyLoan}
       isAdmin={isAdmin}
+      // 注文状況の情報をコンポーネントに渡す
+      orderStatus={orderStatus}
+      orderStatusLoading={orderStatusLoading}
+      isCreatingOrder={createOrderMutation.isPending}
+      isCancellingOrder={cancelOrderMutation.isPending}
     />
   );
 };

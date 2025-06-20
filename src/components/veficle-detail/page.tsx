@@ -1,4 +1,4 @@
-// src/components/vehicle-detail/page.tsx
+// src/components/veficle-detail/page.tsx
 import { ArrowLeft, Heart } from "lucide-react";
 import Header from "../Header";
 import Sidebar from "../Sidebar";
@@ -8,6 +8,7 @@ import VehicleInfo from "../ui-parts/vehicle-detail/VehicleInfo";
 import VehicleDocuments from "../ui-parts/vehicle-detail/VehicleDocuments";
 import { Vehicle } from "../../types/db/vehicle";
 import { useAuth } from "../../hooks/useAuth";
+import { VehicleOrderStatus } from "../../server/orders/handler_000";
 import LoanApplicationStatusView from "../ui-parts/vehicle-detail/LoanApplicationStatus";
 
 interface VehicleDetailComponentProps {
@@ -28,6 +29,11 @@ interface VehicleDetailComponentProps {
   onCreateEstimate: () => void;
   onApplyLoan: () => void;
   isAdmin?: boolean;
+  // 注文状況関連のprops
+  orderStatus?: VehicleOrderStatus;
+  orderStatusLoading?: boolean;
+  isCreatingOrder?: boolean;
+  isCancellingOrder?: boolean;
 }
 
 const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({
@@ -48,8 +54,83 @@ const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({
   onCreateEstimate,
   onApplyLoan,
   isAdmin,
+  orderStatus,
+  orderStatusLoading,
+  isCreatingOrder,
+  isCancellingOrder,
 }) => {
   const { user } = useAuth();
+
+  // 注文ボタンの表示内容を決定
+  const getOrderButtonConfig = () => {
+    if (!user) {
+      return {
+        text: "ログインして注文",
+        disabled: true,
+        bgColor: "bg-gray-400",
+        hoverColor: "hover:bg-gray-500",
+      };
+    }
+
+    if (orderStatusLoading) {
+      return {
+        text: "読み込み中...",
+        disabled: true,
+        bgColor: "bg-gray-400",
+        hoverColor: "hover:bg-gray-500",
+      };
+    }
+
+    if (!orderStatus?.isAvailable) {
+      // 販売済み または 他人が注文依頼中
+      return {
+        text: "注文不可",
+        disabled: true,
+        bgColor: "bg-gray-400",
+        hoverColor: "hover:bg-gray-500",
+      };
+    }
+
+    switch (orderStatus?.userOrderStatus) {
+      case 0: // pending
+        return {
+          text: "注文依頼中（キャンセル）",
+          disabled: false,
+          bgColor: "bg-orange-600",
+          hoverColor: "hover:bg-orange-700",
+        };
+      case 1: // approved（この状態では表示されないはず）
+        return {
+          text: "購入済み",
+          disabled: true,
+          bgColor: "bg-gray-400",
+          hoverColor: "hover:bg-gray-500",
+        };
+      case 2: // rejected
+        return {
+          text: "再注文する",
+          disabled: false,
+          bgColor: "bg-blue-600",
+          hoverColor: "hover:bg-blue-700",
+        };
+      case 3: // cancelled
+        return {
+          text: "再注文する",
+          disabled: false,
+          bgColor: "bg-blue-600",
+          hoverColor: "hover:bg-blue-700",
+        };
+      default: // 注文なし
+        return {
+          text: "今すぐ注文",
+          disabled: false,
+          bgColor: "bg-red-600",
+          hoverColor: "hover:bg-red-700",
+        };
+    }
+  };
+
+  const buttonConfig = getOrderButtonConfig();
 
   if (loading) {
     return (
@@ -125,15 +206,52 @@ const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({
                     <p className="mt-1 text-sm text-gray-500">
                       {vehicle.year}年モデル｜走行距離：{vehicle.mileage.toLocaleString()}km｜車両ID: {vehicle.vehicle_id || vehicle.id}
                     </p>
+
+                    {/* 注文状況表示 */}
+                    {orderStatus?.userOrderStatus !== undefined && (
+                      <div className="mt-2">
+                        {orderStatus.userOrderStatus === 0 && (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">注文依頼中</span>
+                        )}
+                        {orderStatus.userOrderStatus === 2 && (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                            注文拒否済み
+                            {orderStatus.rejectReason && <span className="ml-2 text-xs">({orderStatus.rejectReason})</span>}
+                          </span>
+                        )}
+                        {orderStatus.userOrderStatus === 3 && (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                            注文キャンセル済み
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center space-x-4">
                     <span className="text-3xl font-bold text-red-600">¥{vehicle.price.toLocaleString()}</span>
-                    <button
-                      onClick={onInquiry}
-                      className="flex items-center gap-1 px-6 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-                    >
-                      今すぐ注文
-                    </button>
+
+                    {/* 注文ボタン（動的に変化） */}
+                    {!isAdmin && (
+                      <button
+                        onClick={onInquiry}
+                        disabled={buttonConfig.disabled || isCreatingOrder || isCancellingOrder}
+                        className={`flex items-center gap-1 px-6 py-2 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                          buttonConfig.disabled || isCreatingOrder || isCancellingOrder
+                            ? "bg-gray-400 cursor-not-allowed"
+                            : `${buttonConfig.bgColor} ${buttonConfig.hoverColor} focus:ring-red-500`
+                        }`}
+                      >
+                        {isCreatingOrder || isCancellingOrder ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1"></div>
+                            処理中...
+                          </>
+                        ) : (
+                          buttonConfig.text
+                        )}
+                      </button>
+                    )}
+
                     {!isAdmin && (
                       <button
                         onClick={onToggleFavorite}
