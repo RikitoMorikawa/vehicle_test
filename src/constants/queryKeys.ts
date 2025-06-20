@@ -8,6 +8,8 @@ export const QUERY_KEYS = {
   ACCOUNT: ["account"] as const,
   USERS: ["users"] as const,
   Car_MAKERS: ["carMakers"] as const,
+  ORDERS: ["orders"] as const,
+  VEHICLE_ORDER_STATUS: ["order", "detail"] as const,
 } as const;
 
 export type QueryKeys = typeof QUERY_KEYS;
