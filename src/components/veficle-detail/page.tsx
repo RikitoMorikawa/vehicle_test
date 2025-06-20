@@ -1,4 +1,4 @@
-// src/components/veficle-detail/page.tsx
+// src/components/veficle-detail/page.tsx - 管理者用注文管理統合版
 import { ArrowLeft, Heart } from "lucide-react";
 import Header from "../Header";
 import Sidebar from "../Sidebar";
@@ -6,9 +6,10 @@ import Footer from "../Footer";
 import View360Viewer from "../ui-parts/vehicle-detail/View360Viewer";
 import VehicleInfo from "../ui-parts/vehicle-detail/VehicleInfo";
 import VehicleDocuments from "../ui-parts/vehicle-detail/VehicleDocuments";
+import AdminOrderManagement from "../ui-parts/vehicle-detail/AdminOrderManagement";
 import { Vehicle } from "../../types/db/vehicle";
 import { useAuth } from "../../hooks/useAuth";
-import { VehicleOrderStatus } from "../../server/orders/handler_000";
+import { VehicleOrderStatus, OrderData } from "../../server/orders/handler_000";
 import LoanApplicationStatusView from "../ui-parts/vehicle-detail/LoanApplicationStatus";
 
 interface VehicleDetailComponentProps {
@@ -34,6 +35,12 @@ interface VehicleDetailComponentProps {
   orderStatusLoading?: boolean;
   isCreatingOrder?: boolean;
   isCancellingOrder?: boolean;
+  // 管理者用注文管理のprops
+  vehicleOrders?: OrderData[];
+  vehicleOrdersLoading?: boolean;
+  onApproveOrder?: (orderId: string, adminUserId: string) => void;
+  onRejectOrder?: (orderId: string, adminUserId: string, rejectReason?: string) => void;
+  isProcessingOrder?: boolean;
 }
 
 const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({
@@ -58,6 +65,10 @@ const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({
   orderStatusLoading,
   isCreatingOrder,
   isCancellingOrder,
+  vehicleOrders,
+  onApproveOrder,
+  onRejectOrder,
+  isProcessingOrder,
 }) => {
   const { user } = useAuth();
 
@@ -82,7 +93,6 @@ const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({
     }
 
     if (!orderStatus?.isAvailable) {
-      // 販売済み または 他人が注文依頼中
       return {
         text: "注文不可",
         disabled: true,
@@ -99,7 +109,7 @@ const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({
           bgColor: "bg-orange-600",
           hoverColor: "hover:bg-orange-700",
         };
-      case 1: // approved（この状態では表示されないはず）
+      case 1: // approved
         return {
           text: "購入済み",
           disabled: true,
@@ -196,6 +206,20 @@ const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({
               </nav>
             </div>
 
+            {/* 管理者用注文管理セクション */}
+            {isAdmin && vehicleOrders && (
+              <div className="mb-6">
+                <AdminOrderManagement
+                  vehicleId={vehicle.id}
+                  orders={vehicleOrders}
+                  onApproveOrder={onApproveOrder!}
+                  onRejectOrder={onRejectOrder!}
+                  isProcessing={isProcessingOrder || false}
+                  currentAdminId={user?.id || ""}
+                />
+              </div>
+            )}
+
             <div className="bg-white rounded-lg shadow-sm overflow-hidden">
               <div className="p-6 border-b border-gray-200">
                 <div className="flex justify-between items-start">
@@ -207,8 +231,8 @@ const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({
                       {vehicle.year}年モデル｜走行距離：{vehicle.mileage.toLocaleString()}km｜車両ID: {vehicle.vehicle_id || vehicle.id}
                     </p>
 
-                    {/* 注文状況表示 */}
-                    {orderStatus?.userOrderStatus !== undefined && (
+                    {/* 注文状況表示（一般ユーザー用） */}
+                    {!isAdmin && orderStatus?.userOrderStatus !== undefined && (
                       <div className="mt-2">
                         {orderStatus.userOrderStatus === 0 && (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">注文依頼中</span>
@@ -230,7 +254,7 @@ const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({
                   <div className="flex items-center space-x-4">
                     <span className="text-3xl font-bold text-red-600">¥{vehicle.price.toLocaleString()}</span>
 
-                    {/* 注文ボタン（動的に変化） */}
+                    {/* 注文ボタン（一般ユーザー用） */}
                     {!isAdmin && (
                       <button
                         onClick={onInquiry}

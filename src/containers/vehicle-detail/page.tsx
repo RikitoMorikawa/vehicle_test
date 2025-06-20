@@ -1,4 +1,4 @@
-// src/containers/vehicle-detail/page.tsx
+// src/containers/vehicle-detail/page.tsx - 管理者用注文管理統合版
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -37,14 +37,24 @@ const VehicleDetailContainer: React.FC = () => {
   // 車両詳細データの取得
   const { data: vehicle, isLoading: isVehicleLoading, error: vehicleError } = vehicleDetailService.useVehicleDetail(id);
 
-  // 注文状況の取得
+  // 注文状況の取得（一般ユーザー用）
   const { data: orderStatus, isLoading: orderStatusLoading } = orderService.useVehicleOrderStatus(id, user?.id);
+
+  // 管理者用：この車両の全注文データを取得
+  const { data: allOrders } = orderService.useAllOrders();
+  const vehicleOrders = allOrders?.filter((order) => order.vehicle_id === id) || [];
 
   // 注文作成mutation
   const createOrderMutation = orderService.useCreateOrder();
 
   // 注文キャンセルmutation
   const cancelOrderMutation = orderService.useCancelOrder();
+
+  // 管理者用：注文承認mutation
+  const approveOrderMutation = orderService.useApproveOrder();
+
+  // 管理者用：注文拒否mutation
+  const rejectOrderMutation = orderService.useRejectOrder();
 
   // お気に入り情報の取得
   const { favorites } = favoritesService.useFavorites(user?.id || "");
@@ -86,7 +96,7 @@ const VehicleDetailContainer: React.FC = () => {
     navigate(-1);
   };
 
-  // 注文ボタンのクリックハンドラー（修正版）
+  // 注文ボタンのクリックハンドラー（一般ユーザー用）
   const handleInquiry = async () => {
     if (!user) {
       alert("ログインが必要です");
@@ -136,6 +146,46 @@ const VehicleDetailContainer: React.FC = () => {
     }
   };
 
+  // 管理者用：注文承認処理
+  const handleApproveOrder = async (orderId: string, adminUserId: string) => {
+    try {
+      await approveOrderMutation.mutateAsync({ orderId, adminUserId });
+
+      // 関連データを再取得
+      queryClient.invalidateQueries({
+        queryKey: [...QUERY_KEYS.ORDERS],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [...QUERY_KEYS.VEHICLE_ORDER_STATUS, id],
+      });
+
+      alert("注文を承認しました");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      alert(error.message || "承認処理に失敗しました");
+    }
+  };
+
+  // 管理者用：注文拒否処理
+  const handleRejectOrder = async (orderId: string, adminUserId: string, rejectReason?: string) => {
+    try {
+      await rejectOrderMutation.mutateAsync({ orderId, adminUserId, rejectReason });
+
+      // 関連データを再取得
+      queryClient.invalidateQueries({
+        queryKey: [...QUERY_KEYS.ORDERS],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [...QUERY_KEYS.VEHICLE_ORDER_STATUS, id],
+      });
+
+      alert("注文を拒否しました");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      alert(error.message || "拒否処理に失敗しました");
+    }
+  };
+
   // タブ切り替え処理
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
@@ -170,11 +220,17 @@ const VehicleDetailContainer: React.FC = () => {
       onCreateEstimate={handleCreateEstimate}
       onApplyLoan={handleApplyLoan}
       isAdmin={isAdmin}
-      // 注文状況の情報をコンポーネントに渡す
+      // 注文状況の情報をコンポーネントに渡す（一般ユーザー用）
       orderStatus={orderStatus}
       orderStatusLoading={orderStatusLoading}
       isCreatingOrder={createOrderMutation.isPending}
       isCancellingOrder={cancelOrderMutation.isPending}
+      // 管理者用注文管理の情報を渡す
+      vehicleOrders={vehicleOrders}
+      vehicleOrdersLoading={false}
+      onApproveOrder={handleApproveOrder}
+      onRejectOrder={handleRejectOrder}
+      isProcessingOrder={approveOrderMutation.isPending || rejectOrderMutation.isPending}
     />
   );
 };
