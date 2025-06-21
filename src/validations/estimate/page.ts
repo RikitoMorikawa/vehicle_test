@@ -48,7 +48,7 @@ export const loanCalculationSchema = z.object({
 // (A)付属品・特別仕様内訳のバリデーションスキーマを追加
 export const accessorySchema = z.object({
   name: z.string().min(1, "品名を入力してください").max(100, "品名は100文字以内で入力してください"),
-  price: z.number().nonnegative("価格は0以上で入力してください").int("価格は整数で入力してください").min(1, "価格は1以上で入力してください"),
+  price: z.number().nonnegative("価格は0以上で入力してください").int("価格は整数で入力してください"),
 });
 
 // (B) 税金・保険料内訳のバリデーションスキーマを追加
