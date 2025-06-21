@@ -82,6 +82,18 @@ const VehicleInfo: React.FC<{
           <p className="text-base">{vehicle.year}年</p>
         </div>
         <div>
+          <p className="text-sm text-gray-500">グレード</p>
+          <p className="text-base">{vehicle.grade || "-"}</p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-500">型式</p>
+          <p className="text-base">{vehicle.model_code || "-"}</p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-500">ボディーカラー</p>
+          <p className="text-base">{vehicle.color || "-"}</p>
+        </div>
+        <div>
           <p className="text-sm text-gray-500">走行距離</p>
           <p className="text-base">{vehicle.mileage.toLocaleString()}km</p>
         </div>

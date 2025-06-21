@@ -11,6 +11,9 @@ export interface Vehicle {
   mileage: number;
   price: number;
   user_id?: string;
+  grade?: string;
+  model_code?: string;
+  color?: string;
 }
 
 export const estimateHandler = {

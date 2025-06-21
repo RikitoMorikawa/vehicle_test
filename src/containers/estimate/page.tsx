@@ -14,8 +14,15 @@ const EstimateContainer: React.FC = () => {
   const { user } = useAuth(); // ★追加：認証情報を取得
 
   // 車両情報の取得
-  const { vehicle, isLoading: vehicleLoading, error: vehicleError } = estimateService.useVehicle(vehicleId || "");
+  const { vehicle, isLoading: vehicleLoading, error: vehicleError, refetch: refetchVehicle } = estimateService.useVehicle(vehicleId || "");
 
+  // ★ページマウント時に最新データを取得
+  React.useEffect(() => {
+    if (vehicleId) {
+      refetchVehicle();
+    }
+  }, [vehicleId, refetchVehicle]);
+  
   // 見積もり作成ミューテーション
   const createEstimate = estimateService.useCreateEstimate();
 

@@ -10,17 +10,21 @@ function useVehicle(id: string) {
     data: vehicle,
     isLoading,
     error,
+    refetch,
   } = useQuery<Vehicle, Error>({
     queryKey: [...QUERY_KEYS.VEHICLE_DETAIL, id],
     queryFn: () => estimateHandler.fetchVehicle(id),
-    enabled: !!id, // idがある場合のみクエリを実行
-    retry: 1, // エラー時の再試行回数を制限
+    enabled: !!id,
+    retry: 1,
+    staleTime: 0, // ★常に最新データを取得
+    refetchOnWindowFocus: true, // ★フォーカス時に再取得
   });
 
   return {
     vehicle,
     isLoading,
     error,
+    refetch,
   };
 }
 
