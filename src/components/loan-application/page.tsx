@@ -317,7 +317,7 @@ const LoanApplicationComponent: React.FC<LoanApplicationComponentProps> = ({ for
                     value={formData.notes || ""}
                     onChange={onInputChange}
                     rows={4}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                    className="mt-1 block w-full rounded-md border-gray-300 bg-white shadow-sm focus:border-red-500 focus:ring-red-500 border"
                   />
                   {error?.notes && <p className="mt-1 text-sm text-red-600">{error.notes}</p>}
                 </div>

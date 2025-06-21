@@ -39,7 +39,7 @@ export const loanApplicationSchema = z.object({
   employer_phone: z
     .string()
     .min(1, "勤務先電話番号を入力してください")
-    .regex(/^\d{2,4}-\d{2,4}-\d{4}$/, "勤務先電話番号は半角数字でXXX-XXX-XXXXの形式で入力してください"),
+    .regex(/^\d{2,4}-\d{2,4}-\d{4}$/, "勤務先電話番号は半角数字でXX-XXX-XXXXの形式で入力してください"),
   employment_type: z.string().min(1, "雇用形態を選択してください"),
   years_employed: z
     .string()
@@ -75,8 +75,8 @@ export const loanApplicationSchema = z.object({
   bonus_months: z.string().optional(),
   bonus_amount: z
     .string()
-    .regex(/^[0-9]+$/, "0以上の整数で入力してください")
-    .optional(),
+    .optional()
+    .refine((val) => !val || /^[0-9]+$/.test(val), "0以上の整数で入力してください"),
 
   // 連帯保証人情報（任意）
   guarantor_name: z.string().max(100, "連帯保証人名は100文字以内で入力してください").optional(),
@@ -88,12 +88,12 @@ export const loanApplicationSchema = z.object({
   guarantor_relationship: z.string().max(50, "続柄は50文字以内で入力してください").optional(),
   guarantor_phone: z
     .string()
-    .regex(/^\d{2,4}-\d{2,4}-\d{4}$/, "連帯保証人の電話番号は半角数字でXXX-XXX-XXXXの形式で入力してください")
-    .optional(),
+    .optional()
+    .refine((val) => !val || /^\d{2,4}-\d{2,4}-\d{4}$/.test(val), "連帯保証人の電話番号は半角数字でXXX-XXX-XXXXの形式で入力してください"),
   guarantor_postal_code: z
     .string()
-    .regex(/^\d{3}-\d{4}$/, "郵便番号は半角数字で000-0000の形式で入力してください")
-    .optional(),
+    .optional()
+    .refine((val) => !val || /^\d{3}-\d{4}$/.test(val), "郵便番号は半角数字で000-0000の形式で入力してください"),
   guarantor_address: z.string().max(100, "住所は100文字以内で入力してください").optional(),
 
   // その他
