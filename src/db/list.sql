@@ -395,9 +395,15 @@ create table public.companies (
   name text not null,
   created_at timestamp with time zone null default now(),
   updated_at timestamp with time zone null default now(),
+  address text null,
+  bank_account jsonb null,
   constraint companies_pkey primary key (id),
   constraint companies_name_key unique (name)
 ) TABLESPACE pg_default;
+
+create trigger update_companies_updated_at BEFORE
+update on companies for EACH row
+execute FUNCTION update_updated_at_column ();
 
 
 

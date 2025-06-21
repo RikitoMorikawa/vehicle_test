@@ -127,3 +127,45 @@ ALTER TABLE vehicles DROP COLUMN IF EXISTS image_path;
 
 -- インデックス追加（パフォーマンス向上のため）
 CREATE INDEX IF NOT EXISTS idx_vehicles_images ON vehicles USING GIN(images);
+
+
+-- companiesテーブルに住所と振り込み口座カラムを追加
+ALTER TABLE public.companies 
+ADD COLUMN address TEXT,
+ADD COLUMN bank_account JSONB;
+
+-- カラムのコメントを追加
+COMMENT ON COLUMN public.companies.address IS '会社住所';
+COMMENT ON COLUMN public.companies.bank_account IS '振り込み口座情報（JSON形式で銀行名、支店名、口座種別、口座番号、口座名義を格納）';
+
+-- 更新日時の自動更新トリガーを追加（まだない場合）
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- トリガーを作成（既に存在する場合は無視される）
+DROP TRIGGER IF EXISTS update_companies_updated_at ON public.companies;
+CREATE TRIGGER update_companies_updated_at
+    BEFORE UPDATE ON public.companies
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- 行レベルセキュリティを有効化
+ALTER TABLE public.companies ENABLE ROW LEVEL SECURITY;
+
+-- 全ユーザーがすべての操作を実行できるポリシーを作成
+CREATE POLICY "全てのユーザーに閲覧を許可" ON public.companies
+    FOR SELECT USING (true);
+
+CREATE POLICY "全てのユーザーに挿入を許可" ON public.companies
+    FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "全てのユーザーに更新を許可" ON public.companies
+    FOR UPDATE USING (true);
+
+CREATE POLICY "全てのユーザーに削除を許可" ON public.companies
+    FOR DELETE USING (true);
