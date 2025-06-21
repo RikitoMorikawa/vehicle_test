@@ -39,7 +39,6 @@ export interface EstimatePDFData {
     displacement?: string;
     inspectionExpiry?: string;
     transmission?: string;
-    equipment?: string;
     price: number;
     created_at: string;
   };

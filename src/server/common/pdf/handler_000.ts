@@ -164,7 +164,6 @@ export const pdfHandler = {
           displacement: estimateVehicle.displacement,
           inspectionExpiry: estimateVehicle.inspection_expiry,
           transmission: estimateVehicle.transmission,
-          equipment: estimateVehicle.equipment,
           price: estimateVehicle.price,
           created_at: estimateVehicle.created_at,
         },

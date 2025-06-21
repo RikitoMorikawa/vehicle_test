@@ -29,6 +29,40 @@ export interface EstimateComponentProps {
   onAccessoryChange: (action: "add" | "remove", value: Accessory | number) => void;
 }
 
+const ConfirmDialog: React.FC<{
+  isOpen: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+  title: string;
+  vehicle?: Vehicle;
+  formData: EstimateFormData;
+}> = ({ isOpen, onConfirm, onCancel, title, formData }) => {
+  if (!isOpen) return null;
+
+  const documentTypeText = formData.document_type === "estimate" ? "見積書" : formData.document_type === "invoice" ? "請求書" : "注文書";
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">{title}</h3>
+
+        <div className="mb-6">
+          <p className="text-sm text-gray-600 mb-2">以下の内容で{documentTypeText}を作成します：</p>
+        </div>
+
+        <div className="flex justify-end space-x-3">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            キャンセル
+          </Button>
+          <Button type="button" onClick={onConfirm}>
+            作成する
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // 車両情報コンポーネント
 const VehicleInfo: React.FC<{
   vehicle: Vehicle;
@@ -124,7 +158,7 @@ const TradeInInfo: React.FC<{
           name="mileage"
           type="text"
           inputMode="numeric"
-          value={tradeIn.mileage || ""}
+          value={tradeIn.mileage?.toString() ?? ""}
           onChange={handleChange}
           error={getFieldError("mileage")}
           placeholder="0以上の数値"
@@ -241,7 +275,7 @@ const LoanCalculationComponent: React.FC<{
           type="text"
           currency={true}
           inputMode="numeric"
-          value={loanCalculation.down_payment || ""}
+          value={loanCalculation.down_payment?.toString() ?? ""}
           onChange={handleChange}
           error={getFieldError("down_payment")}
           placeholder="0"
@@ -269,7 +303,7 @@ const LoanCalculationComponent: React.FC<{
           type="text"
           currency={true}
           inputMode="numeric"
-          value={loanCalculation.interest_fee || ""}
+          value={loanCalculation.interest_fee?.toString() ?? ""}
           onChange={handleChange}
           error={getFieldError("interest_fee")}
           placeholder="0"
@@ -329,7 +363,7 @@ const LoanCalculationComponent: React.FC<{
           type="text"
           currency={true}
           inputMode="numeric"
-          value={loanCalculation.first_payment || ""}
+          value={loanCalculation.first_payment?.toString() ?? ""}
           onChange={handleChange}
           error={getFieldError("first_payment")}
           placeholder="0"
@@ -340,7 +374,7 @@ const LoanCalculationComponent: React.FC<{
           type="text"
           currency={true}
           inputMode="numeric"
-          value={loanCalculation.monthly_payment || ""}
+          value={loanCalculation.monthly_payment?.toString() ?? ""}
           onChange={handleChange}
           error={getFieldError("monthly_payment")}
           placeholder="0"
@@ -351,7 +385,7 @@ const LoanCalculationComponent: React.FC<{
           type="text"
           currency={true}
           inputMode="numeric"
-          value={loanCalculation.bonus_amount || ""}
+          value={loanCalculation.bonus_amount?.toString() ?? ""}
           onChange={handleChange}
           error={getFieldError("bonus_amount")}
           placeholder="0"
@@ -590,7 +624,7 @@ const TaxInsuranceInfo: React.FC<{
           type="text"
           currency={true}
           inputMode="numeric"
-          value={taxInsuranceFees.automobile_tax || ""}
+          value={taxInsuranceFees.automobile_tax?.toString() ?? ""}
           onChange={handleChange}
           error={getFieldError("automobile_tax")}
           placeholder="0"
@@ -601,7 +635,7 @@ const TaxInsuranceInfo: React.FC<{
           type="text"
           currency={true}
           inputMode="numeric"
-          value={taxInsuranceFees.environmental_performance_tax || ""}
+          value={taxInsuranceFees.environmental_performance_tax?.toString() ?? ""}
           onChange={handleChange}
           error={getFieldError("environmental_performance_tax")}
           placeholder="0"
@@ -612,7 +646,7 @@ const TaxInsuranceInfo: React.FC<{
           type="text"
           currency={true}
           inputMode="numeric"
-          value={taxInsuranceFees.weight_tax || ""}
+          value={taxInsuranceFees.weight_tax?.toString() ?? ""}
           onChange={handleChange}
           error={getFieldError("weight_tax")}
           placeholder="0"
@@ -623,7 +657,7 @@ const TaxInsuranceInfo: React.FC<{
           type="text"
           currency={true}
           inputMode="numeric"
-          value={taxInsuranceFees.liability_insurance_fee || ""}
+          value={taxInsuranceFees.liability_insurance_fee?.toString() ?? ""}
           onChange={handleChange}
           error={getFieldError("liability_insurance_fee")}
           placeholder="0"
@@ -634,7 +668,7 @@ const TaxInsuranceInfo: React.FC<{
           type="text"
           currency={true}
           inputMode="numeric"
-          value={taxInsuranceFees.voluntary_insurance_fee || ""}
+          value={taxInsuranceFees.voluntary_insurance_fee?.toString() ?? ""}
           onChange={handleChange}
           error={getFieldError("voluntary_insurance_fee")}
           placeholder="0"
@@ -672,7 +706,7 @@ const LegalFeesInfo: React.FC<{
           type="text"
           currency={true}
           inputMode="numeric"
-          value={legalFees.inspection_registration_stamp || ""}
+          value={legalFees.inspection_registration_stamp?.toString() ?? ""}
           onChange={handleChange}
           error={getFieldError("inspection_registration_stamp")}
           placeholder="0"
@@ -683,7 +717,7 @@ const LegalFeesInfo: React.FC<{
           type="text"
           currency={true}
           inputMode="numeric"
-          value={legalFees.parking_certificate_stamp || ""}
+          value={legalFees.parking_certificate_stamp?.toString() ?? ""}
           onChange={handleChange}
           error={getFieldError("parking_certificate_stamp")}
           placeholder="0"
@@ -694,7 +728,7 @@ const LegalFeesInfo: React.FC<{
           type="text"
           currency={true}
           inputMode="numeric"
-          value={legalFees.trade_in_stamp || ""}
+          value={legalFees.trade_in_stamp?.toString() ?? ""}
           onChange={handleChange}
           error={getFieldError("trade_in_stamp")}
           placeholder="0"
@@ -705,7 +739,7 @@ const LegalFeesInfo: React.FC<{
           type="text"
           currency={true}
           inputMode="numeric"
-          value={legalFees.recycling_deposit || ""}
+          value={legalFees.recycling_deposit?.toString() ?? ""}
           onChange={handleChange}
           error={getFieldError("recycling_deposit")}
           placeholder="0"
@@ -716,7 +750,7 @@ const LegalFeesInfo: React.FC<{
           type="text"
           currency={true}
           inputMode="numeric"
-          value={legalFees.other_nontaxable || ""}
+          value={legalFees.other_nontaxable?.toString() ?? ""}
           onChange={handleChange}
           error={getFieldError("other_nontaxable")}
           placeholder="0"
@@ -754,7 +788,7 @@ const ProcessingFeesInfo: React.FC<{
           type="text"
           currency={true}
           inputMode="numeric"
-          value={processingFees.inspection_registration_fee || ""}
+          value={processingFees.inspection_registration_fee?.toString() ?? ""}
           onChange={handleChange}
           error={getFieldError("inspection_registration_fee")}
           placeholder="0"
@@ -765,7 +799,7 @@ const ProcessingFeesInfo: React.FC<{
           type="text"
           currency={true}
           inputMode="numeric"
-          value={processingFees.parking_certificate_fee || ""}
+          value={processingFees.parking_certificate_fee?.toString() ?? ""}
           onChange={handleChange}
           error={getFieldError("parking_certificate_fee")}
           placeholder="0"
@@ -776,7 +810,7 @@ const ProcessingFeesInfo: React.FC<{
           type="text"
           currency={true}
           inputMode="numeric"
-          value={processingFees.trade_in_processing_fee || ""}
+          value={processingFees.trade_in_processing_fee?.toString() ?? ""}
           onChange={handleChange}
           error={getFieldError("trade_in_processing_fee")}
           placeholder="0"
@@ -787,7 +821,7 @@ const ProcessingFeesInfo: React.FC<{
           type="text"
           currency={true}
           inputMode="numeric"
-          value={processingFees.trade_in_assessment_fee || ""}
+          value={processingFees.trade_in_assessment_fee?.toString() ?? ""}
           onChange={handleChange}
           error={getFieldError("trade_in_assessment_fee")}
           placeholder="0"
@@ -798,7 +832,7 @@ const ProcessingFeesInfo: React.FC<{
           type="text"
           currency={true}
           inputMode="numeric"
-          value={processingFees.recycling_management_fee || ""}
+          value={processingFees.recycling_management_fee?.toString() ?? ""}
           onChange={handleChange}
           error={getFieldError("recycling_management_fee")}
           placeholder="0"
@@ -809,7 +843,7 @@ const ProcessingFeesInfo: React.FC<{
           type="text"
           currency={true}
           inputMode="numeric"
-          value={processingFees.delivery_fee || ""}
+          value={processingFees.delivery_fee?.toString() ?? ""}
           onChange={handleChange}
           error={getFieldError("delivery_fee")}
           placeholder="0"
@@ -820,7 +854,7 @@ const ProcessingFeesInfo: React.FC<{
           type="text"
           currency={true}
           inputMode="numeric"
-          value={processingFees.other_fees || ""}
+          value={processingFees.other_fees?.toString() ?? ""}
           onChange={handleChange}
           error={getFieldError("other_fees")}
           placeholder="0"
@@ -989,7 +1023,7 @@ const SalesPriceInfo: React.FC<{
             type="text"
             currency={true}
             inputMode="numeric"
-            value={salesPrice.base_price || ""}
+            value={salesPrice.base_price?.toString() ?? ""}
             onChange={handleChange}
             error={getFieldError("base_price")}
             placeholder="0"
@@ -1000,7 +1034,7 @@ const SalesPriceInfo: React.FC<{
             type="text"
             currency={true}
             inputMode="numeric"
-            value={salesPrice.discount || ""}
+            value={salesPrice.discount?.toString() ?? ""}
             onChange={handleChange}
             error={getFieldError("discount")}
             placeholder="0"
@@ -1011,7 +1045,7 @@ const SalesPriceInfo: React.FC<{
             type="text"
             currency={true}
             inputMode="numeric"
-            value={salesPrice.inspection_fee || ""}
+            value={salesPrice.inspection_fee?.toString() ?? ""}
             onChange={handleChange}
             error={getFieldError("inspection_fee")}
             placeholder="0"
@@ -1118,7 +1152,7 @@ const SalesPriceInfo: React.FC<{
             type="text"
             currency={true}
             inputMode="numeric"
-            value={salesPrice.trade_in_price || ""}
+            value={salesPrice.trade_in_price?.toString() ?? ""}
             onChange={handleChange}
             error={getFieldError("trade_in_price")}
             placeholder="0"
@@ -1129,7 +1163,7 @@ const SalesPriceInfo: React.FC<{
             type="text"
             currency={true}
             inputMode="numeric"
-            value={salesPrice.trade_in_debt || ""}
+            value={salesPrice.trade_in_debt?.toString() ?? ""}
             onChange={handleChange}
             error={getFieldError("trade_in_debt")}
             placeholder="0"
@@ -1216,6 +1250,7 @@ const EstimateComponent: React.FC<EstimateComponentProps> = ({
   onCancel,
   onAccessoryChange,
 }) => {
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   // 現金販売価格の計算（SalesPriceInfoと同じロジック）
   const totalTaxInsurance =
     (formData.taxInsuranceFees.automobile_tax || 0) +
@@ -1251,6 +1286,36 @@ const EstimateComponent: React.FC<EstimateComponentProps> = ({
 
   // 現金販売価格(1)+(2)（税抜き）
   const cashSalesPrice = calculatedVehiclePrice + totalMiscFee;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // バリデーションチェック（エラーがある場合は確認ダイアログを表示しない）
+    if (errors && Object.keys(errors).length > 0) {
+      onSubmit(e); // 既存の処理でバリデーションエラーを表示
+      return;
+    }
+
+    // 確認ダイアログを表示
+    setShowConfirmDialog(true);
+  };
+
+  // 確認ダイアログでOKが押された場合
+  const handleConfirmSubmit = () => {
+    setShowConfirmDialog(false);
+    // 実際の処理実行（新しいイベントオブジェクトを作成）
+    const syntheticEvent = {
+      preventDefault: () => {},
+      target: {},
+      currentTarget: {},
+    } as React.FormEvent;
+    onSubmit(syntheticEvent);
+  };
+
+  // 確認ダイアログでキャンセルが押された場合
+  const handleCancelSubmit = () => {
+    setShowConfirmDialog(false);
+  };
 
   if (loading) {
     return (
@@ -1327,7 +1392,7 @@ const EstimateComponent: React.FC<EstimateComponentProps> = ({
                 </div>
               )}
 
-              <form onSubmit={onSubmit} className="p-6 space-y-8">
+              <form onSubmit={handleSubmit} className="p-6 space-y-8">
                 {/* 車両情報のみ外部から取得した値で表示 */}
                 {vehicle && <VehicleInfo vehicle={vehicle} />}
                 {/* 下取り車両情報コンポーネントを使用 */}
@@ -1369,6 +1434,15 @@ const EstimateComponent: React.FC<EstimateComponentProps> = ({
         </main>
       </div>
       <Footer />
+      {/* ★ここに確認ダイアログを追加★ */}
+      <ConfirmDialog
+        isOpen={showConfirmDialog}
+        onConfirm={handleConfirmSubmit}
+        onCancel={handleCancelSubmit}
+        title="書類作成確認"
+        vehicle={vehicle}
+        formData={formData}
+      />
     </div>
   );
 };

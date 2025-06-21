@@ -312,7 +312,6 @@ th, td {
                             <div>走行距離：${formatNumber(data.estimateVehicle.mileage)}km</div>
                             <div>修復歴：${data.estimateVehicle.repairHistory ? "有" : "無"}</div>
                             <div>外装色：${data.estimateVehicle.exteriorColor || "-"}</div>
-                            <div>装備：${data.estimateVehicle.equipment || "-"}</div>
                         </div>
                     </div>
                     <div class="w-32 p-2 text-center">
