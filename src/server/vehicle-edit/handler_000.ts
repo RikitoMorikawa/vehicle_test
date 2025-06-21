@@ -69,7 +69,7 @@ export const vehicleEditHandler = {
     // 車両データを取得（複数画像対応）
     const { data: vehicle, error: fetchError } = await supabase
       .from("vehicles")
-      .select("images, view360_images") // image_path → images に変更
+      .select("images, view360_images")
       .eq("id", id)
       .single();
 

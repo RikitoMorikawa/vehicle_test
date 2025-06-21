@@ -25,7 +25,7 @@ export const favoritesHandler = {
         const vehicleData = Array.isArray(item.vehicle) ? item.vehicle[0] : item.vehicle;
 
         // 必要なプロパティの存在確認
-        if (!vehicleData || !vehicleData.id || !vehicleData.image_path) {
+        if (!vehicleData || !vehicleData.id || !vehicleData.images || vehicleData.images.length === 0) {
           console.error("Invalid vehicle data:", vehicleData);
           return null;
         }
@@ -33,7 +33,7 @@ export const favoritesHandler = {
         return {
           ...vehicleData,
           favorite_id: item.id,
-          imageUrl: `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/vehicle-images/${vehicleData.image_path}`,
+          imageUrl: `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/vehicle-images/${vehicleData.images[0]}`,
         } as FavoriteVehicle;
       })
       .filter(Boolean) as FavoriteVehicle[]; // nullを除外

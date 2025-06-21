@@ -232,7 +232,7 @@ const VehicleRegisterContainer: React.FC = () => {
       // 車両データの登録（複数画像対応）
       const result = await registerVehicle.mutateAsync({
         ...formData,
-        images, // image_path → images に変更
+        images,
         view360_images,
       });
 

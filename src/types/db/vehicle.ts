@@ -25,7 +25,7 @@ export interface Vehicle {
   // 新しく追加したカラム
   vehicle_status?: string;
   full_model_code?: string;
-  grade?: string;
+  grade?: string | null;
   registration_number?: string;
   first_registration_date?: string; // 日付はフロントエンドでは文字列として扱う
   chassis_number?: string;
