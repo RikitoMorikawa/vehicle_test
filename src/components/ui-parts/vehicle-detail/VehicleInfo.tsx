@@ -4,6 +4,7 @@ import { Vehicle } from "../../../types/db/vehicle";
 import { useNavigate } from "react-router-dom";
 
 interface VehicleInfoProps {
+  isAdmin?: boolean;
   vehicle: Vehicle;
   mainImageUrl: string;
   otherImagesUrls: string[];
@@ -13,7 +14,7 @@ interface VehicleInfoProps {
   onApplyLoan: () => void;
 }
 
-const VehicleInfo: React.FC<VehicleInfoProps> = ({ vehicle, mainImageUrl, otherImagesUrls, selectedImage, setSelectedImage, onApplyLoan }) => {
+const VehicleInfo: React.FC<VehicleInfoProps> = ({ vehicle, mainImageUrl, otherImagesUrls, selectedImage, setSelectedImage, onApplyLoan, isAdmin }) => {
   const navigate = useNavigate();
   // 表示する画像（選択されていなければメイン画像）
   const displayImageUrl = selectedImage || mainImageUrl;
@@ -30,7 +31,7 @@ const VehicleInfo: React.FC<VehicleInfoProps> = ({ vehicle, mainImageUrl, otherI
         </div>
 
         {/* サムネイル画像の表示（メイン画像とその他の画像） */}
-        {(otherImagesUrls.length > 0 || vehicle.image_path) && (
+        {(otherImagesUrls.length > 0 || vehicle.images) && (
           <div className="grid grid-cols-5 gap-2">
             {/* メイン画像のサムネイル */}
             <div className={`aspect-square cursor-pointer ${selectedImage === null ? "ring-2 ring-red-500" : ""}`} onClick={() => setSelectedImage(null)}>
@@ -101,20 +102,22 @@ const VehicleInfo: React.FC<VehicleInfoProps> = ({ vehicle, mainImageUrl, otherI
             </div>
             <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
               <div></div>
-              <div className="flex space-x-4">
-                <button
-                  onClick={onCreateEstimate}
-                  className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-                >
-                  各種書類作成
-                </button>
-                <button
-                  onClick={onApplyLoan}
-                  className="px-6 py-2 border border-gray-300 bg-white text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-                >
-                  ローン審査申込
-                </button>
-              </div>
+              {!isAdmin && (
+                <div className="flex space-x-4">
+                  <button
+                    onClick={onCreateEstimate}
+                    className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                  >
+                    各種書類作成
+                  </button>
+                  <button
+                    onClick={onApplyLoan}
+                    className="px-6 py-2 border border-gray-300 bg-white text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                  >
+                    ローン審査申込
+                  </button>
+                </div>
+              )}
             </div>
           </dl>
         </div>
