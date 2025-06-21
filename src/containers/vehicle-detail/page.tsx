@@ -27,7 +27,12 @@ const VehicleDetailContainer: React.FC = () => {
       navigate("/vehicles");
       return;
     }
-  }, [id, user?.id, navigate]);
+
+    // クエリキーを正しい形式に修正
+    queryClient.invalidateQueries({
+      queryKey: [QUERY_KEYS.VEHICLE_DETAIL, id],
+    });
+  }, [id, user?.id, navigate, queryClient]);
 
   // IDがない場合は早期リターン
   if (!id) {

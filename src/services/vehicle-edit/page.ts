@@ -17,11 +17,12 @@ function useUpdateVehicle() {
 
   return useMutation({
     mutationFn: (data: { id: string; formData: VehicleFormData }) => vehicleEditHandler.updateVehicle(data.id, data.formData),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       // 車両一覧のキャッシュを無効化して再フェッチを強制
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.VEHICLES });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.VEHICLE_DETAIL });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.VEHICLE_EDIT });
+      // 特定の車両詳細も無効化（idを含める）
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.VEHICLE_DETAIL, variables.id] });
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEYS.VEHICLE_EDIT, variables.id] });
     },
   });
 }

@@ -44,7 +44,6 @@ create table public.vehicles (
   price integer not null,
   created_at timestamp with time zone null default now(),
   updated_at timestamp with time zone null default now(),
-  image_path text null,
   model_code text null,
   color text null,
   engine_size integer null,
@@ -67,6 +66,7 @@ create table public.vehicles (
   recycling_deposit boolean null default false,
   registration_date date null,
   tax_rate integer null,
+  images text[] null default array[]::text[],
   constraint vehicles_pkey primary key (id),
   constraint vehicles_door_count_check check (
     (
@@ -78,6 +78,8 @@ create table public.vehicles (
 ) TABLESPACE pg_default;
 
 create index IF not exists vehicles_vehicle_id_idx on public.vehicles using btree (vehicle_id) TABLESPACE pg_default;
+
+create index IF not exists idx_vehicles_images on public.vehicles using gin (images) TABLESPACE pg_default;
 
 
 

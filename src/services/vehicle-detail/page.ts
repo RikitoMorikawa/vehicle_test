@@ -21,11 +21,18 @@ const useVehicleDetail = (id: string) => {
         throw new Error(`車両詳細の取得に失敗しました: ${error.message}`);
       }
 
-      // 画像URLを追加（vehicle-listハンドラーと同じロジック）
+      // 複数画像対応の修正
       if (data) {
         return {
           ...data,
-          imageUrl: `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/vehicle-images/${data.image_path}`
+          // 複数画像の場合は最初の画像をメイン画像として使用
+          imageUrl: data.images && data.images.length > 0
+            ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/vehicle-images/${data.images[0]}`
+            : null,
+          // 全画像のURLを配列で提供
+          imageUrls: data.images?.map((imagePath: string) => 
+            `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/vehicle-images/${imagePath}`
+          ) || []
         } as Vehicle;
       }
 
