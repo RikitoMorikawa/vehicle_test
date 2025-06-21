@@ -207,7 +207,7 @@ const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({
             </div>
 
             {/* 管理者用注文管理セクション */}
-            {isAdmin && vehicleOrders && (
+            {isAdmin && vehicleOrders && vehicleOrders.length > 0 && (
               <div className="mb-6">
                 <AdminOrderManagement
                   vehicleId={vehicle.id}
