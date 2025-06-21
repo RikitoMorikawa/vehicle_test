@@ -1,25 +1,28 @@
 // src/server/vehicle-detail/handler_000.ts
 import { supabase } from "../../lib/supabase";
 
-// 車両詳細データを取得 - 画像URL付加
+// 車両詳細データを取得 - 複数画像URL付加
 export const getVehicleDetail = async (id: string) => {
   try {
     // 基本情報の取得
-    const { data: vehicleData, error: vehicleError } = await supabase
-      .from("vehicles")
-      .select("*")
-      .eq("id", id)
-      .single();
+    const { data: vehicleData, error: vehicleError } = await supabase.from("vehicles").select("*").eq("id", id).single();
 
     if (vehicleError) {
       throw vehicleError;
     }
 
-    // 画像URLを追加
+    // 複数画像URLを追加
     if (vehicleData) {
       return {
         ...vehicleData,
-        imageUrl: `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/vehicle-images/${vehicleData.image_path}`
+        // 複数画像の場合は最初の画像をメイン画像として使用
+        imageUrl:
+          vehicleData.images && vehicleData.images.length > 0
+            ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/vehicle-images/${vehicleData.images[0]}`
+            : null,
+        // 全画像のURLを配列で提供
+        imageUrls:
+          vehicleData.images?.map((imagePath: string) => `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/vehicle-images/${imagePath}`) || [],
       };
     }
 

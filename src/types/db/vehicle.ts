@@ -6,7 +6,7 @@ export interface Vehicle {
   year: number;
   mileage: number;
   price: number;
-  image_path?: string;
+  images?: string;
   created_at?: string;
   updated_at?: string;
   imageUrl?: string;

@@ -10,9 +10,12 @@ import { makerService } from "../../services/common/car_makers/page";
 
 const VehicleRegisterContainer: React.FC = () => {
   const navigate = useNavigate();
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [view360ImagePreviews, setView360ImagePreviews] = useState<string[]>([]); // 追加
-  const [view360Files, setView360Files] = useState<File[]>([]); // 追加
+  // 複数画像対応のための変更部分
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+
+  const [view360ImagePreviews, setView360ImagePreviews] = useState<string[]>([]);
+  const [view360Files, setView360Files] = useState<File[]>([]);
   // 車両メーカーの取得
   const { data: carMakers, isLoading: isLoadingMakers } = makerService.useMakers();
 
@@ -44,6 +47,7 @@ const VehicleRegisterContainer: React.FC = () => {
     recycling_deposit: "false", // 初期値はfalse
     registration_date: "",
     tax_rate: "",
+    images: [], // 複数画像対応のため配列に変更
   });
   const [error, setError] = useState<VehicleRegisterError | null>(null);
 
@@ -85,17 +89,48 @@ const VehicleRegisterContainer: React.FC = () => {
     return `${Date.now()}_${sanitized}`;
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+  // 複数画像対応のためのハンドラー（新規追加）
+  const handleImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+
+    // 最大5枚まで
+    const remainingSlots = 5 - imageFiles.length;
+    const filesToAdd = files.slice(0, remainingSlots);
+
+    if (files.length > remainingSlots) {
+      setError((prev) => ({
+        ...prev,
+        images: `最大5枚まで選択できます。${files.length - remainingSlots}枚超過しています。`,
+      }));
+    }
+
+    // プレビュー作成
+    const newPreviews: string[] = [];
+    filesToAdd.forEach((file) => {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          newPreviews.push(e.target.result as string);
+          if (newPreviews.length === filesToAdd.length) {
+            setImagePreviews((prev) => [...prev, ...newPreviews]);
+          }
+        }
       };
       reader.readAsDataURL(file);
+    });
 
-      setFormData((prev) => ({ ...prev, image: file }));
+    setImageFiles((prev) => [...prev, ...filesToAdd]);
+
+    // エラークリア
+    if (error?.images) {
+      setError((prev) => (prev ? { ...prev, images: undefined } : null));
     }
+  };
+
+  // 画像削除（新規追加）
+  const handleRemoveImage = (index: number) => {
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   // ファイル名でソートするヘルパー関数
@@ -136,7 +171,10 @@ const VehicleRegisterContainer: React.FC = () => {
 
   // 更新：Zodバリデーションを使用
   const validateForm = (): boolean => {
-    const validation = validateVehicleRegisterForm(formData);
+    const validation = validateVehicleRegisterForm({
+      ...formData,
+      imageFiles, // 複数ファイル対応
+    });
 
     if (!validation.success) {
       setError(validation.errors);
@@ -151,17 +189,19 @@ const VehicleRegisterContainer: React.FC = () => {
     if (!validateForm()) return;
 
     try {
-      let image_path = "";
-      const view360_images: string[] = [];
+      // 複数画像のアップロード処理（変更部分）
+      const images: string[] = [];
 
-      // メイン画像のアップロード
-      if (formData.image) {
-        const sanitizedFileName = sanitizeFileName(formData.image.name);
-        const { error: uploadError } = await supabase.storage.from("vehicle-images").upload(sanitizedFileName, formData.image);
+      // 複数メイン画像のアップロード
+      for (const file of imageFiles) {
+        const sanitizedFileName = sanitizeFileName(file.name);
+        const { error: uploadError } = await supabase.storage.from("vehicle-images").upload(sanitizedFileName, file);
 
         if (uploadError) throw uploadError;
-        image_path = sanitizedFileName;
+        images.push(sanitizedFileName);
       }
+
+      const view360_images: string[] = [];
 
       // 360度ビュー画像のアップロード（追加）
       if (view360Files.length > 0) {
@@ -189,10 +229,10 @@ const VehicleRegisterContainer: React.FC = () => {
         }
       }
 
-      // 車両データの登録
+      // 車両データの登録（複数画像対応）
       const result = await registerVehicle.mutateAsync({
         ...formData,
-        image_path,
+        images, // image_path → images に変更
         view360_images,
       });
 
@@ -254,17 +294,19 @@ const VehicleRegisterContainer: React.FC = () => {
       formData={formData}
       isLoading={registerVehicle.isPending || isLoadingMakers}
       error={error}
-      imagePreview={imagePreview}
+      // 複数画像対応のprops変更
+      imagePreviews={imagePreviews}
+      onImagesChange={handleImagesChange}
+      onRemoveImage={handleRemoveImage}
       view360ImagePreviews={view360ImagePreviews}
       onInputChange={handleInputChange}
-      onCheckboxChange={handleCheckboxChange} // 追加
-      onImageChange={handleImageChange}
+      onCheckboxChange={handleCheckboxChange}
       onView360ImagesChange={handleView360ImagesChange}
       onRemoveView360Image={handleRemoveView360Image}
       onSubmit={handleSubmit}
       onCancel={() => navigate("/vehicles")}
-      carMakers={carMakers || []} // 追加
-      generateYearOptions={generateYearOptions} // 追加
+      carMakers={carMakers || []}
+      generateYearOptions={generateYearOptions}
     />
   );
 };

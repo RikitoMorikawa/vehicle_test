@@ -1,4 +1,4 @@
-// src/types/vehicle-register/page.ts
+// src/types/vehicle-register/page.ts の修正部分のみ
 export interface VehicleFormData {
   vehicle_id: string;
   maker: string;
@@ -12,11 +12,14 @@ export interface VehicleFormData {
   transmission: string;
   drive_system: string;
   inspection_date: string;
-  image_path?: string;
-  image?: File;
+
+  // 複数画像対応（変更部分）
+  images: string[];
+  imageFiles?: File[];
+
   view360_images?: string[];
 
-  // 新しく追加したフィールド
+  // 新しく追加したフィールド（既存のまま）
   vehicle_status?: string;
   full_model_code?: string;
   grade?: string;
@@ -24,13 +27,13 @@ export interface VehicleFormData {
   first_registration_date?: string;
   chassis_number?: string;
   body_type?: string;
-  door_count?: string; // フォームでは文字列として扱う
+  door_count?: string;
   desired_number?: string;
   sales_format?: string;
-  accident_history?: string; // フォームでは文字列として扱う
-  recycling_deposit?: string; // フォームでは文字列として扱う
+  accident_history?: string;
+  recycling_deposit?: string;
   registration_date?: string;
-  tax_rate?: string; // フォームでは文字列として扱う
+  tax_rate?: string;
 }
 
 export interface VehicleRegisterError {
@@ -48,9 +51,9 @@ export interface VehicleRegisterError {
   drive_system?: string;
   inspection_date?: string;
   view360_images?: string;
-  image?: string;
+  images?: string; // 複数画像対応
 
-  // 新しく追加したフィールドのエラー
+  // 新しく追加したフィールドのエラー（既存のまま）
   vehicle_status?: string;
   full_model_code?: string;
   grade?: string;

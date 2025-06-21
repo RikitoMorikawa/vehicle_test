@@ -38,7 +38,11 @@ export const vehicleRegisterSchema = z.object({
     .max(30, "車台番号は最大30文字以内で入力してください")
     .regex(/^[a-zA-Z0-9]*$/, "車台番号は英数字のみで入力してください"),
   // 新規登録時特有のフィールド - 画像は必須
-  image: z.any().refine((val) => val instanceof File, "車両画像を選択してください"),
+  imageFiles: z
+    .array(z.any().refine((val) => val instanceof File, "ファイル形式が正しくありません"))
+    .min(1, "車両画像は最低1枚選択してください")
+    .max(5, "車両画像は最大5枚まで選択できます")
+    .optional(),
 });
 
 export type VehicleRegisterFormData = z.infer<typeof vehicleRegisterSchema>;

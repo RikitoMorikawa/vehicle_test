@@ -374,10 +374,21 @@ const VehicleDetailComponent: React.FC<VehicleDetailComponentProps> = ({
                 {activeTab === "車体画像ギャラリー" && (
                   <div className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <img src={mainImageUrl} alt={`${vehicle.maker} ${vehicle.name}`} className="w-full h-64 object-cover rounded-lg" />
-                      {otherImagesUrls.map((url, index) => (
-                        <img key={index} src={url} alt={`${vehicle.maker} ${vehicle.name} - ${index + 1}`} className="w-full h-64 object-cover rounded-lg" />
-                      ))}
+                      {/* 複数画像がある場合は全て表示 */}
+                      {Array.isArray(vehicle.images) && vehicle.images.length > 0 ? (
+                        vehicle.images.map((imagePath: string, index: number) => (
+                          <img
+                            key={index}
+                            src={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/vehicle-images/${imagePath}`}
+                            alt={`${vehicle.maker} ${vehicle.name} - ${index + 1}`}
+                            className="w-full h-64 object-cover rounded-lg"
+                          />
+                        ))
+                      ) : (
+                        <div className="col-span-full flex items-center justify-center h-64 bg-gray-100 rounded-lg">
+                          <p className="text-gray-500">画像がありません</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

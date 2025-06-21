@@ -7,7 +7,7 @@ import Input from "../ui/Input";
 import Button from "../ui/Button";
 import Checkbox from "../ui/Checkbox";
 import type { VehicleFormData, VehicleRegisterError } from "../../types/vehicle-register/page";
-import { Upload, RotateCw, Info, Image } from "lucide-react";
+import { RotateCw, Info, Image } from "lucide-react";
 import SortableView360Images from "../ui-parts/vehicle-detail/SortableView360Images";
 import { CarMaker } from "../../types/db/car_makers";
 import Select from "../ui/Select";
@@ -17,10 +17,11 @@ interface VehicleEditComponentProps {
   isLoading: boolean;
   isSaving: boolean;
   error: VehicleRegisterError | null;
-  imagePreview: string | null;
+  imagePreviews: string[]; // imagePreview → imagePreviews に変更
+  onImagesChange: (e: React.ChangeEvent<HTMLInputElement>) => void; // onImageChange → onImagesChange に変更
+  onRemoveImage: (index: number) => void;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   onCheckboxChange: (name: string, checked: boolean) => void;
-  onImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
   isDeleting: boolean;
@@ -38,10 +39,11 @@ const VehicleEditComponent: React.FC<VehicleEditComponentProps> = ({
   isLoading,
   isSaving,
   error,
-  imagePreview,
+  imagePreviews, // imagePreview → imagePreviews に変更
+  onImagesChange, // onImageChange → onImagesChange に変更
+  onRemoveImage,
   onInputChange,
   onCheckboxChange,
-  onImageChange,
   onSubmit,
   onCancel,
   isDeleting,
@@ -89,36 +91,62 @@ const VehicleEditComponent: React.FC<VehicleEditComponentProps> = ({
               <form onSubmit={onSubmit} className="p-6 space-y-6">
                 {/* 画像アップロード部分 */}
                 <div className="space-y-4">
-                  <label className="block text-sm font-medium text-slate-700">車両画像</label>
-                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-300 border-dashed rounded-md">
-                    <div className="space-y-1 text-center">
-                      {imagePreview ? (
-                        <div className="relative">
-                          <img src={imagePreview} alt="Preview" className="mx-auto h-64 w-auto rounded-lg" />
-                          <label
-                            htmlFor="image-upload"
-                            className="absolute bottom-2 right-2 bg-white rounded-full p-2 shadow-lg cursor-pointer hover:bg-gray-100"
+                  <label className="block text-sm font-medium text-slate-700">車両画像（最大5枚）</label>
+
+                  {/* 既存画像の表示 */}
+                  {imagePreviews.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                      {imagePreviews.map((preview, index) => (
+                        <div key={index} className="relative">
+                          <img src={preview} alt={`車両画像 ${index + 1}`} className="w-full h-32 object-cover rounded-lg border border-gray-300" />
+                          <button
+                            type="button"
+                            onClick={() => onRemoveImage(index)}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
                           >
-                            <Upload className="h-5 w-5 text-gray-600" />
-                            <input id="image-upload" type="file" accept="image/*" className="hidden" onChange={onImageChange} />
-                          </label>
+                            ×
+                          </button>
                         </div>
-                      ) : (
+                      ))}
+                    </div>
+                  )}
+
+                  {/* 画像アップロードエリア */}
+                  {imagePreviews.length < 5 && (
+                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-300 border-dashed rounded-md">
+                      <div className="space-y-1 text-center">
                         <div className="flex flex-col items-center">
                           <Image className="mx-auto h-12 w-12 text-gray-400" />
                           <div className="flex text-sm text-gray-600">
                             <label htmlFor="image-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-teal-500 hover:text-teal-600">
-                              <span>画像をアップロード</span>
-                              <input id="image-upload" type="file" accept="image/*" className="hidden" onChange={onImageChange} />
+                              <span>画像を追加（あと{5 - imagePreviews.length}枚）</span>
+                              <input id="image-upload" type="file" accept="image/*" multiple className="hidden" onChange={onImagesChange} />
                             </label>
                           </div>
                           <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
                         </div>
-                      )}
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  )}
 
+                  {/* 画像がない場合の初期表示 */}
+                  {imagePreviews.length === 0 && (
+                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-300 border-dashed rounded-md">
+                      <div className="space-y-1 text-center">
+                        <div className="flex flex-col items-center">
+                          <Image className="mx-auto h-12 w-12 text-gray-400" />
+                          <div className="flex text-sm text-gray-600">
+                            <label htmlFor="image-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-teal-500 hover:text-teal-600">
+                              <span>画像をアップロード（最大5枚）</span>
+                              <input id="image-upload" type="file" accept="image/*" multiple className="hidden" onChange={onImagesChange} />
+                            </label>
+                          </div>
+                          <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 {/* 360度ビュー用の画像アップロードセクション */}
                 <div className="space-y-4">
                   <div className="flex items-center">
@@ -162,7 +190,6 @@ const VehicleEditComponent: React.FC<VehicleEditComponentProps> = ({
                     </div>
                   </div>
                 </div>
-
                 {/* 基本情報 */}
                 <div className="border-b border-slate-200 pb-4">
                   <h2 className="text-lg font-medium text-slate-700 mb-4">基本情報</h2>
@@ -247,7 +274,6 @@ const VehicleEditComponent: React.FC<VehicleEditComponentProps> = ({
                     </Select>
                   </div>
                 </div>
-
                 {/* 登録・車検情報 */}
                 <div className="border-b border-slate-200 pb-4">
                   <h2 className="text-lg font-medium text-slate-700 mb-4">登録・車検情報</h2>
@@ -310,7 +336,6 @@ const VehicleEditComponent: React.FC<VehicleEditComponentProps> = ({
                     />
                   </div>
                 </div>
-
                 {/* 仕様・コンディション */}
                 <div className="border-b border-slate-200 pb-4">
                   <h2 className="text-lg font-medium text-slate-700 mb-4">仕様・コンディション</h2>
@@ -350,7 +375,6 @@ const VehicleEditComponent: React.FC<VehicleEditComponentProps> = ({
                     </div>
                   </div>
                 </div>
-
                 {/* 販売情報 */}
                 <div className="border-b border-slate-200 pb-4">
                   <h2 className="text-lg font-medium text-slate-700 mb-4">販売情報</h2>
@@ -383,7 +407,6 @@ const VehicleEditComponent: React.FC<VehicleEditComponentProps> = ({
                     </Select>
                   </div>
                 </div>
-
                 <div className="flex justify-between space-x-3">
                   {/* 左側に削除ボタンを配置 */}
                   <Button type="button" variant="primary" onClick={onDelete} disabled={isSaving || isDeleting} isLoading={isDeleting}>

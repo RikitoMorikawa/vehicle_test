@@ -45,7 +45,7 @@ const VehicleDetailContainer: React.FC = () => {
   console.log("🔍 FRONTEND DEBUG: user?.id:", user?.id);
   console.log("🔍 FRONTEND DEBUG: vehicle id:", id);
   console.log("🔍 FRONTEND DEBUG: orderStatusLoading:", orderStatusLoading);
-  
+
   // 管理者用：この車両の全注文データを取得
   const { data: allOrders } = orderService.useAllOrders();
   const vehicleOrders = allOrders?.filter((order) => order.vehicle_id === id) || [];
@@ -71,12 +71,17 @@ const VehicleDetailContainer: React.FC = () => {
   const favoriteEntry = favorites.find((fav) => fav.id === id);
   const isFavorite = !!favoriteEntry;
 
-  // 画像URLs生成
-  const mainImageUrl = vehicle ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/vehicle-images/${vehicle.image_path}` : "";
+  // 複数画像URLs生成（修正版）
+  const mainImageUrl =
+    vehicle && vehicle.images && vehicle.images.length > 0
+      ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/vehicle-images/${vehicle.images[0]}`
+      : "";
+
   const otherImagesUrls =
-    vehicle && vehicle.other_images_path
-      ? vehicle.other_images_path.map((path) => `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/vehicle-images/${path}`)
+    vehicle && Array.isArray(vehicle.images) && vehicle.images.length > 1
+      ? (vehicle.images as string[]).slice(1).map((path: string) => `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/vehicle-images/${path}`)
       : [];
+
   const view360Images = vehicle?.view360_images || [];
 
   // お気に入り切り替え処理

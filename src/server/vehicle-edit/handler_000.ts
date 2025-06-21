@@ -33,7 +33,7 @@ export const vehicleEditHandler = {
         drive_system: data.drive_system,
         inspection_date: data.inspection_date,
         vehicle_id: data.vehicle_id,
-        image_path: data.image_path,
+        images: data.images,
         view360_images: data.view360_images,
 
         // 新しく追加したフィールド
@@ -64,21 +64,26 @@ export const vehicleEditHandler = {
     return updatedVehicle;
   },
 
+  // src/server/vehicle-edit/handler_000.ts の deleteVehicle メソッドの修正
   async deleteVehicle(id: string): Promise<void> {
-    // 車両データを取得
-    const { data: vehicle, error: fetchError } = await supabase.from("vehicles").select("image_path, view360_images").eq("id", id).single();
+    // 車両データを取得（複数画像対応）
+    const { data: vehicle, error: fetchError } = await supabase
+      .from("vehicles")
+      .select("images, view360_images") // image_path → images に変更
+      .eq("id", id)
+      .single();
 
     if (fetchError) {
       console.error("Fetch vehicle error:", fetchError);
       throw new Error(fetchError.message || "車両情報の取得に失敗しました");
     }
 
-    // メイン画像の削除
-    if (vehicle.image_path) {
-      const { error: storageError } = await supabase.storage.from("vehicle-images").remove([vehicle.image_path]);
+    // 複数メイン画像の削除
+    if (vehicle.images && vehicle.images.length > 0) {
+      const { error: storageError } = await supabase.storage.from("vehicle-images").remove(vehicle.images);
 
       if (storageError) {
-        console.error("Main image delete error:", storageError);
+        console.error("Main images delete error:", storageError);
       }
     }
 

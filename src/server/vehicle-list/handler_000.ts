@@ -44,23 +44,28 @@ export const vehicleHandler = {
         break;
     }
 
-      const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
     query = query.range(start, start + ITEMS_PER_PAGE - 1);
 
     const { data, error: queryError, count } = await query;
 
     if (queryError) throw queryError;
 
+    // 複数画像対応の修正
     const vehiclesWithImageUrls =
       data?.map((vehicle) => ({
         ...vehicle,
-        imageUrl: `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/vehicle-images/${vehicle.image_path}`,
+        // 複数画像の場合は最初の画像をメイン画像として使用
+        imageUrl:
+          vehicle.images && vehicle.images.length > 0
+            ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/vehicle-images/${vehicle.images[0]}`
+            : null,
       })) || [];
 
     return {
       vehicles: vehiclesWithImageUrls,
       totalPages: Math.ceil((count || 0) / ITEMS_PER_PAGE),
-      totalCount: count || 0 // 全データ件数を追加
+      totalCount: count || 0,
     };
   },
 };

@@ -27,7 +27,7 @@ export const vehicleRegisterHandler = {
           drive_system: data.drive_system,
           inspection_date: data.inspection_date,
           vehicle_id: data.vehicle_id,
-          image_path: data.image_path,
+          images: data.images || [],
           view360_images: data.view360_images || [], // 追加
 
           // 新しく追加したフィールド

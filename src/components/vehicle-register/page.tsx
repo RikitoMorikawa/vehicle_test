@@ -7,7 +7,7 @@ import Input from "../ui/Input";
 import Button from "../ui/Button";
 import Select from "../ui/Select";
 import Checkbox from "../ui/Checkbox";
-import { Image, Info, RotateCw, Upload, X } from "lucide-react";
+import { Image, Info, RotateCw, X } from "lucide-react";
 import { VehicleFormData, VehicleRegisterError } from "../../types/vehicle-register/page";
 import { CarMaker } from "../../types/db/car_makers";
 
@@ -15,27 +15,29 @@ export interface RegisterVehicleComponentProps {
   formData: VehicleFormData;
   isLoading: boolean;
   error: VehicleRegisterError | null;
-  imagePreview: string | null;
+  imagePreviews: string[]; // 既存のimagePreviewをimagePreviewsに変更
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
-  onCheckboxChange: (name: string, checked: boolean) => void; // 追加
-  onImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onCheckboxChange: (name: string, checked: boolean) => void;
+  onImagesChange: (e: React.ChangeEvent<HTMLInputElement>) => void; // 既存のonImageChangeをonImagesChangeに変更
+  onRemoveImage: (index: number) => void; // 画像削除関数を追加
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
   view360ImagePreviews: string[];
   onView360ImagesChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onRemoveView360Image: (index: number) => void;
-  carMakers: CarMaker[]; // 追加
-  generateYearOptions: () => number[]; // 追加
+  carMakers: CarMaker[];
+  generateYearOptions: () => number[];
 }
 
 const VehicleRegisterComponent: React.FC<RegisterVehicleComponentProps> = ({
   formData,
   isLoading,
   error,
-  imagePreview,
+  imagePreviews,
   onInputChange,
   onCheckboxChange,
-  onImageChange,
+  onImagesChange,
+  onRemoveImage,
   onSubmit,
   onCancel,
   view360ImagePreviews,
@@ -63,44 +65,83 @@ const VehicleRegisterComponent: React.FC<RegisterVehicleComponentProps> = ({
               )}
 
               <form onSubmit={onSubmit} className="p-6 space-y-6">
-                {/* 画像アップロード部分 */}
+                {/* 複数画像アップロード部分 */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <label className="block text-sm font-medium text-slate-700">車両画像</label>
-                    {error?.image && <p className="text-sm text-red-600">{error.image}</p>}
+                    {error?.images && <p className="text-sm text-red-600">{error.images}</p>}
                   </div>
-                  <div
-                    className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 ${
-                      error?.image ? "border-red-300" : "border-slate-300"
-                    } border-dashed rounded-md`}
-                  >
-                    <div className="space-y-1 text-center">
-                      {imagePreview ? (
-                        <div className="relative">
-                          <img src={imagePreview} alt="Preview" className="mx-auto h-64 w-auto rounded-lg" />
-                          <label
-                            htmlFor="image-upload"
-                            className="absolute bottom-2 right-2 bg-white rounded-full p-2 shadow-lg cursor-pointer hover:bg-gray-100"
-                          >
-                            <Upload className="h-5 w-5 text-gray-600" />
-                            <input id="image-upload" type="file" accept="image/*" className="hidden" onChange={onImageChange} />
-                          </label>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center">
-                          <Image className={`mx-auto h-12 w-12 ${error?.image ? "text-red-400" : "text-gray-400"}`} />
-                          <div className="flex text-sm text-gray-600">
-                            <label htmlFor="image-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-red-600 hover:text-red-700">
-                              <span>画像をアップロード</span>
-                              <input id="image-upload" type="file" accept="image/*" className="hidden" onChange={onImageChange} />
-                            </label>
+
+                  {/* 複数画像がある場合のプレビュー表示 */}
+                  {imagePreviews.length > 0 ? (
+                    <div className="space-y-4">
+                      {/* 画像グリッド表示 */}
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {imagePreviews.map((preview, index) => (
+                          <div key={index} className="relative">
+                            <img src={preview} alt={`車両画像 ${index + 1}`} className="w-full h-32 object-cover rounded-lg border border-gray-300" />
+                            <button
+                              type="button"
+                              onClick={() => onRemoveImage(index)}
+                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                            >
+                              ×
+                            </button>
                           </div>
-                          <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
-                          {error?.image && <p className="text-xs text-red-500 mt-1">サムネイル画像は必須です</p>}
+                        ))}
+                      </div>
+
+                      {/* 追加アップロードエリア（5枚未満の場合） */}
+                      {imagePreviews.length < 5 && (
+                        <div
+                          className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 ${
+                            error?.images ? "border-red-300" : "border-slate-300"
+                          } border-dashed rounded-md`}
+                        >
+                          <div className="space-y-1 text-center">
+                            <div className="flex flex-col items-center">
+                              <Image className={`mx-auto h-12 w-12 ${error?.images ? "text-red-400" : "text-gray-400"}`} />
+                              <div className="flex text-sm text-gray-600">
+                                <label
+                                  htmlFor="image-upload"
+                                  className="relative cursor-pointer bg-white rounded-md font-medium text-red-600 hover:text-red-700"
+                                >
+                                  <span>画像を追加</span>
+                                  <input id="image-upload" type="file" accept="image/*" multiple className="hidden" onChange={onImagesChange} />
+                                </label>
+                              </div>
+                              <p className="text-xs text-gray-500">
+                                PNG, JPG, GIF up to 10MB
+                                <br />
+                                あと{5 - imagePreviews.length}枚追加可能
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>
-                  </div>
+                  ) : (
+                    /* 画像がない場合の初期アップロードエリア */
+                    <div
+                      className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 ${
+                        error?.images ? "border-red-300" : "border-slate-300"
+                      } border-dashed rounded-md`}
+                    >
+                      <div className="space-y-1 text-center">
+                        <div className="flex flex-col items-center">
+                          <Image className={`mx-auto h-12 w-12 ${error?.images ? "text-red-400" : "text-gray-400"}`} />
+                          <div className="flex text-sm text-gray-600">
+                            <label htmlFor="image-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-red-600 hover:text-red-700">
+                              <span>画像をアップロード（最大5枚）</span>
+                              <input id="image-upload" type="file" accept="image/*" multiple className="hidden" onChange={onImagesChange} />
+                            </label>
+                          </div>
+                          <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                          {error?.images && <p className="text-xs text-red-500 mt-1">車両画像は必須です</p>}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* 360度ビュー用の画像アップロードセクション */}

@@ -12,11 +12,14 @@ const VehicleEditContainer: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [error, setError] = useState<VehicleRegisterError | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const { data: vehicle, isLoading } = vehicleEditService.useVehicle(id!);
   const updateVehicle = vehicleEditService.useUpdateVehicle();
   const [view360ImagePreviews, setView360ImagePreviews] = useState<string[]>([]);
   const [view360Files, setView360Files] = useState<File[]>([]);
+  const [originalImages, setOriginalImages] = useState<string[]>([]); // 元々存在していた画像パス
+  const [deletedImages, setDeletedImages] = useState<string[]>([]); // 削除対象の既存画像パス
   // 削除用のミューテーションを追加
   const deleteVehicle = vehicleEditService.useDeleteVehicle();
   // 車両メーカーの取得
@@ -54,6 +57,7 @@ const VehicleEditContainer: React.FC = () => {
     recycling_deposit: "",
     registration_date: "",
     tax_rate: "",
+    images: [],
   });
 
   useEffect(() => {
@@ -71,8 +75,7 @@ const VehicleEditContainer: React.FC = () => {
         drive_system: vehicle.drive_system || "",
         inspection_date: vehicle.inspection_date || "",
         vehicle_id: vehicle.vehicle_id || "",
-        image_path: vehicle.image_path,
-        // 新しいフィールドの値を設定
+        images: Array.isArray(vehicle.images) ? vehicle.images : [],
         vehicle_status: vehicle.vehicle_status || "",
         full_model_code: vehicle.full_model_code || "",
         grade: vehicle.grade || "",
@@ -83,15 +86,18 @@ const VehicleEditContainer: React.FC = () => {
         door_count: vehicle.door_count?.toString() || "",
         desired_number: vehicle.desired_number || "",
         sales_format: vehicle.sales_format || "",
-        // ブール値を文字列に変換して設定
         accident_history: vehicle.accident_history ? "true" : "false",
         recycling_deposit: vehicle.recycling_deposit ? "true" : "false",
         registration_date: vehicle.registration_date || "",
         tax_rate: vehicle.tax_rate?.toString() || "",
       });
 
-      if (vehicle.image_path) {
-        setImagePreview(`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/vehicle-images/${vehicle.image_path}`);
+      // 複数画像プレビューの設定
+      if (Array.isArray(vehicle.images) && vehicle.images.length > 0) {
+        const previews = vehicle.images.map((path: string) => `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/vehicle-images/${path}`);
+        setImagePreviews(previews);
+        setOriginalImages(vehicle.images); // 元の画像パスを保存
+        setDeletedImages([]); // 削除リストをリセット
       }
 
       // 360度ビュー画像のプレビューを設定
@@ -231,16 +237,67 @@ const VehicleEditContainer: React.FC = () => {
     return `${Date.now()}_${sanitized}`;
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+  const handleImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+
+    // 現在の画像数（既存 - 削除予定 + 新規追加予定）
+    const currentImageCount = originalImages.length - deletedImages.length + imageFiles.length;
+    const remainingSlots = 5 - currentImageCount;
+    const filesToAdd = files.slice(0, remainingSlots);
+
+    if (files.length > remainingSlots) {
+      setError((prev) => ({
+        ...prev,
+        images: `最大5枚まで選択できます。${files.length - remainingSlots}枚超過しています。`,
+      }));
+    }
+
+    // プレビュー作成
+    const newPreviews: string[] = [];
+    filesToAdd.forEach((file) => {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          newPreviews.push(e.target.result as string);
+          if (newPreviews.length === filesToAdd.length) {
+            setImagePreviews((prev) => [...prev, ...newPreviews]);
+          }
+        }
       };
       reader.readAsDataURL(file);
+    });
 
-      setFormData((prev) => ({ ...prev, image: file }));
+    setImageFiles((prev) => [...prev, ...filesToAdd]);
+
+    // エラークリア
+    if (error?.images) {
+      setError((prev) => (prev ? { ...prev, images: undefined } : null));
+    }
+  };
+
+  // 画像を削除する処理
+  const handleRemoveImage = (index: number) => {
+    const removedPreviewUrl = imagePreviews[index];
+
+    // プレビューから削除
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+
+    // 既存画像かどうか判定
+    const originalImageIndex = originalImages.findIndex((imagePath) => {
+      const imageUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/vehicle-images/${imagePath}`;
+      return imageUrl === removedPreviewUrl;
+    });
+
+    if (originalImageIndex !== -1) {
+      // 既存画像の場合は削除リストに追加
+      const deletedImagePath = originalImages[originalImageIndex];
+      setDeletedImages((prev) => [...prev, deletedImagePath]);
+    } else {
+      // 新規追加画像の場合はファイルリストから削除
+      const newImageIndex = index - (originalImages.length - deletedImages.length);
+      if (newImageIndex >= 0) {
+        setImageFiles((prev) => prev.filter((_, i) => i !== newImageIndex));
+      }
     }
   };
 
@@ -256,35 +313,47 @@ const VehicleEditContainer: React.FC = () => {
     }
 
     try {
-      let image_path = formData.image_path;
       let view360_images: string[] = [];
 
-      // メイン画像のアップロード処理
-      if (formData.image) {
-        const sanitizedFileName = sanitizeFileName(formData.image.name);
-        const { error: uploadError } = await supabase.storage.from("vehicle-images").upload(sanitizedFileName, formData.image);
+      // メイン画像の処理（修正版）
+      // 1. 既存画像から削除対象を除外
+      const remainingOriginalImages = originalImages.filter((imagePath) => !deletedImages.includes(imagePath));
 
-        if (uploadError) throw uploadError;
-        image_path = sanitizedFileName;
+      // 2. 新規画像をアップロード
+      const newUploadedImages: string[] = [];
+      if (imageFiles.length > 0) {
+        for (const file of imageFiles) {
+          const sanitizedFileName = sanitizeFileName(file.name);
+          const { error: uploadError } = await supabase.storage.from("vehicle-images").upload(sanitizedFileName, file);
+
+          if (uploadError) throw uploadError;
+          newUploadedImages.push(sanitizedFileName);
+        }
       }
 
-      // 360度画像の処理
+      // 3. 既存画像 + 新規画像を結合
+      const finalImages = [...remainingOriginalImages, ...newUploadedImages];
+
+      // 4. 削除対象の既存画像をStorageから削除
+      if (deletedImages.length > 0) {
+        const { error: deleteError } = await supabase.storage.from("vehicle-images").remove(deletedImages);
+
+        if (deleteError) {
+          console.warn("一部の画像削除に失敗しました:", deleteError);
+        }
+      }
+
+      // 360度画像の処理（既存のロジックのまま）
       const hasNewImages = view360Files.length > 0;
 
-      // 1. まず既存の画像をview360_imagesに追加
       if (originalView360Paths.length > 0) {
         view360_images = [...originalView360Paths];
       }
 
-      // 2. 新しい画像をアップロード
       if (hasNewImages) {
-        const baseIndex = view360_images.length; // 既存の画像数からインデックスを開始
-        const paddedLength = Math.max(
-          (baseIndex + view360Files.length).toString().length,
-          2 // 最低2桁で統一
-        );
+        const baseIndex = view360_images.length;
+        const paddedLength = Math.max((baseIndex + view360Files.length).toString().length, 2);
 
-        // 新しいファイルを順番に処理
         for (let i = 0; i < view360Files.length; i++) {
           const file = view360Files[i];
           const fileExt = file.name.split(".").pop() || "jpg";
@@ -314,9 +383,8 @@ const VehicleEditContainer: React.FC = () => {
         id,
         formData: {
           ...formData,
-          image_path,
+          images: finalImages, // 最終的な画像リスト
           view360_images,
-          // チェックボックスの値をブール値に変換
           accident_history: formData.accident_history,
           recycling_deposit: formData.recycling_deposit,
         },
@@ -357,10 +425,11 @@ const VehicleEditContainer: React.FC = () => {
       isLoading={isLoading || isLoadingMakers}
       isSaving={updateVehicle.isPending}
       error={error}
-      imagePreview={imagePreview}
+      imagePreviews={imagePreviews} // 配列型に修正
+      onImagesChange={handleImagesChange} // 関数名も変更
+      onRemoveImage={handleRemoveImage} // 新規追加
       onInputChange={handleInputChange}
       onCheckboxChange={handleCheckboxChange}
-      onImageChange={handleImageChange}
       onSubmit={handleSubmit}
       onCancel={() => navigate("/vehicles")}
       isDeleting={deleteVehicle.isPending}

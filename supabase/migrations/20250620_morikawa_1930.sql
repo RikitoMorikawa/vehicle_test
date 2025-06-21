@@ -111,3 +111,19 @@ SELECT
 FROM information_schema.columns 
 WHERE table_name = 'orders' 
 ORDER BY ordinal_position;
+
+
+-- -- 複数画像を格納するためのカラムを追加
+-- ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS images TEXT[] DEFAULT ARRAY[]::TEXT[];
+
+-- -- 既存データの移行：image_pathからimages配列へ
+-- UPDATE vehicles 
+-- SET images = ARRAY[image_path] 
+-- WHERE image_path IS NOT NULL AND image_path != '' AND (images IS NULL OR array_length(images, 1) IS NULL);
+
+
+-- 既存のimage_pathカラムを削除（データ移行後）
+ALTER TABLE vehicles DROP COLUMN IF EXISTS image_path;
+
+-- インデックス追加（パフォーマンス向上のため）
+CREATE INDEX IF NOT EXISTS idx_vehicles_images ON vehicles USING GIN(images);
