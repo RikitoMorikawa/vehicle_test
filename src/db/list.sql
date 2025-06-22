@@ -235,13 +235,22 @@ create table public.loan_calculations (
   updated_at timestamp with time zone null default now(),
   estimate_id uuid null,
   vehicle_id uuid null,
+  annual_rate numeric(5, 2) not null default 0.00,
   constraint loan_calculations_pkey primary key (id),
   constraint loan_calculations_estimate_id_fkey foreign KEY (estimate_id) references estimate_vehicles (id) on delete CASCADE,
+  constraint loan_calculations_annual_rate_check check (
+    (
+      (annual_rate >= 0.00)
+      and (annual_rate <= 50.00)
+    )
+  ),
   constraint loan_calculations_payment_count_check check ((payment_count > 0)),
   constraint loan_calculations_payment_period_check check ((payment_period > 0))
 ) TABLESPACE pg_default;
 
 create index IF not exists idx_loan_calculations_payment_period on public.loan_calculations using btree (payment_period) TABLESPACE pg_default;
+
+create index IF not exists idx_loan_calculations_annual_rate on public.loan_calculations using btree (annual_rate) TABLESPACE pg_default;
 
 create trigger update_loan_calculations_updated_at BEFORE
 update on loan_calculations for EACH row
