@@ -1,0 +1,1 @@
+https://cdn.jsdelivr.net/gh/RikitoMorikawa/vehicle_test@5f689180141c20de4731158af9b34bf771e764fa/src/types/db/legal_fees.ts
