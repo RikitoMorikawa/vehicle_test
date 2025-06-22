@@ -1,8 +1,8 @@
 import React, { useRef } from "react";
 import { X, Download } from "lucide-react";
 import EstimatePDFTemplate from "./EstimatePDFTemplate";
-import { downloadElementAsPDF } from "../../utils/simplePdfDownload";
 import type { EstimatePDFData } from "../../types/common/pdf/page";
+import { downloadElementAsPDF } from "../../utils/src/utils/simplePdfDownload";
 
 interface PDFPreviewModalProps {
   isOpen: boolean;
