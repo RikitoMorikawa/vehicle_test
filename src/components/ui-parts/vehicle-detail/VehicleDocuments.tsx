@@ -1,12 +1,11 @@
 // src/components/ui-parts/vehicle-detail/VehicleDocuments.tsx
 import React, { useState, useEffect } from "react";
 import Button from "../../ui/Button";
-import { FileText, Calendar, Car, Building, Eye } from "lucide-react";
-import PDFPreviewModal from "../../common/PDFPreviewModal";
+import { FileText, Calendar, Car, Building, Download } from "lucide-react";
 import { reportsService } from "../../../services/reports/page";
 import { pdfService } from "../../../services/common/pdf/page";
+import { generateAndDownloadPDF } from "../../../utils/pdfDownload";
 import type { EstimateReport } from "../../../types/report/page";
-import type { EstimatePDFData } from "../../../types/common/pdf/page";
 
 interface VehicleDocumentsProps {
   vehicleId: string;
@@ -18,14 +17,11 @@ const VehicleDocuments: React.FC<VehicleDocumentsProps> = ({ vehicleId, userId }
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // タブ状態管理を追加
+  // タブ状態管理
   const [activeTab, setActiveTab] = useState<"estimate" | "invoice" | "order">("estimate");
 
-  // PDFプレビュー用の状態
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [previewLoading, setPreviewLoading] = useState(false);
-  const [previewData, setPreviewData] = useState<EstimatePDFData | null>(null);
-  const [previewEstimateId, setPreviewEstimateId] = useState<string | null>(null);
+  // ダウンロード状態管理
+  const [downloadingIds, setDownloadingIds] = useState<Set<string>>(new Set());
 
   // 見積書一覧を取得（この車両かつログインユーザーが作成したもののみ）
   useEffect(() => {
@@ -81,37 +77,32 @@ const VehicleDocuments: React.FC<VehicleDocumentsProps> = ({ vehicleId, userId }
 
   const { estimateCount, invoiceCount, orderCount } = getCounts();
 
-  // PDFプレビューハンドラー
-  const handlePreviewPDF = async (estimateId: string) => {
+  // PDFダウンロードハンドラー
+  const handleDownloadPDF = async (estimateId: string) => {
     try {
-      setError(null);
-      setPreviewLoading(true);
-      setPreviewEstimateId(estimateId);
-      setIsPreviewOpen(true);
-      setPreviewData(null);
+      // ダウンロード開始状態に設定
+      setDownloadingIds((prev) => new Set(prev).add(estimateId));
 
-      // 見積書データを取得
-      const estimateData = await pdfService.previewEstimatePDF(estimateId);
-      setPreviewData(estimateData);
-    } catch (err) {
-      console.error("Failed to generate PDF preview:", err);
-      setError("PDFプレビューの生成に失敗しました");
-      setIsPreviewOpen(false);
+      // PDFデータを取得
+      const pdfData = await pdfService.previewEstimatePDF(estimateId);
+
+      if (!pdfData) {
+        throw new Error("PDFデータの取得に失敗しました");
+      }
+
+      // PDFを生成してダウンロード
+      await generateAndDownloadPDF(pdfData);
+    } catch (error) {
+      console.error("PDFダウンロードエラー:", error);
+      setError(error instanceof Error ? error.message : "PDFのダウンロードに失敗しました。もう一度お試しください。");
     } finally {
-      setPreviewLoading(false);
+      // ダウンロード完了状態に設定
+      setDownloadingIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(estimateId);
+        return newSet;
+      });
     }
-  };
-
-  // プレビューモーダルを閉じる
-  const handleClosePreview = () => {
-    setIsPreviewOpen(false);
-    setPreviewEstimateId(null);
-    setPreviewData(null);
-  };
-
-  // ダウンロードハンドラー
-  const handleDownloadPDF = (estimateId: string) => {
-    console.log("Download requested for estimate:", estimateId);
   };
 
   // 日付フォーマット
@@ -138,7 +129,6 @@ const VehicleDocuments: React.FC<VehicleDocumentsProps> = ({ vehicleId, userId }
 
   return (
     <div className="max-w-4xl mx-auto">
-
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
           <p className="text-red-600">{error}</p>
@@ -205,77 +195,74 @@ const VehicleDocuments: React.FC<VehicleDocumentsProps> = ({ vehicleId, userId }
               </div>
             ) : (
               <div className="divide-y divide-gray-200">
-                {filteredEstimates.map((estimate) => (
-                  <div key={estimate.id} className="p-6 hover:bg-gray-50">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center mb-2">
-                          <FileText className="w-4 h-4 text-gray-400 mr-2" />
-                          <span className="text-sm font-medium text-gray-900">資料番号: {estimate.estimateNumber}</span>
-                        </div>
+                {filteredEstimates.map((estimate) => {
+                  const isDownloading = downloadingIds.has(estimate.id);
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                          <div className="flex items-center">
-                            <Car className="w-4 h-4 text-gray-400 mr-2" />
-                            <span>
-                              {estimate.vehicleInfo.maker} {estimate.vehicleInfo.name} ({estimate.vehicleInfo.year}年)
-                            </span>
+                  return (
+                    <div key={estimate.id} className="p-6 hover:bg-gray-50">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center mb-2">
+                            <FileText className="w-4 h-4 text-gray-400 mr-2" />
+                            <span className="text-sm font-medium text-gray-900">資料番号: {estimate.estimateNumber}</span>
                           </div>
 
-                          {estimate.companyName && (
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
                             <div className="flex items-center">
-                              <Building className="w-4 h-4 text-gray-400 mr-2" />
-                              <span>{estimate.companyName}</span>
+                              <Car className="w-4 h-4 text-gray-400 mr-2" />
+                              <span>
+                                {estimate.vehicleInfo.maker} {estimate.vehicleInfo.name} ({estimate.vehicleInfo.year}年)
+                              </span>
                             </div>
-                          )}
 
-                          <div className="flex items-center">
-                            <Calendar className="w-4 h-4 text-gray-400 mr-2" />
-                            <span>{formatDate(estimate.createdAt)}</span>
+                            {estimate.companyName && (
+                              <div className="flex items-center">
+                                <Building className="w-4 h-4 text-gray-400 mr-2" />
+                                <span>{estimate.companyName}</span>
+                              </div>
+                            )}
+
+                            <div className="flex items-center">
+                              <Calendar className="w-4 h-4 text-gray-400 mr-2" />
+                              <span>{formatDate(estimate.createdAt)}</span>
+                            </div>
+                          </div>
+
+                          <div className="mt-2">
+                            <span className="text-lg font-semibold text-red-600">¥{estimate.totalAmount.toLocaleString()}</span>
                           </div>
                         </div>
 
-                        <div className="mt-2">
-                          <span className="text-lg font-semibold text-red-600">¥{estimate.totalAmount.toLocaleString()}</span>
+                        <div className="ml-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDownloadPDF(estimate.id)}
+                            disabled={isDownloading}
+                            className="flex items-center text-blue-600 border-blue-300 hover:bg-blue-50"
+                          >
+                            {isDownloading ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-1"></div>
+                                生成中...
+                              </>
+                            ) : (
+                              <>
+                                <Download className="w-4 h-4 mr-1" />
+                                ダウンロード
+                              </>
+                            )}
+                          </Button>
                         </div>
-                      </div>
-
-                      <div className="ml-4">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handlePreviewPDF(estimate.id)}
-                          className="flex items-center text-blue-600 border-blue-300 hover:bg-blue-50"
-                        >
-                          <Eye className="w-4 h-4 mr-1" />
-                          プレビュー
-                        </Button>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
         )}
       </div>
-
-      {/* PDFプレビューモーダル */}
-      {isPreviewOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 pb-8">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[85vh] flex flex-col mb-4">
-            <PDFPreviewModal
-              isOpen={isPreviewOpen}
-              onClose={handleClosePreview}
-              pdfUrl={null}
-              estimateId={previewEstimateId}
-              loading={previewLoading}
-              onDownload={handleDownloadPDF}
-              estimateData={previewData}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 };

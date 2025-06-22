@@ -1,86 +1,43 @@
 // src/components/reports/page.tsx
-import React, { useState } from "react";
+import React from "react";
 import Header from "../Header";
 import Sidebar from "../Sidebar";
 import Footer from "../Footer";
 import Button from "../ui/Button";
-import { FileText, Calendar, Car, Building, Eye } from "lucide-react";
-import PDFPreviewModal from "../common/PDFPreviewModal";
+import { FileText, Calendar, Car, Building, Download } from "lucide-react";
 import type { EstimateReport } from "../../types/report/page";
-import type { EstimatePDFData } from "../../types/common/pdf/page";
 
 interface ReportsPageProps {
   estimates: EstimateReport[];
   loading: boolean;
   error: string | null;
-  onPreviewPDF: (estimateId: string) => void;
-  // PDFプレビューモーダル用
-  isPreviewOpen: boolean;
-  previewLoading: boolean;
-  previewUrl?: string | null;
-  previewData?: EstimatePDFData | null;
-  previewEstimateId: string | null;
-  onClosePreview: () => void;
-  onDownloadPDF?: (estimateId: string) => void;
+  activeTab: "estimate" | "invoice" | "order";
+  onTabChange: (tab: "estimate" | "invoice" | "order") => void;
+  filteredEstimates: EstimateReport[];
+  downloadingIds: Set<string>;
+  formatDate: (dateString: string) => string;
+  getTabLabel: (tabType: "estimate" | "invoice" | "order") => string;
+  estimateCount: number;
+  invoiceCount: number;
+  orderCount: number;
+  onDownloadPDF: (estimateId: string) => Promise<void>;
 }
 
 const ReportsPage: React.FC<ReportsPageProps> = ({
   estimates,
   loading,
   error,
-  onPreviewPDF,
-  isPreviewOpen,
-  previewLoading,
-  previewUrl = null,
-  previewData,
-  previewEstimateId,
-  onClosePreview,
+  activeTab,
+  onTabChange,
+  filteredEstimates,
+  downloadingIds,
+  formatDate,
+  getTabLabel,
+  estimateCount,
+  invoiceCount,
+  orderCount,
   onDownloadPDF,
 }) => {
-  // タブ状態管理
-  const [activeTab, setActiveTab] = useState<"estimate" | "invoice" | "order">("estimate");
-
-  // タブに応じて見積書をフィルタリング
-  const filteredEstimates = estimates.filter((estimate) => {
-    const documentType = estimate.document_type || "estimate";
-    return documentType === activeTab;
-  });
-
-  // 日付フォーマット
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("ja-JP", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
-  };
-
-  // タブのラベル取得
-  const getTabLabel = (tabType: "estimate" | "invoice" | "order") => {
-    switch (tabType) {
-      case "estimate":
-        return "見積書";
-      case "invoice":
-        return "請求書";
-      case "order":
-        return "注文書";
-      default:
-        return "見積書";
-    }
-  };
-
-  // 各タブの件数を計算
-  const getCounts = () => {
-    const estimateCount = estimates.filter((e) => (e.document_type || "estimate") === "estimate").length;
-    const invoiceCount = estimates.filter((e) => e.document_type === "invoice").length;
-    const orderCount = estimates.filter((e) => e.document_type === "order").length;
-
-    return { estimateCount, invoiceCount, orderCount };
-  };
-
-  const { estimateCount, invoiceCount, orderCount } = getCounts();
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -130,7 +87,7 @@ const ReportsPage: React.FC<ReportsPageProps> = ({
               <div className="border-b border-gray-200">
                 <nav className="flex" aria-label="Tabs">
                   <button
-                    onClick={() => setActiveTab("estimate")}
+                    onClick={() => onTabChange("estimate")}
                     className={`px-6 py-4 text-center text-sm font-medium ${
                       activeTab === "estimate" ? "border-b-2 border-red-600 text-red-600" : "text-gray-500 hover:text-gray-700 hover:border-gray-300"
                     }`}
@@ -138,7 +95,7 @@ const ReportsPage: React.FC<ReportsPageProps> = ({
                     見積書 ({estimateCount})
                   </button>
                   <button
-                    onClick={() => setActiveTab("invoice")}
+                    onClick={() => onTabChange("invoice")}
                     className={`px-6 py-4 text-center text-sm font-medium ${
                       activeTab === "invoice" ? "border-b-2 border-red-600 text-red-600" : "text-gray-500 hover:text-gray-700 hover:border-gray-300"
                     }`}
@@ -146,7 +103,7 @@ const ReportsPage: React.FC<ReportsPageProps> = ({
                     請求書 ({invoiceCount})
                   </button>
                   <button
-                    onClick={() => setActiveTab("order")}
+                    onClick={() => onTabChange("order")}
                     className={`px-6 py-4 text-center text-sm font-medium ${
                       activeTab === "order" ? "border-b-2 border-red-600 text-red-600" : "text-gray-500 hover:text-gray-700 hover:border-gray-300"
                     }`}
@@ -180,6 +137,8 @@ const ReportsPage: React.FC<ReportsPageProps> = ({
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {filteredEstimates.map((estimate) => {
+                        const isDownloading = downloadingIds.has(estimate.id);
+
                         return (
                           <tr key={estimate.id} className="hover:bg-gray-50">
                             <td className="px-6 py-4 whitespace-nowrap">
@@ -220,11 +179,21 @@ const ReportsPage: React.FC<ReportsPageProps> = ({
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => onPreviewPDF(estimate.id)}
+                                onClick={() => onDownloadPDF(estimate.id)}
+                                disabled={isDownloading}
                                 className="flex items-center text-blue-600 border-blue-300 hover:bg-blue-50"
                               >
-                                <Eye className="w-4 h-4 mr-1" />
-                                プレビュー
+                                {isDownloading ? (
+                                  <>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-1"></div>
+                                    生成中...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Download className="w-4 h-4 mr-1" />
+                                    ダウンロード
+                                  </>
+                                )}
                               </Button>
                             </td>
                           </tr>
@@ -239,23 +208,6 @@ const ReportsPage: React.FC<ReportsPageProps> = ({
         </main>
       </div>
       <Footer />
-
-      {/* PDFプレビューモーダル */}
-      {isPreviewOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 pb-8">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[85vh] flex flex-col mb-4">
-            <PDFPreviewModal
-              isOpen={isPreviewOpen}
-              onClose={onClosePreview}
-              pdfUrl={previewUrl}
-              estimateId={previewEstimateId}
-              loading={previewLoading}
-              onDownload={onDownloadPDF}
-              estimateData={previewData}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 };
