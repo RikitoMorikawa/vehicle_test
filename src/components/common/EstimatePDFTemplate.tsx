@@ -1,3 +1,4 @@
+// src / components / common / EstimatePDFTemplate.tsx;
 import React from "react";
 import type { EstimatePDFData } from "../../types/common/pdf/page";
 
@@ -17,8 +18,137 @@ const EstimatePDFTemplate: React.FC<EstimatePDFTemplateProps> = ({ data, classNa
   const documentType = data.document_type || "estimate";
   const documentLabel = documentType === "estimate" ? "見積書" : documentType === "invoice" ? "請求書" : documentType === "order" ? "注文書" : "見積書";
 
+  // 特約条項コンポーネント（注文書専用）
+  const SpecialTermsPage = () => (
+    <div
+      className="bg-white p-8 max-w-4xl mx-auto"
+      style={{
+        fontFamily: "system-ui, -apple-system, sans-serif",
+        pageBreakBefore: "always", // 新しいページで開始
+      }}
+    >
+      {/* ヘッダー */}
+      <div className="text-center mb-8">
+        <h1 className="text-2xl font-bold mb-6 border-b-2 border-black pb-2">特約条項</h1>
+      </div>
+
+      {/* 特約条項内容 */}
+      <div className="space-y-4 text-sm leading-relaxed">
+        {/* 1. 申込金の性格と充当 */}
+        <div>
+          <h3 className="font-bold mb-2">1. (申込金の性格と充当)</h3>
+          <div className="ml-4 space-y-1">
+            <p>1. 注文者は販売会社に対し注文と同時に申込金を支払うものとします。</p>
+            <p>2. 申込金は手付金ではありません。</p>
+            <p>3. 申込金は契約成立後に、売買代金の一部に充当されるものとします。</p>
+          </div>
+        </div>
+
+        {/* 2. 注文に応じられない場合 */}
+        <div>
+          <h3 className="font-bold mb-2">2. (注文に応じられない場合)</h3>
+          <p className="ml-4">
+            この注文書における販売会社(以下、販売会社)がこの注文に応じられない場合、この契約を解除されてもこの注文書における注文者(以下、注文者)は一切異議のないものとします。この場合、申込金はそのまま注文者に返還されるものとします。
+          </p>
+        </div>
+
+        {/* 3. 申込みの撤回又は契約の解除による損害賠償 */}
+        <div>
+          <h3 className="font-bold mb-2">3. (申込みの撤回又は契約の解除による損害賠償)</h3>
+          <p className="ml-4">
+            注文者の都合により申込みを撤回した場合又は契約の解除をした場合、注文者は販売会社に対し当該車輛本体価格の2割相当額を損害賠償金として請求されても異議のないものとします。この場合申込金と対等額で相殺されても異議のないものとします。又申込み後販売会社の指定のない場合において、一ヶ月以内に全額支払えない場合には、販売会社において申込みの撤回の手続きをとられても異議のないものとします。
+          </p>
+        </div>
+
+        {/* 4. 契約の成立時期 */}
+        <div>
+          <h3 className="font-bold mb-2">4. (契約の成立時期)</h3>
+          <p className="ml-4">この注文書による契約の成立は、申込金を支払った日又は注文書交付日のいずれか早い方とします。</p>
+        </div>
+
+        {/* 5. 支払について */}
+        <div>
+          <h3 className="font-bold mb-2">5. (支払について)</h3>
+          <p className="ml-4">注文者は頭金を契約成立日に、残金を販売会社の定めた支払期日に従い納車日までにその全額を販売会社に支払うものとします。</p>
+        </div>
+
+        {/* 6. 所有権移転の時期について */}
+        <div>
+          <h3 className="font-bold mb-2">6. (所有権移転の時期について)</h3>
+          <p className="ml-4">当該車輛の所有権移転手続きの時期は売買代金完済時とします。</p>
+        </div>
+
+        {/* 7. 下取車の性格・担保責任・再査定 */}
+        <div>
+          <h3 className="font-bold mb-2">7. (下取車の性格・担保責任・再査定)</h3>
+          <p className="ml-4">
+            注文者は下取自動車を売買代金の一部の支払いの為、代物弁済として販売会社に引渡します。従って下取自動車について差押、公租公課の滞納等一切の負担のないこと及び走行距離改竄等のないことを保証し、万一負担もしくはメーター改竄等がある場合は注文者の責任において処理することとします。又当該下取自動車が、販売会社に引渡すまでの間に、状態に変化が生じた場合は、再査定された価格をもって下取価格とされても異議のないものとします。
+          </p>
+        </div>
+
+        {/* 8. 下取自動車の賠償責任保険料及び自動車税 */}
+        <div>
+          <h3 className="font-bold mb-2">8. (下取自動車の賠償責任保険料及び自動車税)</h3>
+          <p className="ml-4">当該下取自動車の未経過保険料及び自動車税期日未経過分は、その相当額を下取価格に含めるものとします。</p>
+        </div>
+
+        {/* 9. 下取自動車の引渡し時期と引取り費用 */}
+        <div>
+          <h3 className="font-bold mb-2">9. (下取自動車の引渡し時期と引取り費用)</h3>
+          <p className="ml-4">
+            注文者は当該下取自動車を、注文した自動車の引渡しと引替えに販売会社に引渡すものとします。また下取自動車が自走不能の場合は、下取諸費用の他にその引取り費用を販売会社に支払う事とします。
+          </p>
+        </div>
+
+        {/* 10. 中古車の瑕疵担保責任 */}
+        <div>
+          <h3 className="font-bold mb-2">10. (中古車の瑕疵担保責任)</h3>
+          <p className="ml-4">
+            中古車の注文者は、価格ステッカー及び車輛状態説明書、もしくは整備明細書に表示の走行距離、前使用者の使用状況により生じる瑕疵について、一切異議のないものとします。保証書の交付を受けた場合はその範囲内の保証がなされるものとします。
+          </p>
+        </div>
+
+        {/* 11. 納入の遅延 */}
+        <div>
+          <h3 className="font-bold mb-2">11. (納入の遅延)</h3>
+          <p className="ml-4">
+            メーカーのストライキあるいは港湾のストライキ、注文者の依頼に基づく修理・改造・架装等による遅れ、その他販売会社の責に帰し得ない事由により当該注文自動車の納入が遅れた場合、注文者はこれを認める事とします。
+          </p>
+        </div>
+
+        {/* 12. 安全基準等による改造 */}
+        <div>
+          <h3 className="font-bold mb-2">12. (安全基準等による改造)</h3>
+          <p className="ml-4">
+            道路運送車輛法に基づく安全基準に適合する改善指導等により行われた改造の為、カタログ現車と一部異なる場合、注文者はこれを認めるものとします。
+          </p>
+        </div>
+
+        {/* 13. 管轄合意 */}
+        <div>
+          <h3 className="font-bold mb-2">13. (管轄合意)</h3>
+          <p className="ml-4">本契約により生ずる権利義務に関する訴訟について注文者は、販売会社所在の裁判所を第一審の裁判所とする事に同意するものとします。</p>
+        </div>
+
+        {/* 署名欄 */}
+        <div className="mt-12 pt-8 border-t-2 border-gray-300">
+          <p className="mb-8 font-medium">上記特約条項を読み確認、納得致しました。</p>
+          <div className="flex justify-between items-end">
+            <div>
+              <p className="mb-2 font-medium">署名：</p>
+              <div className="border-b-2 border-black w-64 h-8"></div>
+            </div>
+            <div className="text-sm text-gray-600">
+              <p>日付：{formatDate(data.estimateDate)}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className={`bg-white p-8 max-w-4xl mx-auto ${className}`} style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}>
+    <div className={`${className}`} style={{ fontFamily: "system-ui, -apple-system, sans-serif" }} data-document-type={documentType}>
       {/* ヘッダー */}
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold mb-4 border-b-4 border-black pb-2">{documentLabel}</h1>
@@ -374,6 +504,8 @@ const EstimatePDFTemplate: React.FC<EstimatePDFTemplateProps> = ({ data, classNa
           </table>
         </div>
       )}
+      {/* 2ページ目：注文書の場合のみ特約条項を表示 */}
+      {documentType === "order" && <SpecialTermsPage />}
     </div>
   );
 };
