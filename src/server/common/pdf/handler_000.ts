@@ -16,6 +16,16 @@ export const pdfHandler = {
           *,
           companies!estimate_vehicles_company_id_fkey (
             name
+          ),
+          vehicles!estimate_vehicles_vehicle_id_fkey (
+            grade,
+            full_model_code,
+            color,
+            engine_size,
+            inspection_date,
+            transmission,
+            accident_history,
+            chassis_number
           )
         `
         )
@@ -129,6 +139,9 @@ export const pdfHandler = {
         phone: estimateVehicle.customer_phone || "",
       };
 
+      // vehiclesテーブルから取得したデータを使用
+      const vehicleData = estimateVehicle.vehicles || {};
+
       // データを統合してEstimatePDFData形式に変換
       const estimateData: EstimatePDFData = {
         // 基本情報
@@ -139,7 +152,7 @@ export const pdfHandler = {
         // 販売店情報
         dealerInfo: {
           name: userData?.company_name || "販売店名未設定",
-          address: userData?.address || "住所未設定", // 住所はusersテーブルにないため、後で追加するか固定値
+          address: userData?.address || "住所未設定",
           phone: userData?.phone || "電話番号未設定",
           representative: userData?.user_name || "担当者未設定",
           email: userData?.email || "メールアドレス未設定",
@@ -148,22 +161,22 @@ export const pdfHandler = {
         // 顧客情報
         customerInfo,
 
-        // 見積車両情報
+        // 見積車両情報（vehiclesテーブルのデータを使用）
         estimateVehicle: {
           id: estimateVehicle.id,
           maker: estimateVehicle.maker,
           name: estimateVehicle.name,
-          grade: estimateVehicle.grade,
-          model: estimateVehicle.model,
+          grade: vehicleData.grade || "グレード未設定", // vehiclesテーブルから取得
+          model: vehicleData.full_model_code || "型式未設定", // vehiclesテーブルのfull_model_codeを使用
           year: estimateVehicle.year,
           mileage: estimateVehicle.mileage,
-          repairHistory: estimateVehicle.repair_history,
-          carHistory: estimateVehicle.car_history,
-          chassisNumber: estimateVehicle.chassis_number,
-          exteriorColor: estimateVehicle.exterior_color || "色未設定",
-          displacement: estimateVehicle.displacement,
-          inspectionExpiry: estimateVehicle.inspection_expiry,
-          transmission: estimateVehicle.transmission,
+          repairHistory: vehicleData.accident_history || false, // accident_historyを使用
+          carHistory: "", // 存在しないため空文字
+          chassisNumber: vehicleData.chassis_number || "",
+          exteriorColor: vehicleData.color || "色未設定", // vehiclesテーブルのcolorを使用
+          displacement: vehicleData.engine_size ? vehicleData.engine_size.toString() : "", // engine_sizeを使用
+          inspectionExpiry: vehicleData.inspection_date || "", // inspection_dateを使用
+          transmission: vehicleData.transmission || "",
           price: estimateVehicle.price,
           created_at: estimateVehicle.created_at,
         },
@@ -277,7 +290,6 @@ export const pdfHandler = {
       phone: "03-1234-5678",
       representative: "営業部 田中太郎",
       taxNumber: "T1234567890123",
-
     };
   },
 };
