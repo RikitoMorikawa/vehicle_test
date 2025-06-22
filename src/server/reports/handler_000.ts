@@ -35,6 +35,7 @@ export const reportsHandler = {
       }
 
       // データを EstimateReport 形式に変換
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const estimates: EstimateReport[] = data.map((item: any) => {
         const totalAmount = item.sales_prices?.[0]?.payment_total || 0;
         const companyName = item.users?.company_name || "";
