@@ -283,8 +283,8 @@ const EstimatePDFTemplate: React.FC<EstimatePDFTemplateProps> = ({ data, classNa
                 </tbody>
               </table>
             </div>
-            <div className="w-52 p-4 text-center bg-yellow-50">
-              <div className="text-2xl font-bold text-red-600">¥{formatNumber(data.salesPrices.payment_total)}</div>
+            <div className="w-52 p-4 text-center">
+              <div className="text-2xl font-bold">¥{formatNumber(data.salesPrices.payment_total)}</div>
               <div className="text-xs mt-1">(内消費税 ¥{formatNumber(Math.floor(data.salesPrices.consumption_tax))})</div>
             </div>
           </div>
@@ -352,7 +352,7 @@ const EstimatePDFTemplate: React.FC<EstimatePDFTemplateProps> = ({ data, classNa
                   <td className="p-2">下取車残債</td>
                   <td className="p-2 text-right">¥{formatNumber(data.salesPrices.trade_in_debt)}</td>
                 </tr>
-                <tr className="bg-yellow-100">
+                <tr className="bg-gray-100">
                   <td className="p-2 font-bold">販売価格</td>
                   <td className="p-2 text-right font-bold">¥{formatNumber(data.salesPrices.payment_total)}</td>
                 </tr>
