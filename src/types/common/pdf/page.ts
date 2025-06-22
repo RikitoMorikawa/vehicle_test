@@ -7,13 +7,14 @@ export interface EstimatePDFData {
   estimateDate: string;
   document_type?: string;
 
-  // 販売店情報
+  // 販売店情報（銀行口座情報を追加）
   dealerInfo: {
     name: string;
     address?: string;
     phone: string;
     representative: string;
     email?: string;
+    bankAccount?: BankAccount; // 追加：銀行口座情報
   };
 
   // 顧客情報
@@ -144,4 +145,13 @@ export interface PDFGenerationResult {
   error?: string;
   estimateId: string;
   generatedAt: string;
+}
+
+// 銀行口座情報の型定義
+export interface BankAccount {
+  bankName: string;      // 銀行名
+  branchName: string;    // 支店名
+  accountType: string;   // 口座種別（普通・当座等）
+  accountNumber: string; // 口座番号
+  accountHolder: string; // 口座名義
 }

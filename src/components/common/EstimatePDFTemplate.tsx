@@ -154,7 +154,7 @@ const EstimatePDFTemplate: React.FC<EstimatePDFTemplateProps> = ({ data, classNa
         <h1 className="text-3xl font-bold mb-4 border-b-4 border-black pb-2">{documentLabel}</h1>
         <div className="flex justify-between items-start mb-6">
           <div className="text-left text-sm">
-            <div className="mb-1">書類番号：{data.estimateNumber}</div>
+            <div className="mb-1">番号：{data.estimateNumber}</div>
             <div>日付：{formatDate(data.estimateDate)}</div>
           </div>
           <div className="text-right border-2 border-gray-300 p-4 bg-gray-50 w-80">
@@ -180,13 +180,56 @@ const EstimatePDFTemplate: React.FC<EstimatePDFTemplateProps> = ({ data, classNa
         </div>
       </div>
 
-      {/* 顧客情報 */}
+      {/* 顧客情報（手書き用テーブル） */}
       <div className="mb-6">
-        <div className="border-b-2 border-black py-2 mb-4">
-          <span className="font-bold text-lg">{data.customerInfo.name} 様</span>
-          <div className="text-sm mt-1">ご住所：{data.customerInfo.address}</div>
-          <div className="text-sm">ご連絡先：{data.customerInfo.phone}</div>
-        </div>
+        <div className="bg-gray-200 px-4 py-2 font-bold border-2 border-black text-lg">お客様情報</div>
+        <table className="w-full border-2 border-t-0 border-black text-sm">
+          <tbody>
+            <tr className="border-b border-black">
+              <td className="p-3 w-1/6 bg-gray-100 font-medium border-r border-black">お客様氏名（買い主）</td>
+              <td className="p-3 w-1/3 border-r border-black">
+                <div className="h-6"></div>
+              </td>
+              <td className="p-3 w-1/6 bg-gray-100 font-medium border-r border-black">フリガナ</td>
+              <td className="p-3 w-1/3">
+                <div className="h-6"></div>
+              </td>
+            </tr>
+            <tr className="border-b border-black">
+              <td className="p-3 bg-gray-100 font-medium border-r border-black">住所</td>
+              <td className="p-3 border-r border-black" colSpan={3}>
+                <div className="h-6"></div>
+              </td>
+            </tr>
+            <tr className="border-b border-black">
+              <td className="p-3 bg-gray-100 font-medium border-r border-black">生年月日</td>
+              <td className="p-3 border-r border-black">
+                <div className="flex items-center space-x-2">
+                  <div className="flex-1 h-6"></div>
+                  <span>年</span>
+                  <div className="w-12 h-6"></div>
+                  <span>月</span>
+                  <div className="w-12 h-6"></div>
+                  <span>日</span>
+                </div>
+              </td>
+              <td className="p-3 bg-gray-100 font-medium border-r border-black">電話</td>
+              <td className="p-3">
+                <div className="h-6"></div>
+              </td>
+            </tr>
+            <tr className="border-b border-black">
+              <td className="p-3 bg-gray-100 font-medium border-r border-black">携帯</td>
+              <td className="p-3 border-r border-black">
+                <div className="h-6"></div>
+              </td>
+              <td className="p-3 bg-gray-100 font-medium border-r border-black">備考</td>
+              <td className="p-3">
+                <div className="h-6"></div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       {/* 見積車両情報 */}
@@ -219,7 +262,7 @@ const EstimatePDFTemplate: React.FC<EstimatePDFTemplateProps> = ({ data, classNa
                 </div>
               </div>
             </div>
-            <div className="w-40 p-4 text-center bg-yellow-50">
+            <div className="w-52 p-4 text-center bg-yellow-50">
               <div className="text-2xl font-bold text-red-600">¥{formatNumber(data.salesPrices.payment_total)}</div>
               <div className="text-xs mt-1">(内消費税 ¥{formatNumber(Math.floor(data.salesPrices.consumption_tax))})</div>
             </div>
@@ -504,6 +547,34 @@ const EstimatePDFTemplate: React.FC<EstimatePDFTemplateProps> = ({ data, classNa
           </table>
         </div>
       )}
+
+      {/* 振り込み口座欄 */}
+      <div className="mb-6">
+        <div className="bg-gray-200 px-4 py-2 font-bold border-2 border-black text-lg">振り込み口座</div>
+        <table className="w-full border-2 border-t-0 border-black text-sm">
+          <tbody>
+            <tr className="border-b border-black">
+              <td className="p-3 w-1/6 bg-gray-100 font-medium border-r border-black">銀行名</td>
+              <td className="p-3 w-1/3 border-r border-black">{data.dealerInfo.bankAccount?.bankName || ""}</td>
+              <td className="p-3 w-1/6 bg-gray-100 font-medium border-r border-black">支店名</td>
+              <td className="p-3 w-1/3">{data.dealerInfo.bankAccount?.branchName || ""}</td>
+            </tr>
+            <tr className="border-b border-black">
+              <td className="p-3 bg-gray-100 font-medium border-r border-black">口座種別</td>
+              <td className="p-3 border-r border-black">{data.dealerInfo.bankAccount?.accountType || ""}</td>
+              <td className="p-3 bg-gray-100 font-medium border-r border-black">口座番号</td>
+              <td className="p-3">{data.dealerInfo.bankAccount?.accountNumber || ""}</td>
+            </tr>
+            <tr className="border-b border-black">
+              <td className="p-3 bg-gray-100 font-medium border-r border-black">口座名義</td>
+              <td className="p-3" colSpan={3}>
+                {data.dealerInfo.bankAccount?.accountHolder || ""}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
       {/* 2ページ目：注文書の場合のみ特約条項を表示 */}
       {documentType === "order" && <SpecialTermsPage />}
     </div>

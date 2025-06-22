@@ -57,21 +57,40 @@ export const pdfHandler = {
       // ★追加: usersのcompany_nameからcompaniesテーブルを検索して完全な会社情報を取得
       let companyData = null;
       if (userData?.company_name) {
+        console.log("Searching for company:", userData.company_name);
+
         const { data: companyResult, error: companyError } = await supabase
           .from("companies")
-          .select("name, address")
+          .select("name, address, bank_account") // ← bank_account を追加
           .eq("name", userData.company_name)
-          .single();
+          .maybeSingle(); // ← .single() から .maybeSingle() に変更（0行でもエラーにならない）
 
         if (companyError) {
           console.error("Error fetching company data:", companyError);
-        } else {
+        } else if (companyResult) {
+          console.log("Found company data:", companyResult);
           companyData = companyResult;
+        } else {
+          console.log("No company found with name:", userData.company_name);
         }
-      }
 
-      console.log("Found estimate vehicle:", estimateVehicle.id);
-      console.log("Found user data:", userData);
+        // 会社データ取得後にログ追加
+        if (companyResult) {
+          console.log("Found company data:", companyResult);
+          console.log("Bank account data:", companyResult.bank_account);
+          companyData = companyResult;
+        } else {
+          console.log("No company found with name:", userData.company_name);
+        }
+
+        // dealerInfo構築後にログ追加
+        console.log("Final dealerInfo:", {
+          name: companyData?.name || userData?.company_name || "販売店名未設定",
+          address: companyData?.address || "住所未設定",
+          bankAccount: companyData?.bank_account,
+        });
+
+      }
 
       const [tradeInResult, loanResult, accessoriesResult, taxInsuranceResult, legalFeesResult, processingFeesResult, salesPricesResult] = await Promise.all([
         // trade_in_vehiclesテーブル（デバッグ強化）
@@ -168,10 +187,19 @@ export const pdfHandler = {
         // 販売店情報（companiesテーブルの情報を優先的に使用）
         dealerInfo: {
           name: companyData?.name || userData?.company_name || "販売店名未設定",
-          address: companyData?.address || "住所未設定", // companiesテーブルから取得
+          address: companyData?.address || "住所未設定",
           phone: userData?.phone || "電話番号未設定",
           representative: userData?.user_name || "担当者未設定",
           email: userData?.email || "メールアドレス未設定",
+          bankAccount: companyData?.bank_account
+            ? {
+                bankName: companyData.bank_account.bank_name || "",
+                branchName: companyData.bank_account.branch_name || "",
+                accountType: companyData.bank_account.account_type || "",
+                accountNumber: companyData.bank_account.account_number || "",
+                accountHolder: companyData.bank_account.account_holder || "",
+              }
+            : undefined,
         },
 
         // 顧客情報
