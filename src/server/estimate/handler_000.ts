@@ -32,7 +32,7 @@ export const estimateHandler = {
 
   // 見積もりを作成する関数（user_id対応版）
   async createEstimate(data: { vehicleId: string; userId: string } & EstimateFormData): Promise<void> {
-    const { vehicleId, userId, tradeIn, loanCalculation, accessories, taxInsuranceFees, legalFees, processingFees, salesPrice } = data;
+    const { vehicleId, userId, tradeIn, loanCalculation, accessories, taxInsuranceFees, legalFees, processingFees, salesPrice, shippingInfo } = data;
 
     console.log("Creating estimate with data:", {
       vehicleId,
@@ -40,6 +40,7 @@ export const estimateHandler = {
       tradeIn,
       loanCalculation,
       accessories,
+      shippingInfo,
     });
 
     try {
@@ -68,6 +69,7 @@ export const estimateHandler = {
             mileage: vehicleData.mileage,
             price: vehicleData.price,
             document_type: data.document_type || "estimate",
+            area_code: shippingInfo.area_code,
           },
         ])
         .select();

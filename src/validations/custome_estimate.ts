@@ -10,6 +10,7 @@ import {
   taxInsuranceFeesSchema,
   legalFeesSchema,
   processingFeesSchema,
+  shippingInfoSchema,
 } from "./estimate/page";
 
 // バリデーション関数
@@ -22,6 +23,7 @@ export const validateEstimate = (data: unknown): z.SafeParseReturnType<EstimateF
     taxInsuranceFees: taxInsuranceFeesSchema, // 税金・保険料のバリデーションを追加
     legalFees: legalFeesSchema, // 法定費用のバリデーションを追加
     processingFees: processingFeesSchema, // 手続き費用のバリデーションを追加
+    shippingInfo: shippingInfoSchema, // 配送情報のバリデーションを追加
   });
 
   return estimateSchema.safeParse(data);

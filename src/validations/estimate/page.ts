@@ -98,6 +98,14 @@ export const salesPriceSchema = z.object({
   payment_total: z.number().nonnegative("支払総額は0以上で入力してください"),
 });
 
+// ★新しく追加: 配送エリア情報のバリデーションスキーマ
+export const shippingInfoSchema = z.object({
+  area_code: z.number().min(1, "配送エリアを選択してください").nullable(),
+  prefecture: z.string().min(1, "都道府県を選択してください"),
+  city: z.string().min(1, "市区町村を選択してください"),
+  shipping_cost: z.number().min(0, "送料は0以上である必要があります"),
+});
+
 // 型の導出
 export type TradeInFormData = z.infer<typeof tradeInSchema>;
 
@@ -111,7 +119,17 @@ export interface EstimateFormData {
   taxInsuranceFees: z.infer<typeof taxInsuranceFeesSchema>;
   legalFees: z.infer<typeof legalFeesSchema>;
   processingFees: z.infer<typeof processingFeesSchema>;
+  shippingInfo: z.infer<typeof shippingInfoSchema>;
 }
+
+// ★配送エリア関連の型定義を追加
+export interface ShippingInfo {
+  area_code: number | null;
+  prefecture: string;
+  city: string;
+  shipping_cost: number;
+}
+
 
 // エラー型定義も更新
 export interface EstimateError {
@@ -124,7 +142,17 @@ export interface EstimateError {
   general?: string;
   legalFees?: { [key: string]: string } | string;
   processingFees?: { [key: string]: string } | string;
+  shippingInfo?: { [key: string]: string } | string;
 }
+
+// ★配送エリアエラー型を追加
+export interface ShippingInfoError {
+  area_code?: string;
+  prefecture?: string;
+  city?: string;
+  shipping_cost?: string;
+}
+
 
 // サービスパラメータ型定義
 export interface CreateEstimateParams {

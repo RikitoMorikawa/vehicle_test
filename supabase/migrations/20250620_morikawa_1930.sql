@@ -169,3 +169,26 @@ CREATE POLICY "全てのユーザーに更新を許可" ON public.companies
 
 CREATE POLICY "全てのユーザーに削除を許可" ON public.companies
     FOR DELETE USING (true);
+
+
+    -- estimate_vehiclesテーブルにarea_codeカラムを追加
+-- shipping_costsテーブルのarea_codeと紐づけるためのカラム
+
+-- area_codeカラムを追加（送料計算のために使用）
+ALTER TABLE estimate_vehicles 
+ADD COLUMN area_code INTEGER;
+
+-- 外部キー制約を追加（shipping_costsテーブルのarea_codeと紐づけ）
+ALTER TABLE estimate_vehicles 
+ADD CONSTRAINT fk_estimate_vehicles_area_code 
+FOREIGN KEY (area_code) REFERENCES shipping_costs(area_code);
+
+-- インデックスを追加（検索性能向上のため）
+CREATE INDEX IF NOT EXISTS idx_estimate_vehicles_area_code 
+ON estimate_vehicles(area_code);
+
+-- カラムの説明を追加
+COMMENT ON COLUMN estimate_vehicles.area_code IS '送料エリアコード (shipping_costs.area_codeと紐づけ)';
+
+-- スキーマキャッシュをリロード
+NOTIFY pgrst, 'reload schema';

@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import EstimateComponent from "../../components/estimate/page";
-import type { EstimateError, EstimateFormData } from "../../validations/estimate/page";
+import type { EstimateError, EstimateFormData, ShippingInfo } from "../../validations/estimate/page";
 import { getValidationErrors, validateEstimate } from "../../validations/custome_estimate";
 import { estimateService } from "../../services/estimate/page";
 import { useAuth } from "../../hooks/useAuth"; // ★追加
@@ -22,7 +22,7 @@ const EstimateContainer: React.FC = () => {
       refetchVehicle();
     }
   }, [vehicleId, refetchVehicle]);
-  
+
   // 見積もり作成ミューテーション
   const createEstimate = estimateService.useCreateEstimate();
 
@@ -98,6 +98,12 @@ const EstimateContainer: React.FC = () => {
       delivery_fee: 0,
       other_fees: 0,
     },
+    shippingInfo: {
+      area_code: null,
+      prefecture: "",
+      city: "",
+      shipping_cost: 0,
+    },
   });
 
   // フォームデータの各セクション変更を監視して販売価格の対応するフィールドを更新するuseEffect
@@ -166,11 +172,20 @@ const EstimateContainer: React.FC = () => {
 
   // 入力値変更ハンドラ
   const handleInputChange = (
-    section: "salesPrice" | "tradeIn" | "loanCalculation" | "accessories" | "taxInsuranceFees" | "legalFees" | "processingFees" | "document_type", // document_type追加
+    section:
+      | "salesPrice"
+      | "tradeIn"
+      | "loanCalculation"
+      | "accessories"
+      | "taxInsuranceFees"
+      | "legalFees"
+      | "processingFees"
+      | "document_type"
+      | "shippingInfo",
     name: string,
     value: string | number | boolean | number[]
   ) => {
-    // document_typeの処理を追加
+    // document_typeの処理
     if (section === "document_type") {
       setFormData((prev) => ({
         ...prev,
@@ -178,6 +193,19 @@ const EstimateContainer: React.FC = () => {
       }));
       return;
     }
+
+    // 配送エリア情報の処理
+    if (section === "shippingInfo") {
+      setFormData((prev) => ({
+        ...prev,
+        shippingInfo: {
+          ...prev.shippingInfo,
+          [name]: value,
+        },
+      }));
+      return;
+    }
+
     // ローン計算の特別処理
     if (section === "loanCalculation") {
       if (name === "payment_count" && typeof value === "number") {
@@ -302,7 +330,7 @@ const EstimateContainer: React.FC = () => {
   // エラーメッセージの統合
   const pageError = apiError || (vehicleError ? "車両情報の取得に失敗しました" : null);
 
-  // 付属品変更用の新しいハンドラを追加
+  // 付属品変更用のハンドラ
   const handleAccessoryChange = (action: "add" | "remove", value: Accessory | number) => {
     if (action === "add" && typeof value !== "number") {
       // 付属品を追加
@@ -319,6 +347,14 @@ const EstimateContainer: React.FC = () => {
     }
   };
 
+  // 配送エリア変更用のハンドラ
+  const handleShippingChange = (shippingInfo: ShippingInfo) => {
+    setFormData((prev) => ({
+      ...prev,
+      shippingInfo,
+    }));
+  };
+
   return (
     <EstimateComponent
       loading={isPageLoading}
@@ -331,6 +367,7 @@ const EstimateContainer: React.FC = () => {
       onSubmit={handleSubmit}
       onCancel={handleCancel}
       onAccessoryChange={handleAccessoryChange}
+      onShippingChange={handleShippingChange}
     />
   );
 };

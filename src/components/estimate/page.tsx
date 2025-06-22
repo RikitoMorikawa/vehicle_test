@@ -6,10 +6,11 @@ import Footer from "../Footer";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
 import Select from "../ui/Select";
-import type { EstimateError, EstimateFormData } from "../../validations/estimate/page";
+import type { EstimateError, EstimateFormData, ShippingInfo } from "../../validations/estimate/page";
 import { Vehicle } from "../../server/estimate/handler_000";
 import { Accessory } from "../../types/db/accessories";
 import { Plus, Trash2 } from "lucide-react";
+import ShippingAreaSelector from "./ShippingAreaSelector";
 
 // インターフェース更新
 export interface EstimateComponentProps {
@@ -27,6 +28,7 @@ export interface EstimateComponentProps {
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
   onAccessoryChange: (action: "add" | "remove", value: Accessory | number) => void;
+  onShippingChange: (shippingInfo: ShippingInfo) => void;
 }
 
 const ConfirmDialog: React.FC<{
@@ -1261,6 +1263,7 @@ const EstimateComponent: React.FC<EstimateComponentProps> = ({
   onSubmit,
   onCancel,
   onAccessoryChange,
+  onShippingChange,
 }) => {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   // 現金販売価格の計算（SalesPriceInfoと同じロジック）
@@ -1434,6 +1437,8 @@ const EstimateComponent: React.FC<EstimateComponentProps> = ({
                   onInputChange={onInputChange}
                   errors={errors}
                 />
+                {/* 配送エリア選択コンポーネントを追加 */}
+                <ShippingAreaSelector shippingInfo={formData.shippingInfo} onShippingChange={onShippingChange} errors={errors} />
                 <div className="flex justify-end space-x-4">
                   <Button type="button" variant="outline" onClick={onCancel}>
                     キャンセル
