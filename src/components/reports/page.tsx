@@ -173,7 +173,6 @@ const ReportsPage: React.FC<ReportsPageProps> = ({
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">書類番号</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">車両情報</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">加盟店</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">顧客名</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">支払総額</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">作成日</th>
                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">アクション</th>
@@ -203,10 +202,11 @@ const ReportsPage: React.FC<ReportsPageProps> = ({
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
                                 <Building className="w-4 h-4 text-gray-400 mr-2" />
-                                <span className="text-sm text-gray-900">{estimate.companyName || "-"}</span>
+                                <div>
+                                  <div className="text-sm font-medium text-gray-900">{estimate.companyName || "-"}</div>
+                                </div>
                               </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{estimate.customerName || "-"}</td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <span className="text-sm font-semibold text-gray-900">¥{estimate.totalAmount.toLocaleString()}</span>
                             </td>

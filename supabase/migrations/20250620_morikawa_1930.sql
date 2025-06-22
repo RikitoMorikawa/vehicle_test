@@ -226,3 +226,13 @@ COMMENT ON COLUMN loan_calculations.annual_rate IS '年利（%）: 例 5.25% = 5
 
 -- スキーマキャッシュをリロード
 NOTIFY pgrst, 'reload schema';
+
+
+-- 2. 外部キー制約を追加
+ALTER TABLE estimate_vehicles 
+ADD CONSTRAINT fk_estimate_vehicles_user_id 
+FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+
+-- 3. インデックスを追加（パフォーマンス向上）
+CREATE INDEX IF NOT EXISTS idx_estimate_vehicles_user_id 
+ON estimate_vehicles(user_id);

@@ -1,6 +1,6 @@
 // src/server/reports/handler_000.ts
 import { supabase } from "../../lib/supabase";
-import type { EstimateReport, EstimateVehicleRawData } from "../../types/report/page";
+import type { EstimateReport } from "../../types/report/page";
 
 export const reportsHandler = {
   // 見積書一覧を取得（user_idとvehicle_idを含む）
@@ -20,7 +20,7 @@ export const reportsHandler = {
           created_at,
           company_id,
           sales_prices!inner(payment_total),
-          companies(name)
+          users:user_id(company_name)
         `
         )
         .order("created_at", { ascending: false });
@@ -35,15 +35,15 @@ export const reportsHandler = {
       }
 
       // データを EstimateReport 形式に変換
-      const estimates: EstimateReport[] = data.map((item: EstimateVehicleRawData) => {
+      const estimates: EstimateReport[] = data.map((item: any) => {
         const totalAmount = item.sales_prices?.[0]?.payment_total || 0;
-        const companyName = item.companies?.[0]?.name || "";
+        const companyName = item.users?.company_name || "";
 
         return {
           id: item.id,
           estimateNumber: `EST-${item.id.slice(0, 8).toUpperCase()}`,
-          user_id: item.user_id, // ★追加
-          vehicle_id: item.vehicle_id, // ★追加
+          user_id: item.user_id,
+          vehicle_id: item.vehicle_id,
           vehicleInfo: {
             maker: item.maker,
             name: item.name,
@@ -81,7 +81,7 @@ export const reportsHandler = {
           created_at,
           company_id,
           sales_prices!inner(payment_total),
-          companies(name)
+          users:user_id(company_name)
         `
         )
         .eq("id", id)
@@ -97,13 +97,13 @@ export const reportsHandler = {
       }
 
       const totalAmount = data.sales_prices?.[0]?.payment_total || 0;
-      const companyName = data.companies?.[0]?.name || "";
+      const companyName = data.users?.[0]?.company_name || "";
 
       return {
         id: data.id,
         estimateNumber: `EST-${data.id.slice(0, 8).toUpperCase()}`,
-        user_id: data.user_id, // ★追加
-        vehicle_id: data.vehicle_id, // ★追加
+        user_id: data.user_id,
+        vehicle_id: data.vehicle_id,
         vehicleInfo: {
           maker: data.maker,
           name: data.name,
@@ -128,8 +128,8 @@ export const reportsHandler = {
     dateFrom?: string;
     dateTo?: string;
     searchText?: string;
-    userId?: string; // ★追加
-    vehicleId?: string; // ★追加
+    userId?: string;
+    vehicleId?: string;
   }): Promise<EstimateReport[]> {
     try {
       let query = supabase.from("estimate_vehicles").select(`
@@ -143,7 +143,7 @@ export const reportsHandler = {
           created_at,
           company_id,
           sales_prices!inner(payment_total),
-          companies(name)
+          users:user_id(company_name)
         `);
 
       // フィルタリング条件を追加
@@ -168,7 +168,8 @@ export const reportsHandler = {
       }
 
       if (params.searchText) {
-        query = query.or(`maker.ilike.%${params.searchText}%,name.ilike.%${params.searchText}%`);
+        // 加盟店名も検索対象に含める
+        query = query.or(`maker.ilike.%${params.searchText}%,name.ilike.%${params.searchText}%,users.company_name.ilike.%${params.searchText}%`);
       }
 
       query = query.order("created_at", { ascending: false });
@@ -185,9 +186,10 @@ export const reportsHandler = {
       }
 
       // データを EstimateReport 形式に変換
-      const estimates: EstimateReport[] = data.map((item: EstimateVehicleRawData) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const estimates: EstimateReport[] = data.map((item: any) => {
         const totalAmount = item.sales_prices?.[0]?.payment_total || 0;
-        const companyName = item.companies?.[0]?.name || "";
+        const companyName = item.users?.company_name || "";
 
         return {
           id: item.id,
@@ -215,7 +217,7 @@ export const reportsHandler = {
   },
 
   // PDF生成（既存）
-  async generateEstimatePDF(estimateId: string): Promise<Blob> {
+  async generateEstimatePDF(): Promise<Blob> {
     // TODO: PDF生成機能を実装
     throw new Error("PDF生成機能は未実装です");
   },

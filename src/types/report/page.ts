@@ -5,8 +5,8 @@ export interface EstimateReport {
   document_type?: string;
   id: string;
   estimateNumber: string;
-  user_id: string; // ★追加: 作成したユーザーID
-  vehicle_id: string; // ★追加: 車両ID
+  user_id: string;
+  vehicle_id: string;
   vehicleInfo: {
     maker: string;
     name: string;
@@ -22,8 +22,8 @@ export interface EstimateReport {
 // データベースから取得される生データの型定義（修正版）
 export interface EstimateVehicleRawData {
   id: string;
-  user_id: string; // ★追加
-  vehicle_id: string; // ★追加
+  user_id: string;
+  vehicle_id: string;
   maker: string;
   name: string;
   year: number;
@@ -33,8 +33,9 @@ export interface EstimateVehicleRawData {
   sales_prices: Array<{
     payment_total: number;
   }> | null;
-  companies: Array<{
-    name: string;
+  // Supabaseのリレーション構文による取得データの型
+  users: Array<{
+    company_name: string;
   }> | null;
 }
 
@@ -45,8 +46,8 @@ export interface EstimateSearchParams {
   dateFrom?: string;
   dateTo?: string;
   searchText?: string;
-  userId?: string; // ★追加: ユーザーIDでフィルタリング
-  vehicleId?: string; // ★追加: 車両IDでフィルタリング
+  userId?: string;
+  vehicleId?: string;
 }
 
 // レポート関連のエラー型
@@ -64,8 +65,8 @@ export interface ReportFilters {
   dateFrom: string;
   dateTo: string;
   searchText: string;
-  userId?: string; // ★追加
-  vehicleId?: string; // ★追加
+  userId?: string;
+  vehicleId?: string;
 }
 
 // レポート表示用のソート設定
