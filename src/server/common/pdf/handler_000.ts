@@ -297,15 +297,4 @@ export const pdfHandler = {
     const idSuffix = vehicleId.slice(-4).toUpperCase();
     return `EST-${timestamp}-${idSuffix}`;
   },
-
-  // 会社情報のデフォルト値を取得
-  getDefaultDealerInfo() {
-    return {
-      name: "株式会社サンプル自動車",
-      address: "東京都渋谷区サンプル1-2-3",
-      phone: "03-1234-5678",
-      representative: "営業部 田中太郎",
-      taxNumber: "T1234567890123",
-    };
-  },
 };
