@@ -22,17 +22,5 @@ export const pdfService = {
   // 見積書データを取得（汎用）
   async getEstimateData(estimateId: string): Promise<EstimatePDFData> {
     return this.previewEstimatePDF(estimateId);
-  },
-
-  // 印刷用（将来の拡張用）
-  async printEstimate(estimateId: string): Promise<void> {
-    try {
-      // データを取得してブラウザの印刷機能を呼び出す
-      await this.previewEstimatePDF(estimateId);
-      window.print();
-    } catch (error) {
-      console.error("Error printing estimate:", error);
-      throw error;
-    }
-  },
+  }
 };

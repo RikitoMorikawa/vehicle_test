@@ -4,7 +4,7 @@ import Header from "../Header";
 import Sidebar from "../Sidebar";
 import Footer from "../Footer";
 import Button from "../ui/Button";
-import { FileText, Calendar, Car, Building, Download } from "lucide-react";
+import { FileText, Calendar, Car, Building, Eye } from "lucide-react";
 import type { EstimateReport } from "../../types/report/page";
 
 interface ReportsPageProps {
@@ -186,12 +186,12 @@ const ReportsPage: React.FC<ReportsPageProps> = ({
                                 {isDownloading ? (
                                   <>
                                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-1"></div>
-                                    生成中...
+                                    読み込み中...
                                   </>
                                 ) : (
                                   <>
-                                    <Download className="w-4 h-4 mr-1" />
-                                    ダウンロード
+                                    <Eye className="w-4 h-4 mr-1" />
+                                    プレビュー
                                   </>
                                 )}
                               </Button>
