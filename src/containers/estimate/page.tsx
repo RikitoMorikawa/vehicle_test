@@ -108,24 +108,22 @@ const EstimateContainer: React.FC = () => {
   });
 
   // フォームデータの各セクション変更を監視して販売価格の対応するフィールドを更新するuseEffect
+  // EstimateContainer の修正版 useEffect
   React.useEffect(() => {
-    // 税金・保険料の合計
+
+    // 基本集計のみ（消費税計算は SalesPriceInfo に委ねる）
     const totalTaxInsurance =
       (formData.taxInsuranceFees.automobile_tax || 0) +
       (formData.taxInsuranceFees.environmental_performance_tax || 0) +
       (formData.taxInsuranceFees.weight_tax || 0) +
       (formData.taxInsuranceFees.liability_insurance_fee || 0) +
       (formData.taxInsuranceFees.voluntary_insurance_fee || 0);
-
-    // 法定費用の合計
     const totalLegalFee =
       (formData.legalFees.inspection_registration_stamp || 0) +
       (formData.legalFees.parking_certificate_stamp || 0) +
       (formData.legalFees.trade_in_stamp || 0) +
       (formData.legalFees.recycling_deposit || 0) +
       (formData.legalFees.other_nontaxable || 0);
-
-    // 手続代行費用の合計
     const totalProcessingFee =
       (formData.processingFees.inspection_registration_fee || 0) +
       (formData.processingFees.parking_certificate_fee || 0) +
@@ -134,33 +132,39 @@ const EstimateContainer: React.FC = () => {
       (formData.processingFees.recycling_management_fee || 0) +
       (formData.processingFees.delivery_fee || 0) +
       (formData.processingFees.other_fees || 0);
+    const totalAccessoriesFee = (formData.accessories || []).reduce(
+      (total, accessory) => total + (typeof accessory.price === "number" ? accessory.price : 0),
+      0
+    );
 
-    // 付属品費用の合計
-    const totalAccessoriesFee = (formData.accessories || []).reduce((total, accessory) => {
-      return total + (typeof accessory.price === "number" ? accessory.price : 0);
-    }, 0);
-
-    // 値が異なる場合のみ更新（無限ループ防止）
-    const needsUpdate =
+    // ★修正：基本的な集計項目のみ更新（消費税・総額計算はSalesPriceInfoに委ねる）
+    const basicUpdateNeeded =
       formData.salesPrice.tax_insurance !== totalTaxInsurance ||
       formData.salesPrice.legal_fee !== totalLegalFee ||
       formData.salesPrice.processing_fee !== totalProcessingFee ||
       formData.salesPrice.accessories_fee !== totalAccessoriesFee;
 
-    if (needsUpdate) {
+    if (basicUpdateNeeded) {
+
       setFormData((prev) => ({
         ...prev,
         salesPrice: {
           ...prev.salesPrice,
+          // ★重要：基本集計項目のみ更新
           tax_insurance: totalTaxInsurance,
           legal_fee: totalLegalFee,
           processing_fee: totalProcessingFee,
           accessories_fee: totalAccessoriesFee,
+          // ★消費税・総額関連は更新しない（SalesPriceInfoに委ねる）
         },
       }));
+    } else {
+      console.log("⏸️ Container 更新不要: 基本項目は同期済み");
     }
+
+    console.groupEnd();
   }, [
-    // 全ての依存項目を列挙
+    // ★修正：基本集計に必要な依存関係のみ
     formData.taxInsuranceFees,
     formData.legalFees,
     formData.processingFees,

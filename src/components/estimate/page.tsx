@@ -972,27 +972,33 @@ const ProcessingFeesInfo: React.FC<{
 };
 
 // SalesPriceInfo コンポーネント改善（不足カラム追加版）
+// SalesPriceInfo コンポーネント完全版（全ての修正を含む）
 const SalesPriceInfo: React.FC<{
   salesPrice: EstimateFormData["salesPrice"];
   taxInsuranceFees: EstimateFormData["taxInsuranceFees"];
   legalFees: EstimateFormData["legalFees"];
   processingFees: EstimateFormData["processingFees"];
-  accessories: Accessory[]; // 付属品情報を追加
+  accessories: Accessory[];
   onInputChange: (section: "salesPrice", field: string, value: string | number) => void;
   errors?: EstimateError | null;
 }> = ({ salesPrice, taxInsuranceFees, legalFees, processingFees, accessories, onInputChange, errors }) => {
+  
+  // 入力値変更ハンドラ
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     const numValue = value === "" ? 0 : parseInt(value);
     onInputChange("salesPrice", name, numValue);
   };
 
+  // エラー取得関数
   const getFieldError = (fieldName: string): string | undefined => {
     if (!errors || !errors.salesPrice) return undefined;
     return typeof errors.salesPrice === "string" ? errors.salesPrice : errors.salesPrice[fieldName];
   };
 
-  // 税金・保険料の合計を計算
+  // =================== 計算ロジック ===================
+  
+  // 税金・保険料の合計を計算（消費税非対象）
   const totalTaxInsurance =
     (taxInsuranceFees.automobile_tax || 0) +
     (taxInsuranceFees.environmental_performance_tax || 0) +
@@ -1000,7 +1006,7 @@ const SalesPriceInfo: React.FC<{
     (taxInsuranceFees.liability_insurance_fee || 0) +
     (taxInsuranceFees.voluntary_insurance_fee || 0);
 
-  // 法定費用の合計を計算
+  // 法定費用の合計を計算（消費税非対象）
   const totalLegalFee =
     (legalFees.inspection_registration_stamp || 0) +
     (legalFees.parking_certificate_stamp || 0) +
@@ -1008,7 +1014,7 @@ const SalesPriceInfo: React.FC<{
     (legalFees.recycling_deposit || 0) +
     (legalFees.other_nontaxable || 0);
 
-  // 手続代行費用の合計を計算
+  // 手続代行費用の合計を計算（消費税対象）
   const totalProcessingFee =
     (processingFees.inspection_registration_fee || 0) +
     (processingFees.parking_certificate_fee || 0) +
@@ -1018,110 +1024,113 @@ const SalesPriceInfo: React.FC<{
     (processingFees.delivery_fee || 0) +
     (processingFees.other_fees || 0);
 
-  // 付属品費用の合計を計算
+  // 付属品費用の合計を計算（消費税対象）
   const totalAccessoriesFee = accessories.reduce((total, accessory) => {
     return total + (typeof accessory.price === "number" ? accessory.price : 0);
   }, 0);
 
-  // 車両販売価格(1)の合計を計算（車両本体価格 - 値引き + 車検整備費用 + 付属品・特別仕様）
+  // ★修正：消費税対象項目の計算（税抜き）
+  const taxableAmount = 
+    (salesPrice.base_price || 0) - (salesPrice.discount || 0) + 
+    (salesPrice.inspection_fee || 0) + 
+    totalAccessoriesFee + 
+    totalProcessingFee;
+
+  // ★修正：消費税非対象項目の計算
+  const nonTaxableAmount = totalTaxInsurance + totalLegalFee;
+
+  // ★修正：消費税の正しい計算（消費税対象項目のみに10%）
+  const calculatedConsumptionTax = Math.floor(taxableAmount * 0.1);
+
+  // 車両販売価格(1)の計算（消費税対象のみ、税抜き）
   const calculatedVehiclePrice = (salesPrice.base_price || 0) - (salesPrice.discount || 0) + (salesPrice.inspection_fee || 0) + totalAccessoriesFee;
 
-  // 販売諸費用(2)の合計を計算（税金・保険料 + 預り法定費用 + 手続代行費用）
+  // 販売諸費用(2)の計算（消費税対象＋非対象の合計）
   const totalMiscFee = totalTaxInsurance + totalLegalFee + totalProcessingFee;
 
-  // 追加計算: 現金販売価格(1)+(2)を計算（車両販売価格(1) + 販売諸費用(2)）
-  const calculatedTotalBeforeTax = calculatedVehiclePrice + totalMiscFee;
-
-  // 消費税を計算（現金販売価格(1)+(2)の10%）
-  const calculatedConsumptionTax = Math.floor(calculatedTotalBeforeTax * 0.1);
-
-  // 最終的な現金販売価格(1)+(2)を計算（税込み）
-  const calculatedTotalPrice = calculatedTotalBeforeTax + calculatedConsumptionTax;
+  // ★修正：最終的な総額計算（税抜き＋消費税＋非課税）
+  const calculatedTotalPrice = taxableAmount + calculatedConsumptionTax + nonTaxableAmount;
 
   // 支払総額を計算（総額 - 下取り価格 + 下取り債務）
   const calculatedPaymentTotal = calculatedTotalPrice - (salesPrice.trade_in_price || 0) + (salesPrice.trade_in_debt || 0);
 
-  // コンポーネントがマウントされた時や依存する値が変更された時に自動更新
+  // 税抜き総額の計算
+  const taxBeforeTaxTotal = taxableAmount + nonTaxableAmount;
+
+  // =================== フォームデータ自動更新 ===================
+  
   React.useEffect(() => {
-    // 税金・保険料の自動更新
+    let updateNeeded = false;
+    const updates: Array<{field: string, current: number, calculated: number}> = [];
+
+    // 各項目をチェックして更新が必要かどうかを判断
     if (salesPrice.tax_insurance !== totalTaxInsurance) {
-      onInputChange("salesPrice", "tax_insurance", totalTaxInsurance);
+      updates.push({field: 'tax_insurance', current: salesPrice.tax_insurance || 0, calculated: totalTaxInsurance});
+      updateNeeded = true;
     }
-
-    // 法定費用の自動更新
     if (salesPrice.legal_fee !== totalLegalFee) {
-      onInputChange("salesPrice", "legal_fee", totalLegalFee);
+      updates.push({field: 'legal_fee', current: salesPrice.legal_fee || 0, calculated: totalLegalFee});
+      updateNeeded = true;
     }
-
-    // 手続代行費用の自動更新
     if (salesPrice.processing_fee !== totalProcessingFee) {
-      onInputChange("salesPrice", "processing_fee", totalProcessingFee);
+      updates.push({field: 'processing_fee', current: salesPrice.processing_fee || 0, calculated: totalProcessingFee});
+      updateNeeded = true;
     }
-
-    // 付属品費用の自動更新
     if (salesPrice.accessories_fee !== totalAccessoriesFee) {
-      onInputChange("salesPrice", "accessories_fee", totalAccessoriesFee);
+      updates.push({field: 'accessories_fee', current: salesPrice.accessories_fee || 0, calculated: totalAccessoriesFee});
+      updateNeeded = true;
     }
-
-    // 車両販売価格(1)の自動更新
     if (salesPrice.vehicle_price !== calculatedVehiclePrice) {
-      onInputChange("salesPrice", "vehicle_price", calculatedVehiclePrice);
+      updates.push({field: 'vehicle_price', current: salesPrice.vehicle_price || 0, calculated: calculatedVehiclePrice});
+      updateNeeded = true;
     }
-
-    // 販売諸費用(2)の自動更新
     if (salesPrice.misc_fee !== totalMiscFee) {
-      onInputChange("salesPrice", "misc_fee", totalMiscFee);
+      updates.push({field: 'misc_fee', current: salesPrice.misc_fee || 0, calculated: totalMiscFee});
+      updateNeeded = true;
     }
-
-    // 消費税の自動更新
     if (salesPrice.consumption_tax !== calculatedConsumptionTax) {
-      onInputChange("salesPrice", "consumption_tax", calculatedConsumptionTax);
+      updates.push({field: 'consumption_tax', current: salesPrice.consumption_tax || 0, calculated: calculatedConsumptionTax});
+      updateNeeded = true;
     }
-
-    // 現金販売価格(1)+(2)の自動更新
     if (salesPrice.total_price !== calculatedTotalPrice) {
-      onInputChange("salesPrice", "total_price", calculatedTotalPrice);
+      updates.push({field: 'total_price', current: salesPrice.total_price || 0, calculated: calculatedTotalPrice});
+      updateNeeded = true;
+    }
+    if (salesPrice.payment_total !== calculatedPaymentTotal) {
+      updates.push({field: 'payment_total', current: salesPrice.payment_total || 0, calculated: calculatedPaymentTotal});
+      updateNeeded = true;
     }
 
-    // 支払総額の自動更新
-    if (salesPrice.payment_total !== calculatedPaymentTotal) {
-      onInputChange("salesPrice", "payment_total", calculatedPaymentTotal);
+    if (updateNeeded) {
+      console.log('✅ フォーム更新実行:', updates);
+      
+      // 個別に更新して確実に反映させる
+      updates.forEach(update => {
+        console.log(`🔄 ${update.field}: ${update.current.toLocaleString()} → ${update.calculated.toLocaleString()}`);
+        onInputChange("salesPrice", update.field, update.calculated);
+      });
+    } else {
+      console.log('⏸️ 更新不要: 全ての値が同期済み');
     }
   }, [
-    // 依存関係を全て列挙
-    totalTaxInsurance,
-    salesPrice.tax_insurance,
-    totalLegalFee,
-    salesPrice.legal_fee,
-    totalProcessingFee,
-    salesPrice.processing_fee,
-    totalAccessoriesFee,
-    salesPrice.accessories_fee,
-    calculatedVehiclePrice,
-    salesPrice.vehicle_price,
-    totalMiscFee,
-    salesPrice.misc_fee,
-    calculatedConsumptionTax,
-    salesPrice.consumption_tax,
-    calculatedTotalPrice,
-    salesPrice.total_price,
-    calculatedPaymentTotal,
-    salesPrice.payment_total,
-    salesPrice.base_price,
-    salesPrice.discount,
-    salesPrice.inspection_fee,
-    salesPrice.trade_in_price,
-    salesPrice.trade_in_debt,
-    onInputChange,
+    // 依存関係を明確に列挙
+    totalTaxInsurance, totalLegalFee, totalProcessingFee, totalAccessoriesFee,
+    calculatedVehiclePrice, totalMiscFee, calculatedConsumptionTax, calculatedTotalPrice, calculatedPaymentTotal,
+    salesPrice.tax_insurance, salesPrice.legal_fee, salesPrice.processing_fee, salesPrice.accessories_fee,
+    salesPrice.vehicle_price, salesPrice.misc_fee, salesPrice.consumption_tax, salesPrice.total_price, salesPrice.payment_total,
+    salesPrice.base_price, salesPrice.discount, salesPrice.inspection_fee, salesPrice.trade_in_price, salesPrice.trade_in_debt,
+    onInputChange
   ]);
 
+  // =================== JSX レンダリング ===================
+  
   return (
     <div className="border-b border-gray-200 pb-6">
       <h2 className="text-lg font-medium text-gray-900 mb-4">販売価格情報</h2>
-
+      
       {/* 基本価格情報 */}
       <div className="mb-6">
-        <h3 className="text-md font-medium text-gray-700 mb-3">基本価格・車両販売価格(1)</h3>
+        <h3 className="text-md font-medium text-gray-700 mb-3">基本価格・車両販売価格(1)【消費税対象】</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input
             label="車両本体価格"
@@ -1170,7 +1179,7 @@ const SalesPriceInfo: React.FC<{
           />
           <div className="md:col-span-2">
             <Input
-              label="車両販売価格(1)"
+              label="車両販売価格(1)【税抜き】"
               name="vehicle_price"
               type="text"
               currency={true}
@@ -1179,78 +1188,85 @@ const SalesPriceInfo: React.FC<{
               error={getFieldError("vehicle_price")}
               placeholder="自動計算"
               disabled={true}
-              className="bg-gray-100 font-semibold"
+              className="bg-blue-50 font-semibold"
             />
-            <div className="text-sm text-gray-500 mt-1">
-              <p>車両本体価格 - 値引き + 車検整備費用 + 付属品・特別仕様</p>
+            <div className="text-sm text-blue-600 mt-1">
+              <p>車両本体価格 - 値引き + 車検整備費用 + 付属品・特別仕様（税抜き）</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 自動計算フィールド */}
+      {/* 消費税対象・非対象の明確な区分 */}
       <div className="mb-6">
         <h3 className="text-md font-medium text-gray-700 mb-3">販売諸費用(2)の内訳</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Input
-            label="税金・保険料"
-            name="tax_insurance"
-            type="text"
-            currency={true}
-            inputMode="numeric"
-            value={totalTaxInsurance || ""}
-            error={getFieldError("tax_insurance")}
-            placeholder="自動計算"
-            disabled={true}
-            className="bg-gray-100"
-          />
-          <Input
-            label="預り法定費用"
-            name="legal_fee"
-            type="text"
-            currency={true}
-            inputMode="numeric"
-            value={totalLegalFee || ""}
-            error={getFieldError("legal_fee")}
-            placeholder="自動計算"
-            disabled={true}
-            className="bg-gray-100"
-          />
-          <Input
-            label="手続代行費用"
-            name="processing_fee"
-            type="text"
-            currency={true}
-            inputMode="numeric"
-            value={totalProcessingFee || ""}
-            error={getFieldError("processing_fee")}
-            placeholder="自動計算"
-            disabled={true}
-            className="bg-gray-100"
-          />
-          <div className="md:col-span-1">
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium text-red-600">【消費税非対象】</h4>
             <Input
-              label="販売諸費用(2)"
-              name="misc_fee"
+              label="税金・保険料"
+              name="tax_insurance"
               type="text"
               currency={true}
               inputMode="numeric"
-              value={totalMiscFee || ""}
-              error={getFieldError("misc_fee")}
+              value={totalTaxInsurance || ""}
+              error={getFieldError("tax_insurance")}
               placeholder="自動計算"
               disabled={true}
-              className="bg-gray-100 font-semibold"
+              className="bg-red-50"
             />
-            <div className="text-sm text-gray-500 mt-1">
-              <p>上記3項目の合計</p>
-            </div>
+            <Input
+              label="預り法定費用"
+              name="legal_fee"
+              type="text"
+              currency={true}
+              inputMode="numeric"
+              value={totalLegalFee || ""}
+              error={getFieldError("legal_fee")}
+              placeholder="自動計算"
+              disabled={true}
+              className="bg-red-50"
+            />
+          </div>
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium text-blue-600">【消費税対象】</h4>
+            <Input
+              label="手続代行費用"
+              name="processing_fee"
+              type="text"
+              currency={true}
+              inputMode="numeric"
+              value={totalProcessingFee || ""}
+              error={getFieldError("processing_fee")}
+              placeholder="自動計算"
+              disabled={true}
+              className="bg-blue-50"
+            />
+          </div>
+        </div>
+        
+        <div className="mt-4">
+          <Input
+            label="販売諸費用(2)【税対象+非対象 合計】"
+            name="misc_fee"
+            type="text"
+            currency={true}
+            inputMode="numeric"
+            value={totalMiscFee || ""}
+            error={getFieldError("misc_fee")}
+            placeholder="自動計算"
+            disabled={true}
+            className="bg-gray-100 font-semibold"
+          />
+          <div className="text-sm text-gray-500 mt-1">
+            <p>上記3項目の合計</p>
           </div>
         </div>
       </div>
 
       {/* その他費用と下取り情報 */}
       <div className="mb-6">
-        <h3 className="text-md font-medium text-gray-700 mb-3">販売諸費用・下取り情報</h3>
+        <h3 className="text-md font-medium text-gray-700 mb-3">下取り情報</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input
             label="下取車価格"
@@ -1277,27 +1293,12 @@ const SalesPriceInfo: React.FC<{
         </div>
       </div>
 
-      {/* 最終計算結果 */}
+      {/* 税計算・最終金額 */}
       <div className="mb-6">
-        <h3 className="text-md font-medium text-gray-700 mb-3">最終金額（自動計算）</h3>
+        <h3 className="text-md font-medium text-gray-700 mb-3">税計算・最終金額</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="md:col-span-2">
-            <Input
-              label="現金販売価格(1)+(2)"
-              name="total_price"
-              type="text"
-              currency={true}
-              inputMode="numeric"
-              value={calculatedTotalBeforeTax || ""}
-              error={getFieldError("total_price")}
-              placeholder="自動計算"
-              disabled={true}
-              className="bg-gray-100 font-semibold"
-            />
-            <div className="text-sm text-gray-500 mt-1">
-              <p>車両販売価格(1) + 販売諸費用(2)</p>
-            </div>
-          </div>
+          {/* 消費税の表示 */}
+          
           <Input
             label="内消費税"
             name="consumption_tax"
@@ -1306,22 +1307,46 @@ const SalesPriceInfo: React.FC<{
             inputMode="numeric"
             value={calculatedConsumptionTax || ""}
             error={getFieldError("consumption_tax")}
-            placeholder="自動計算（10%）"
+            placeholder="消費税対象額の10%"
             disabled={true}
-            className="bg-gray-100"
+            className="bg-green-100 font-semibold"
           />
-          <Input
-            label="税込み総額"
-            name="total_with_tax"
-            type="text"
-            currency={true}
-            inputMode="numeric"
-            value={calculatedTotalPrice || ""}
-            placeholder="自動計算"
-            disabled={true}
-            className="bg-gray-100"
-          />
-          <div className="md:col-span-2">
+          <div className="text-sm text-green-600 mt-6">
+            <p>車両・整備・付属品・手続代行費用のみに10%</p>
+          </div>
+          
+          {/* 税抜き総額の表示 */}
+            <Input
+              label="総額（税抜き）"
+              name="total_before_tax"
+              type="text"
+              currency={true}
+              inputMode="numeric"
+              value={taxBeforeTaxTotal || ""}
+              placeholder="自動計算"
+              disabled={true}
+              className="bg-yellow-100 font-semibold"
+            />
+            <div className="text-sm text-yellow-600 mt-6">
+              <p>消費税対象（税抜き）+ 消費税非対象</p>
+            </div>
+          
+            <Input
+              label="総額（税込み）"
+              name="total_price"
+              type="text"
+              currency={true}
+              inputMode="numeric"
+              value={calculatedTotalPrice || ""}
+              error={getFieldError("total_price")}
+              placeholder="自動計算"
+              disabled={true}
+              className="bg-green-100 font-semibold"
+            />
+            <div className="text-sm text-green-600 mt-6">
+              <p>税抜き総額 + 消費税</p>
+            </div>
+          
             <Input
               label="お支払総額"
               name="payment_total"
@@ -1332,17 +1357,23 @@ const SalesPriceInfo: React.FC<{
               error={getFieldError("payment_total")}
               placeholder="自動計算"
               disabled={true}
-              className="bg-gray-100 text-lg font-semibold"
+              className="bg-blue-100 text-lg font-semibold"
             />
-          </div>
+            <div className="text-sm text-blue-600 mt-6">
+              <p>総額 - 下取車価格 + 下取車残債</p>
+            </div>
         </div>
       </div>
 
-      {errors?.salesPrice && typeof errors.salesPrice === "string" && <div className="mt-4 text-sm text-red-600">{errors.salesPrice}</div>}
+      {/* エラーメッセージ */}
+      {errors?.salesPrice && typeof errors.salesPrice === "string" && (
+        <div className="mt-4 text-sm text-red-600">{errors.salesPrice}</div>
+      )}
     </div>
   );
 };
 
+// メインコンポーネント
 // メインコンポーネント
 const EstimateComponent: React.FC<EstimateComponentProps> = ({
   loading,
@@ -1358,7 +1389,9 @@ const EstimateComponent: React.FC<EstimateComponentProps> = ({
   onShippingChange,
 }) => {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  // 現金販売価格の計算（SalesPriceInfoと同じロジック）
+  
+  // =================== 修正された現金販売価格の計算 ===================
+  
   const totalTaxInsurance =
     (formData.taxInsuranceFees.automobile_tax || 0) +
     (formData.taxInsuranceFees.environmental_performance_tax || 0) +
@@ -1386,14 +1419,25 @@ const EstimateComponent: React.FC<EstimateComponentProps> = ({
     return total + (typeof accessory.price === "number" ? accessory.price : 0);
   }, 0);
 
-  const calculatedVehiclePrice =
-    (formData.salesPrice.base_price || 0) - (formData.salesPrice.discount || 0) + (formData.salesPrice.inspection_fee || 0) + totalAccessoriesFee;
+  // ★修正：消費税対象項目の計算（税抜き）
+  const taxableAmount = 
+    (formData.salesPrice.base_price || 0) - 
+    (formData.salesPrice.discount || 0) + 
+    (formData.salesPrice.inspection_fee || 0) + 
+    totalAccessoriesFee + 
+    totalProcessingFee;
 
-  const totalMiscFee = totalTaxInsurance + totalLegalFee + totalProcessingFee;
+  // ★修正：消費税非対象項目の計算
+  const nonTaxableAmount = totalTaxInsurance + totalLegalFee;
 
-  // 現金販売価格(1)+(2)（税抜き）
-  const cashSalesPrice = calculatedVehiclePrice + totalMiscFee;
+  // ★修正：消費税の正しい計算（消費税対象項目のみに10%）
+  const calculatedConsumptionTax = Math.floor(taxableAmount * 0.1);
 
+  // ★修正：現金販売価格（正しい計算）= 消費税対象（税抜き）+ 消費税 + 消費税非対象
+  const cashSalesPrice = taxableAmount + calculatedConsumptionTax + nonTaxableAmount;
+
+  // =================== フォーム送信処理 ===================
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -1424,6 +1468,8 @@ const EstimateComponent: React.FC<EstimateComponentProps> = ({
     setShowConfirmDialog(false);
   };
 
+  // =================== ローディング・エラー処理 ===================
+  
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -1458,6 +1504,8 @@ const EstimateComponent: React.FC<EstimateComponentProps> = ({
     );
   }
 
+  // =================== メインレンダリング ===================
+  
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
@@ -1466,12 +1514,11 @@ const EstimateComponent: React.FC<EstimateComponentProps> = ({
         <main className="flex-1 p-8">
           <div className="max-w-4xl mx-auto">
             <div className="bg-white shadow rounded-lg">
-              {/* 書類種別選択 - 追加 */}
+
+              {/* 書類種別選択 */}
               <div className="ml-4 border-b border-gray-200 pb-6 pt-4">
                 <h2 className="text-lg font-medium text-gray-900 my-4">書類種別</h2>
                 <div className="max-w-xs">
-                  {" "}
-                  {/* ★横幅を制限 */}
                   <Select
                     label="作成する書類"
                     name="document_type"
@@ -1487,6 +1534,7 @@ const EstimateComponent: React.FC<EstimateComponentProps> = ({
                 </div>
               </div>
 
+              {/* エラー・成功メッセージ */}
               {errors?.general && (
                 <div className="px-6 py-4 bg-red-50 border-b border-red-200">
                   <p className="text-sm text-red-600">{errors.general}</p>
@@ -1499,38 +1547,50 @@ const EstimateComponent: React.FC<EstimateComponentProps> = ({
                 </div>
               )}
 
+              {/* メインフォーム */}
               <form onSubmit={handleSubmit} className="p-6 space-y-8">
-                {/* 車両情報のみ外部から取得した値で表示 */}
+                
+                {/* 車両情報 */}
                 {vehicle && <VehicleInfo vehicle={vehicle} />}
-                {/* 下取り車両情報コンポーネントを使用 */}
+                
+                {/* 下取り車両情報 */}
                 <TradeInInfo tradeIn={formData.tradeIn} onInputChange={onInputChange} errors={errors} />
-                {/* ローン計算情報コンポーネントを使用 */}
+                
+                {/* ローン計算情報 - 修正された現金販売価格を渡す */}
                 <LoanCalculationComponent
                   loanCalculation={formData.loanCalculation}
                   cashSalesPrice={cashSalesPrice}
                   onInputChange={onInputChange}
                   errors={errors}
                 />
-                {/* (A)付属品情報コンポーネントを使用 */}
+                
+                {/* 付属品情報 */}
                 <AccessoriesInfo accessories={formData.accessories || []} onInputChange={onAccessoryChange} errors={errors} />
-                {/* (B)税金・保険料コンポーネントを追加 */}
+                
+                {/* 税金・保険料 */}
                 <TaxInsuranceInfo taxInsuranceFees={formData.taxInsuranceFees} onInputChange={onInputChange} errors={errors} />
-                {/* (C)法定費用コンポーネントを追加 */}
+                
+                {/* 法定費用 */}
                 <LegalFeesInfo legalFees={formData.legalFees} onInputChange={onInputChange} errors={errors} />
-                {/* (D)手続代行費用コンポーネントを追加 */}
+                
+                {/* 手続代行費用 */}
                 <ProcessingFeesInfo processingFees={formData.processingFees} onInputChange={onInputChange} errors={errors} />
-                {/* 販売価格情報コンポーネントを使用 - 全ての必要な情報を渡す */}
+                
+                {/* 販売価格情報 - 修正版SalesPriceInfoコンポーネントを使用 */}
                 <SalesPriceInfo
                   salesPrice={formData.salesPrice}
                   taxInsuranceFees={formData.taxInsuranceFees}
                   legalFees={formData.legalFees}
                   processingFees={formData.processingFees}
-                  accessories={formData.accessories || []} // 付属品情報を渡す
+                  accessories={formData.accessories || []}
                   onInputChange={onInputChange}
                   errors={errors}
                 />
-                {/* 配送エリア選択コンポーネントを追加 */}
+                
+                {/* 配送エリア選択 */}
                 <ShippingAreaSelector shippingInfo={formData.shippingInfo} onShippingChange={onShippingChange} errors={errors} />
+                
+                {/* フォームボタン */}
                 <div className="flex justify-end space-x-4">
                   <Button type="button" variant="outline" onClick={onCancel}>
                     キャンセル
@@ -1543,7 +1603,8 @@ const EstimateComponent: React.FC<EstimateComponentProps> = ({
         </main>
       </div>
       <Footer />
-      {/* ★ここに確認ダイアログを追加★ */}
+      
+      {/* 確認ダイアログ */}
       <ConfirmDialog
         isOpen={showConfirmDialog}
         onConfirm={handleConfirmSubmit}
