@@ -291,11 +291,8 @@ th, td {
         <div class="mb-3">
             <div class="border-b-2 py-1 mb-2">
                 <span class="font-bold text-sm">${data.customerInfo.name} 様</span>
-            </div>
-            <div class="text-xs">
                 <div>ご住所：${data.customerInfo.address}</div>
                 <div>ご連絡先：${data.customerInfo.phone}</div>
-            </div>
         </div>
 
         <!-- 見積車両情報 -->
