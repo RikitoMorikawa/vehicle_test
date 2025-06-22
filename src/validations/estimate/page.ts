@@ -35,6 +35,15 @@ export const tradeInSchema = z.object({
 export const loanCalculationSchema = z.object({
   down_payment: z.number().nonnegative("頭金は0以上で入力してください"),
   principal: z.number().nonnegative("元金は0以上で入力してください"),
+  annual_rate: z
+    .number()
+    .min(0, "年利は0以上で入力してください")
+    .max(50, "年利は50%以下で入力してください")
+    .refine((val) => {
+      // 小数点以下2桁までの制限
+      const decimalPlaces = (val.toString().split(".")[1] || "").length;
+      return decimalPlaces <= 2;
+    }, "年利は小数点以下2桁まで入力してください"),
   interest_fee: z.number().nonnegative("金利手数料は0以上で入力してください"),
   total_payment: z.number().nonnegative("支払総額は0以上で入力してください"),
   payment_count: z.number().int().positive("支払回数は1以上で入力してください"),

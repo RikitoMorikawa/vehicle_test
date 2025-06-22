@@ -20,4 +20,6 @@ export interface LoanCalculation {
   bonus_months: string[];
   // ボーナス加算額;
   bonus_amount: number;
+  // 年利（%）
+  annual_rate: number;
 }

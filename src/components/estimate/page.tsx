@@ -236,15 +236,40 @@ const LoanCalculationComponent: React.FC<{
   // 現金・割賦元金を自動計算（現金販売価格 - 頭金）
   const calculatedPrincipal = Math.max(0, (cashSalesPrice || 0) - (loanCalculation.down_payment || 0));
 
-  // 分割支払金合計を自動計算（現金・割賦元金 + 分割払手数料）
-  const calculatedTotalPayment = calculatedPrincipal + (loanCalculation.interest_fee || 0);
+  // ★年利による自動計算ロジック★
+  const calculateFromAnnualRate = React.useCallback(() => {
+    if (calculatedPrincipal > 0 && loanCalculation.annual_rate > 0 && loanCalculation.payment_count > 0) {
+      const result = calculateLoanPayments({
+        principal: calculatedPrincipal,
+        annualRate: loanCalculation.annual_rate,
+        paymentCount: loanCalculation.payment_count,
+        bonusAmount: loanCalculation.bonus_amount,
+        bonusMonths: loanCalculation.bonus_months || [],
+      });
+
+      return result;
+    }
+
+    return {
+      monthlyPayment: 0,
+      interestFee: 0,
+      totalPayment: calculatedPrincipal,
+    };
+  }, [calculatedPrincipal, loanCalculation.annual_rate, loanCalculation.payment_count, loanCalculation.bonus_amount, loanCalculation.bonus_months]);
+
+  // 自動計算結果
+  const autoCalculatedValues = calculateFromAnnualRate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
 
-    // 支払回数が変更された場合、コンテナコンポーネントで自動的に支払期間も更新
+    // 支払回数が変更された場合
     if (name === "payment_count") {
       const numValue = value === "" ? 0 : parseInt(value, 10);
+      onInputChange("loanCalculation", name, numValue);
+    } else if (name === "annual_rate") {
+      // ★年利の処理（小数点対応）
+      const numValue = value === "" ? 0 : parseFloat(value);
       onInputChange("loanCalculation", name, numValue);
     } else {
       // その他のフィールドの処理
@@ -255,27 +280,45 @@ const LoanCalculationComponent: React.FC<{
 
   const getFieldError = (fieldName: string): string | undefined => {
     if (!errors || !errors.loanCalculation) return undefined;
-
     return typeof errors.loanCalculation === "string" ? errors.loanCalculation : errors.loanCalculation[fieldName];
   };
 
-  // 現金・割賦元金と分割支払金合計の自動更新
+  // ★自動計算値の更新 - 年利による計算を優先
   React.useEffect(() => {
-    // 現金・割賦元金の自動更新
-    if (loanCalculation.principal !== calculatedPrincipal) {
-      onInputChange("loanCalculation", "principal", calculatedPrincipal);
-    }
+    const shouldUpdate =
+      loanCalculation.principal !== calculatedPrincipal ||
+      (loanCalculation.annual_rate > 0 &&
+        (loanCalculation.monthly_payment !== autoCalculatedValues.monthlyPayment ||
+          loanCalculation.interest_fee !== autoCalculatedValues.interestFee ||
+          loanCalculation.total_payment !== autoCalculatedValues.totalPayment));
 
-    // 分割支払金合計の自動更新
-    if (loanCalculation.total_payment !== calculatedTotalPayment) {
-      onInputChange("loanCalculation", "total_payment", calculatedTotalPayment);
+    if (shouldUpdate) {
+      // 現金・割賦元金の自動更新
+      if (loanCalculation.principal !== calculatedPrincipal) {
+        onInputChange("loanCalculation", "principal", calculatedPrincipal);
+      }
+
+      // 年利による自動計算値の更新（年利が入力されている場合のみ）
+      if (loanCalculation.annual_rate > 0) {
+        if (loanCalculation.monthly_payment !== autoCalculatedValues.monthlyPayment) {
+          onInputChange("loanCalculation", "monthly_payment", autoCalculatedValues.monthlyPayment);
+        }
+        if (loanCalculation.interest_fee !== autoCalculatedValues.interestFee) {
+          onInputChange("loanCalculation", "interest_fee", autoCalculatedValues.interestFee);
+        }
+        if (loanCalculation.total_payment !== autoCalculatedValues.totalPayment) {
+          onInputChange("loanCalculation", "total_payment", autoCalculatedValues.totalPayment);
+        }
+      }
     }
   }, [
     calculatedPrincipal,
+    autoCalculatedValues,
     loanCalculation.principal,
-    calculatedTotalPayment,
+    loanCalculation.monthly_payment,
+    loanCalculation.interest_fee,
     loanCalculation.total_payment,
-    loanCalculation.interest_fee, // 分割払手数料の変更も監視
+    loanCalculation.annual_rate,
     onInputChange,
   ]);
 
@@ -311,34 +354,21 @@ const LoanCalculationComponent: React.FC<{
             <p>現金販売価格({cashSalesPrice?.toLocaleString() || 0}円) - 頭金</p>
           </div>
         </div>
+
+        {/* ★年利フィールドを追加★ */}
         <Input
-          label="分割払手数料"
-          name="interest_fee"
-          type="text"
-          currency={true}
-          inputMode="numeric"
-          value={loanCalculation.interest_fee?.toString() ?? ""}
+          label="年利（%）"
+          name="annual_rate"
+          type="number"
+          step="0.01"
+          min="0"
+          max="50"
+          inputMode="decimal"
+          value={loanCalculation.annual_rate?.toString() ?? ""}
           onChange={handleChange}
-          error={getFieldError("interest_fee")}
-          placeholder="0"
+          error={getFieldError("annual_rate")}
+          placeholder="例: 5.25"
         />
-        <div className="md:col-span-1">
-          <Input
-            label="分割支払金合計"
-            name="total_payment"
-            type="text"
-            currency={true}
-            inputMode="numeric"
-            value={calculatedTotalPayment || ""}
-            error={getFieldError("total_payment")}
-            placeholder="自動計算"
-            disabled={true}
-            className="bg-gray-100 font-semibold"
-          />
-          <div className="text-sm text-gray-500 mt-1">
-            <p>現金・割賦元金({calculatedPrincipal?.toLocaleString() || 0}円) + 分割払手数料</p>
-          </div>
-        </div>
 
         {/* 支払回数をプルダウンに変更 */}
         <Select
@@ -371,6 +401,44 @@ const LoanCalculationComponent: React.FC<{
           className="bg-gray-100"
         />
 
+        {/* ★分割払手数料は年利から自動計算★ */}
+        <div className="md:col-span-1">
+          <Input
+            label="分割払手数料"
+            name="interest_fee"
+            type="text"
+            currency={true}
+            inputMode="numeric"
+            value={loanCalculation.annual_rate > 0 ? autoCalculatedValues.interestFee : loanCalculation.interest_fee?.toString() ?? ""}
+            onChange={handleChange}
+            error={getFieldError("interest_fee")}
+            placeholder={loanCalculation.annual_rate > 0 ? "年利から自動計算" : "0"}
+            disabled={loanCalculation.annual_rate > 0}
+            className={loanCalculation.annual_rate > 0 ? "bg-gray-100 font-semibold" : ""}
+          />
+          <div className="text-sm text-gray-500 mt-1">
+            {loanCalculation.annual_rate > 0 ? <p>利息総額（年利 {loanCalculation.annual_rate}%）</p> : <p>年利を入力すると自動計算されます</p>}
+          </div>
+        </div>
+
+        <div className="md:col-span-1">
+          <Input
+            label="分割支払金合計"
+            name="total_payment"
+            type="text"
+            currency={true}
+            inputMode="numeric"
+            value={loanCalculation.annual_rate > 0 ? autoCalculatedValues.totalPayment : calculatedPrincipal + (loanCalculation.interest_fee || 0)}
+            error={getFieldError("total_payment")}
+            placeholder="自動計算"
+            disabled={true}
+            className="bg-gray-100 font-semibold"
+          />
+          <div className="text-sm text-gray-500 mt-1">
+            <p>現金・割賦元金({calculatedPrincipal?.toLocaleString() || 0}円) + 分割払手数料</p>
+          </div>
+        </div>
+
         <Input
           label="初回支払額"
           name="first_payment"
@@ -382,17 +450,27 @@ const LoanCalculationComponent: React.FC<{
           error={getFieldError("first_payment")}
           placeholder="0"
         />
-        <Input
-          label="月々支払額"
-          name="monthly_payment"
-          type="text"
-          currency={true}
-          inputMode="numeric"
-          value={loanCalculation.monthly_payment?.toString() ?? ""}
-          onChange={handleChange}
-          error={getFieldError("monthly_payment")}
-          placeholder="0"
-        />
+
+        {/* ★月々支払額は年利から自動計算★ */}
+        <div className="md:col-span-1">
+          <Input
+            label="月々支払額"
+            name="monthly_payment"
+            type="text"
+            currency={true}
+            inputMode="numeric"
+            value={loanCalculation.annual_rate > 0 ? autoCalculatedValues.monthlyPayment : loanCalculation.monthly_payment?.toString() ?? ""}
+            onChange={handleChange}
+            error={getFieldError("monthly_payment")}
+            placeholder={loanCalculation.annual_rate > 0 ? "年利から自動計算" : "0"}
+            disabled={loanCalculation.annual_rate > 0}
+            className={loanCalculation.annual_rate > 0 ? "bg-gray-100 font-semibold" : ""}
+          />
+          <div className="text-sm text-gray-500 mt-1">
+            {loanCalculation.annual_rate > 0 ? <p>年利 {loanCalculation.annual_rate}% で自動計算</p> : <p>年利を入力すると自動計算されます</p>}
+          </div>
+        </div>
+
         <Input
           label="ボーナス加算額"
           name="bonus_amount"
@@ -450,6 +528,19 @@ const LoanCalculationComponent: React.FC<{
         {getFieldError("bonus_months") && <p className="mt-1 text-sm text-red-600">{getFieldError("bonus_months")}</p>}
       </div>
 
+      {/* ★年利使用時の計算詳細表示★ */}
+      {loanCalculation.annual_rate > 0 && calculatedPrincipal > 0 && (
+        <div className="mt-4 p-4 bg-blue-50 rounded-md">
+          <h4 className="text-sm font-medium text-blue-900 mb-2">計算詳細</h4>
+          <div className="text-sm text-blue-700 grid grid-cols-2 gap-2">
+            <div>借入元金: {calculatedPrincipal.toLocaleString()}円</div>
+            <div>年利: {loanCalculation.annual_rate}%</div>
+            <div>月利: {(loanCalculation.annual_rate / 12).toFixed(3)}%</div>
+            <div>返済回数: {loanCalculation.payment_count}回</div>
+          </div>
+        </div>
+      )}
+
       {errors?.loanCalculation && typeof errors.loanCalculation === "string" && <div className="mt-4 text-sm text-red-600">{errors.loanCalculation}</div>}
     </div>
   );
@@ -457,6 +548,7 @@ const LoanCalculationComponent: React.FC<{
 
 // AccessoriesInfo コンポーネントを追加
 import { accessorySchema } from "../../validations/estimate/page";
+import { calculateLoanPayments } from "../../utils/loanCalculation";
 
 const AccessoriesInfo: React.FC<{
   accessories: Accessory[];

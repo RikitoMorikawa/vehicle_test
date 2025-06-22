@@ -65,6 +65,7 @@ const EstimateContainer: React.FC = () => {
     loanCalculation: {
       down_payment: 0,
       principal: 0,
+      annual_rate: 0,
       interest_fee: 0,
       total_payment: 0,
       payment_count: 24,

@@ -192,3 +192,37 @@ COMMENT ON COLUMN estimate_vehicles.area_code IS '送料エリアコード (ship
 
 -- スキーマキャッシュをリロード
 NOTIFY pgrst, 'reload schema';
+
+-- -- 1. 既存のポリシーをすべて削除（もしあれば）
+-- DROP POLICY IF EXISTS "Allow public read access for shipping costs" ON shipping_costs;
+-- DROP POLICY IF EXISTS "Allow authenticated read access for shipping costs" ON shipping_costs;
+-- DROP POLICY IF EXISTS "shipping_costs_select_policy" ON shipping_costs;
+
+-- -- 2. RLSが有効になっていることを確認
+-- ALTER TABLE shipping_costs ENABLE ROW LEVEL SECURITY;
+-- 方法B: または、すべての操作を許可（vehiclesテーブルと同じパターン）
+CREATE POLICY "shipping_costs全アクセス許可" 
+ON shipping_costs
+FOR ALL 
+USING (true)
+WITH CHECK (true);
+
+
+-- 年利フィールドを追加（小数点2桁まで、例：5.25% = 5.25）
+ALTER TABLE loan_calculations 
+ADD COLUMN annual_rate DECIMAL(5,2) NOT NULL DEFAULT 0.00;
+
+-- 年利の制約を追加（0%以上50%以下の妥当な範囲）
+ALTER TABLE loan_calculations 
+ADD CONSTRAINT loan_calculations_annual_rate_check 
+CHECK (annual_rate >= 0.00 AND annual_rate <= 50.00);
+
+-- インデックスを追加（年利での検索・分析用）
+CREATE INDEX IF NOT EXISTS idx_loan_calculations_annual_rate 
+ON loan_calculations(annual_rate);
+
+-- カラムにコメントを追加
+COMMENT ON COLUMN loan_calculations.annual_rate IS '年利（%）: 例 5.25% = 5.25';
+
+-- スキーマキャッシュをリロード
+NOTIFY pgrst, 'reload schema';
