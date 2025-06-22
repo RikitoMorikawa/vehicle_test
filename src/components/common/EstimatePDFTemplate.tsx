@@ -157,9 +157,73 @@ const EstimatePDFTemplate: React.FC<EstimatePDFTemplateProps> = ({ data, classNa
             <div className="mb-1">番号：{data.estimateNumber}</div>
             <div>日付：{formatDate(data.estimateDate)}</div>
           </div>
-          <div className="text-right border-2 border-gray-300 p-4 bg-gray-50 w-80">
-            <h3 className="font-bold mb-2">販売店情報</h3>
-            <div className="text-sm space-y-1">
+        </div>
+      </div>
+
+      {/* 販売店情報とお客様情報を並列に配置 */}
+      <div className="grid grid-cols-2 gap-6 mb-6">
+        {/* 左側：お客様情報（手書き用テーブル） */}
+        <div>
+          <div className="bg-gray-200 px-4 py-2 font-bold border-2 border-black text-lg">お客様情報</div>
+          <table className="w-full border-2 border-t-0 border-black text-sm">
+            <tbody>
+              <tr className="border-b border-black">
+                <td className="p-3 w-1/3 bg-gray-100 font-medium border-r border-black">お客様氏名（買い主）</td>
+                <td className="p-3 w-2/3">
+                  <div className="h-6"></div>
+                </td>
+              </tr>
+              <tr className="border-b border-black">
+                <td className="p-3 bg-gray-100 font-medium border-r border-black">フリガナ</td>
+                <td className="p-3">
+                  <div className="h-6"></div>
+                </td>
+              </tr>
+              <tr className="border-b border-black">
+                <td className="p-3 bg-gray-100 font-medium border-r border-black">住所</td>
+                <td className="p-3">
+                  <div className="h-6"></div>
+                </td>
+              </tr>
+              <tr className="border-b border-black">
+                <td className="p-3 bg-gray-100 font-medium border-r border-black">生年月日</td>
+                <td className="p-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="flex-1 h-6"></div>
+                    <span>年</span>
+                    <div className="w-8 h-6"></div>
+                    <span>月</span>
+                    <div className="w-8 h-6"></div>
+                    <span>日</span>
+                  </div>
+                </td>
+              </tr>
+              <tr className="border-b border-black">
+                <td className="p-3 bg-gray-100 font-medium border-r border-black">電話</td>
+                <td className="p-3">
+                  <div className="h-6"></div>
+                </td>
+              </tr>
+              <tr className="border-b border-black">
+                <td className="p-3 bg-gray-100 font-medium border-r border-black">携帯</td>
+                <td className="p-3">
+                  <div className="h-6"></div>
+                </td>
+              </tr>
+              <tr>
+                <td className="p-3 bg-gray-100 font-medium border-r border-black">備考</td>
+                <td className="p-3">
+                  <div className="h-6"></div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        {/* 右側：販売店情報 */}
+        <div>
+          <div className="bg-gray-200 px-4 py-2 font-bold border-2 border-black text-lg">販売店情報</div>
+          <div className="border-2 border-t-0 border-black p-4 bg-gray-50">
+            <div className="text-sm space-y-2">
               <div>
                 <span className="font-medium">販売店名:</span> {data.dealerInfo.name}
               </div>
@@ -180,87 +244,44 @@ const EstimatePDFTemplate: React.FC<EstimatePDFTemplateProps> = ({ data, classNa
         </div>
       </div>
 
-      {/* 顧客情報（手書き用テーブル） */}
-      <div className="mb-6">
-        <div className="bg-gray-200 px-4 py-2 font-bold border-2 border-black text-lg">お客様情報</div>
-        <table className="w-full border-2 border-t-0 border-black text-sm">
-          <tbody>
-            <tr className="border-b border-black">
-              <td className="p-3 w-1/6 bg-gray-100 font-medium border-r border-black">お客様氏名（買い主）</td>
-              <td className="p-3 w-1/3 border-r border-black">
-                <div className="h-6"></div>
-              </td>
-              <td className="p-3 w-1/6 bg-gray-100 font-medium border-r border-black">フリガナ</td>
-              <td className="p-3 w-1/3">
-                <div className="h-6"></div>
-              </td>
-            </tr>
-            <tr className="border-b border-black">
-              <td className="p-3 bg-gray-100 font-medium border-r border-black">住所</td>
-              <td className="p-3 border-r border-black" colSpan={3}>
-                <div className="h-6"></div>
-              </td>
-            </tr>
-            <tr className="border-b border-black">
-              <td className="p-3 bg-gray-100 font-medium border-r border-black">生年月日</td>
-              <td className="p-3 border-r border-black">
-                <div className="flex items-center space-x-2">
-                  <div className="flex-1 h-6"></div>
-                  <span>年</span>
-                  <div className="w-12 h-6"></div>
-                  <span>月</span>
-                  <div className="w-12 h-6"></div>
-                  <span>日</span>
-                </div>
-              </td>
-              <td className="p-3 bg-gray-100 font-medium border-r border-black">電話</td>
-              <td className="p-3">
-                <div className="h-6"></div>
-              </td>
-            </tr>
-            <tr className="border-b border-black">
-              <td className="p-3 bg-gray-100 font-medium border-r border-black">携帯</td>
-              <td className="p-3 border-r border-black">
-                <div className="h-6"></div>
-              </td>
-              <td className="p-3 bg-gray-100 font-medium border-r border-black">備考</td>
-              <td className="p-3">
-                <div className="h-6"></div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
       {/* 見積車両情報 */}
       <div className="mb-6">
         <div className="bg-gray-200 px-4 py-2 font-bold border-2 border-black text-lg">見積車両</div>
         <div className="border-2 border-t-0 border-black">
           <div className="flex">
-            <div className="flex-1 border-r-2 border-black p-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="font-medium">車名:</span> {data.estimateVehicle.maker} {data.estimateVehicle.name}
-                </div>
-                <div>
-                  <span className="font-medium">グレード:</span> {data.estimateVehicle.grade || "-"}
-                </div>
-                <div>
-                  <span className="font-medium">型式:</span> {data.estimateVehicle.model || "-"}
-                </div>
-                <div>
-                  <span className="font-medium">初度登録年月:</span> {data.estimateVehicle.year}年
-                </div>
-                <div>
-                  <span className="font-medium">走行距離:</span> {formatNumber(data.estimateVehicle.mileage)}km
-                </div>
-                <div>
-                  <span className="font-medium">修復歴:</span> {data.estimateVehicle.repairHistory ? "有" : "無"}
-                </div>
-                <div>
-                  <span className="font-medium">外装色:</span> {data.estimateVehicle.exteriorColor || "-"}
-                </div>
-              </div>
+            <div className="flex-1 border-r-2 border-black">
+              <table className="w-full text-sm">
+                <tbody>
+                  <tr className="border-b border-black">
+                    <td className="p-3 w-1/4 bg-gray-100 font-medium border-r border-black">車名</td>
+                    <td className="p-3 w-1/4 border-r border-black">
+                      {data.estimateVehicle.maker} {data.estimateVehicle.name}
+                    </td>
+                    <td className="p-3 w-1/4 bg-gray-100 font-medium border-r border-black">グレード</td>
+                    <td className="p-3 w-1/4">{data.estimateVehicle.grade || "-"}</td>
+                  </tr>
+                  <tr className="border-b border-black">
+                    <td className="p-3 bg-gray-100 font-medium border-r border-black">型式</td>
+                    <td className="p-3 border-r border-black">{data.estimateVehicle.model || "-"}</td>
+                    <td className="p-3 bg-gray-100 font-medium border-r border-black">初度登録年月</td>
+                    <td className="p-3">{data.estimateVehicle.year}年</td>
+                  </tr>
+                  <tr className="border-b border-black">
+                    <td className="p-3 bg-gray-100 font-medium border-r border-black">走行距離</td>
+                    <td className="p-3 border-r border-black">{formatNumber(data.estimateVehicle.mileage)}km</td>
+                    <td className="p-3 bg-gray-100 font-medium border-r border-black">修復歴</td>
+                    <td className="p-3">{data.estimateVehicle.repairHistory ? "有" : "無"}</td>
+                  </tr>
+                  <tr>
+                    <td className="p-3 bg-gray-100 font-medium border-r border-black">外装色</td>
+                    <td className="p-3 border-r border-black" colSpan={1}>
+                      {data.estimateVehicle.exteriorColor || "-"}
+                    </td>
+                    <td className="p-3 bg-gray-100 font-medium border-r border-black"></td>
+                    <td className="p-3"></td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
             <div className="w-52 p-4 text-center bg-yellow-50">
               <div className="text-2xl font-bold text-red-600">¥{formatNumber(data.salesPrices.payment_total)}</div>
@@ -505,76 +526,95 @@ const EstimatePDFTemplate: React.FC<EstimatePDFTemplateProps> = ({ data, classNa
         </div>
       </div>
 
-      {/* ローン計算 */}
-      {data.loanCalculation && (
-        <div className="mb-6">
-          <div className="bg-gray-200 px-4 py-2 font-bold border-2 border-black text-lg">ローン計算</div>
-          <table className="w-full border-2 border-t-0 border-black text-sm">
-            <tbody>
-              <tr className="border-b border-black">
-                <td className="p-3 w-1/4">頭金</td>
-                <td className="p-3 text-right w-1/4">¥{formatNumber(data.loanCalculation.down_payment)}</td>
-                <td className="p-3 w-1/4">支払回数</td>
-                <td className="p-3 text-right w-1/4">{formatNumber(data.loanCalculation.payment_count)}回</td>
-              </tr>
-              <tr className="border-b border-black">
-                <td className="p-3">現金・割賦元金</td>
-                <td className="p-3 text-right">¥{formatNumber(data.loanCalculation.principal)}</td>
-                <td className="p-3">支払期間</td>
-                <td className="p-3 text-right">{formatNumber(data.loanCalculation.payment_period)}年</td>
-              </tr>
-              <tr className="border-b border-black">
-                <td className="p-3">分割払手数料</td>
-                <td className="p-3 text-right">¥{formatNumber(data.loanCalculation.interest_fee)}</td>
-                <td className="p-3">初回支払額</td>
-                <td className="p-3 text-right">¥{formatNumber(data.loanCalculation.first_payment)}</td>
-              </tr>
-              <tr className={`${data.loanCalculation.bonus_amount > 0 ? "border-b border-black" : ""}`}>
-                <td className="p-3">分割支払金合計</td>
-                <td className="p-3 text-right">¥{formatNumber(data.loanCalculation.total_payment)}</td>
-                <td className="p-3">２回目以降支払額</td>
-                <td className="p-3 text-right">¥{formatNumber(data.loanCalculation.monthly_payment)}</td>
-              </tr>
-              {data.loanCalculation.bonus_amount > 0 && (
-                <tr>
-                  <td className="p-3">ボーナス加算月</td>
-                  <td className="p-3 text-right">{data.loanCalculation.bonus_months.join("・")}月</td>
-                  <td className="p-3">ボーナス加算額</td>
-                  <td className="p-3 text-right">¥{formatNumber(data.loanCalculation.bonus_amount)}</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+      {/* ローン計算と振り込み口座を並列に配置 */}
+      {(data.loanCalculation || data.dealerInfo.bankAccount) && (
+        <div className="grid grid-cols-2 gap-6 mb-6">
+          {/* 左側：ローン計算 */}
+          <div>
+            {data.loanCalculation && (
+              <>
+                <div className="bg-gray-200 px-4 py-2 font-bold border-2 border-black text-lg">ローン計算</div>
+                <table className="w-full border-2 border-t-0 border-black text-sm">
+                  <tbody>
+                    <tr className="border-b border-black">
+                      <td className="p-3 w-1/4">頭金</td>
+                      <td className="p-3 text-right w-1/4 border-r border-black">
+                        {data.loanCalculation ? `¥${formatNumber(data.loanCalculation.down_payment)}` : ""}
+                      </td>
+                      <td className="p-3 w-1/4">支払回数</td>
+                      <td className="p-3 text-right w-1/4">{data.loanCalculation ? `${formatNumber(data.loanCalculation.payment_count)}回` : ""}</td>
+                    </tr>
+                    <tr className="border-b border-black">
+                      <td className="p-3">現金・割賦元金</td>
+                      <td className="p-3 text-right border-r border-black">{data.loanCalculation ? `¥${formatNumber(data.loanCalculation.principal)}` : ""}</td>
+                      <td className="p-3">支払期間</td>
+                      <td className="p-3 text-right">{data.loanCalculation ? `${formatNumber(data.loanCalculation.payment_period)}年` : ""}</td>
+                    </tr>
+                    <tr className="border-b border-black">
+                      <td className="p-3">分割払手数料</td>
+                      <td className="p-3 text-right border-r border-black">
+                        {data.loanCalculation ? `¥${formatNumber(data.loanCalculation.interest_fee)}` : ""}
+                      </td>
+                      <td className="p-3">初回支払額</td>
+                      <td className="p-3 text-right">{data.loanCalculation ? `¥${formatNumber(data.loanCalculation.first_payment)}` : ""}</td>
+                    </tr>
+                    <tr className={`${data.loanCalculation?.bonus_amount > 0 ? "border-b border-black" : ""}`}>
+                      <td className="p-3">分割支払金合計</td>
+                      <td className="p-3 text-right border-r border-black">
+                        {data.loanCalculation ? `¥${formatNumber(data.loanCalculation.total_payment)}` : ""}
+                      </td>
+                      <td className="p-3">２回目以降支払額</td>
+                      <td className="p-3 text-right">{data.loanCalculation ? `¥${formatNumber(data.loanCalculation.monthly_payment)}` : ""}</td>
+                    </tr>
+                    {data.loanCalculation?.bonus_amount > 0 && (
+                      <tr>
+                        <td className="p-3">ボーナス加算月</td>
+                        <td className="p-3 text-right border-r border-black">{data.loanCalculation.bonus_months.join("・")}月</td>
+                        <td className="p-3">ボーナス加算額</td>
+                        <td className="p-3 text-right">¥{formatNumber(data.loanCalculation.bonus_amount)}</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </>
+            )}
+          </div>
+
+          {/* 右側：振り込み口座 */}
+          <div>
+            {data.dealerInfo.bankAccount && (
+              <>
+                <div className="bg-gray-200 px-4 py-2 font-bold border-2 border-black text-lg">振り込み口座</div>
+                <table className="w-full border-2 border-t-0 border-black text-sm">
+                  <tbody>
+                    <tr className="border-b border-black">
+                      <td className="p-3 w-1/3 bg-gray-100 font-medium border-r border-black">銀行名</td>
+                      <td className="p-3 w-2/3">{data.dealerInfo.bankAccount?.bankName || ""}</td>
+                    </tr>
+                    <tr className="border-b border-black">
+                      <td className="p-3 bg-gray-100 font-medium border-r border-black">支店名</td>
+                      <td className="p-3">{data.dealerInfo.bankAccount?.branchName || ""}</td>
+                    </tr>
+                    <tr className="border-b border-black">
+                      <td className="p-3 bg-gray-100 font-medium border-r border-black">口座種別</td>
+                      <td className="p-3">{data.dealerInfo.bankAccount?.accountType || ""}</td>
+                    </tr>
+                    <tr className="border-b border-black">
+                      <td className="p-3 bg-gray-100 font-medium border-r border-black">口座番号</td>
+                      <td className="p-3">{data.dealerInfo.bankAccount?.accountNumber || ""}</td>
+                    </tr>
+                    <tr>
+                      <td className="p-3 bg-gray-100 font-medium border-r border-black">口座名義</td>
+                      <td className="p-3">{data.dealerInfo.bankAccount?.accountHolder || ""}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </>
+            )}
+          </div>
         </div>
       )}
 
-      {/* 振り込み口座欄 */}
-      <div className="mb-6">
-        <div className="bg-gray-200 px-4 py-2 font-bold border-2 border-black text-lg">振り込み口座</div>
-        <table className="w-full border-2 border-t-0 border-black text-sm">
-          <tbody>
-            <tr className="border-b border-black">
-              <td className="p-3 w-1/6 bg-gray-100 font-medium border-r border-black">銀行名</td>
-              <td className="p-3 w-1/3 border-r border-black">{data.dealerInfo.bankAccount?.bankName || ""}</td>
-              <td className="p-3 w-1/6 bg-gray-100 font-medium border-r border-black">支店名</td>
-              <td className="p-3 w-1/3">{data.dealerInfo.bankAccount?.branchName || ""}</td>
-            </tr>
-            <tr className="border-b border-black">
-              <td className="p-3 bg-gray-100 font-medium border-r border-black">口座種別</td>
-              <td className="p-3 border-r border-black">{data.dealerInfo.bankAccount?.accountType || ""}</td>
-              <td className="p-3 bg-gray-100 font-medium border-r border-black">口座番号</td>
-              <td className="p-3">{data.dealerInfo.bankAccount?.accountNumber || ""}</td>
-            </tr>
-            <tr className="border-b border-black">
-              <td className="p-3 bg-gray-100 font-medium border-r border-black">口座名義</td>
-              <td className="p-3" colSpan={3}>
-                {data.dealerInfo.bankAccount?.accountHolder || ""}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      
       {/* 2ページ目：注文書の場合のみ特約条項を表示 */}
       {documentType === "order" && <SpecialTermsPage />}
     </div>
