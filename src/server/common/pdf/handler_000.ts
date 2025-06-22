@@ -42,16 +42,32 @@ export const pdfHandler = {
       // 2. 関連テーブルから詳細データを並行取得（デバッグログ追加）
       console.log("Fetching related data for estimateId:", estimateId);
 
-      // ★追加: user_idから販売店情報（ユーザー情報）を取得
+      // ★修正: user_idから販売店情報を取得し、company_idも解決
       const { data: userData, error: userError } = await supabase
         .from("users")
-        .select("company_name, user_name, phone, email, address")
+        .select("company_name, user_name, phone, email")
         .eq("id", estimateVehicle.user_id)
         .single();
 
       if (userError) {
         console.error("Error fetching user data:", userError);
         // エラーでも続行（デフォルト値を使用）
+      }
+
+      // ★追加: usersのcompany_nameからcompaniesテーブルを検索して完全な会社情報を取得
+      let companyData = null;
+      if (userData?.company_name) {
+        const { data: companyResult, error: companyError } = await supabase
+          .from("companies")
+          .select("name, address")
+          .eq("name", userData.company_name)
+          .single();
+
+        if (companyError) {
+          console.error("Error fetching company data:", companyError);
+        } else {
+          companyData = companyResult;
+        }
       }
 
       console.log("Found estimate vehicle:", estimateVehicle.id);
@@ -149,10 +165,10 @@ export const pdfHandler = {
         estimateDate,
         document_type: estimateVehicle.document_type,
 
-        // 販売店情報
+        // 販売店情報（companiesテーブルの情報を優先的に使用）
         dealerInfo: {
-          name: userData?.company_name || "販売店名未設定",
-          address: userData?.address || "住所未設定",
+          name: companyData?.name || userData?.company_name || "販売店名未設定",
+          address: companyData?.address || "住所未設定", // companiesテーブルから取得
           phone: userData?.phone || "電話番号未設定",
           representative: userData?.user_name || "担当者未設定",
           email: userData?.email || "メールアドレス未設定",
