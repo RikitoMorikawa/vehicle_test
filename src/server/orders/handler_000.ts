@@ -28,15 +28,10 @@ export const orderHandler = {
   // 車両の注文状況チェック（ユーザー別表示制御）
   async getVehicleOrderStatus(vehicleId: string, currentUserId?: string): Promise<VehicleOrderStatus> {
     try {
-      console.log("🔍 DEBUG: Starting getVehicleOrderStatus");
-      console.log("🔍 DEBUG: Vehicle ID:", vehicleId);
-      console.log("🔍 DEBUG: User ID:", currentUserId);
 
       // まず簡単なクエリでテスト
-      console.log("🔍 DEBUG: Testing basic query...");
-      const { data: testData, error: testError } = await supabase.from("orders").select("count", { count: "exact" });
+      const {  error: testError } = await supabase.from("orders").select("count", { count: "exact" });
 
-      console.log("🔍 DEBUG: Basic query result:", { data: testData, error: testError });
 
       if (testError) {
         console.error("🚨 DEBUG: Basic query failed:", testError);
@@ -44,28 +39,14 @@ export const orderHandler = {
       }
 
       // 1. 承認済み（販売済み）注文があるかチェック
-      console.log("🔍 DEBUG: Checking approved orders...");
       const { data: approvedOrders, error: approvedError } = await supabase.from("orders").select("*").eq("vehicle_id", vehicleId).eq("status", 1); // approved
-
-      console.log("🔍 DEBUG: Approved query result:", {
-        data: approvedOrders,
-        error: approvedError,
-        count: approvedOrders?.length,
-      });
 
       if (approvedError) {
         console.error("🚨 DEBUG: Approved query error:", approvedError);
       }
 
       // 2. 注文依頼中（pending）の注文があるかチェック
-      console.log("🔍 DEBUG: Checking pending orders...");
       const { data: pendingOrders, error: pendingError } = await supabase.from("orders").select("*").eq("vehicle_id", vehicleId).eq("status", 0); // pending
-
-      console.log("🔍 DEBUG: Pending query result:", {
-        data: pendingOrders,
-        error: pendingError,
-        count: pendingOrders?.length,
-      });
 
       if (pendingError) {
         console.error("🚨 DEBUG: Pending query error:", pendingError);
@@ -76,7 +57,6 @@ export const orderHandler = {
       // まずユーザー自身の注文状況をチェック（ログイン時のみ）
       let userOrder = null;
       if (currentUserId) {
-        console.log("🔍 DEBUG: Checking user orders...");
         const { data: userOrders, error: userError } = await supabase
           .from("orders")
           .select("*")
@@ -85,12 +65,6 @@ export const orderHandler = {
           .in("status", [0, 1, 2, 3]) // pending, approved, rejected, cancelled
           .order("created_at", { ascending: false })
           .limit(1);
-
-        console.log("🔍 DEBUG: User query result:", {
-          data: userOrders,
-          error: userError,
-          count: userOrders?.length,
-        });
 
         if (userError) {
           console.error("🚨 DEBUG: User query error:", userError);
@@ -114,12 +88,6 @@ export const orderHandler = {
         console.log("✅ DEBUG: Vehicle is already sold by someone else");
         return { isAvailable: false };
       }
-
-      // 4. 結果を返す
-      console.log("🔍 DEBUG: Final decision logic...");
-      console.log("🔍 DEBUG: userOrder:", userOrder);
-      console.log("🔍 DEBUG: pendingOrder:", pendingOrder);
-      console.log("🔍 DEBUG: currentUserId:", currentUserId);
 
       if (userOrder) {
         console.log("✅ DEBUG: User has order with status:", userOrder.status);
@@ -147,7 +115,6 @@ export const orderHandler = {
   // 注文作成
   async createOrder(userId: string, vehicleId: string): Promise<OrderData> {
     try {
-      console.log("🔍 DEBUG: Creating order for user:", userId, "vehicle:", vehicleId);
 
       // 新規注文作成
       const { data, error } = await supabase
@@ -163,7 +130,6 @@ export const orderHandler = {
         .select()
         .single();
 
-      console.log("🔍 DEBUG: Create order result:", { data, error });
 
       if (error) {
         console.error("🚨 DEBUG: Order creation error:", error);
@@ -181,7 +147,6 @@ export const orderHandler = {
   // 注文キャンセル（ユーザー用）
   async cancelOrder(orderId: string, userId: string): Promise<OrderData> {
     try {
-      console.log("🔍 DEBUG: Cancelling order:", orderId, "by user:", userId);
 
       const { data, error } = await supabase
         .from("orders")
@@ -192,7 +157,6 @@ export const orderHandler = {
         .select()
         .single();
 
-      console.log("🔍 DEBUG: Cancel order result:", { data, error });
 
       if (error) {
         console.error("🚨 DEBUG: Cancel order error:", error);

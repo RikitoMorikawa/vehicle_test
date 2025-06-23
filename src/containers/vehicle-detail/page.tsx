@@ -45,12 +45,6 @@ const VehicleDetailContainer: React.FC = () => {
   // 注文状況の取得（一般ユーザー用）
   const { data: orderStatus, isLoading: orderStatusLoading } = orderService.useVehicleOrderStatus(id, user?.id);
 
-  // この直後に以下のログを追加
-  console.log("🔍 FRONTEND DEBUG: orderStatus data:", orderStatus);
-  console.log("🔍 FRONTEND DEBUG: user?.id:", user?.id);
-  console.log("🔍 FRONTEND DEBUG: vehicle id:", id);
-  console.log("🔍 FRONTEND DEBUG: orderStatusLoading:", orderStatusLoading);
-
   // 管理者用：この車両の全注文データを取得
   const { data: allOrders } = orderService.useAllOrders();
   const vehicleOrders = allOrders?.filter((order) => order.vehicle_id === id) || [];

@@ -68,7 +68,6 @@ export const pdfHandler = {
         if (companyError) {
           console.error("Error fetching company data:", companyError);
         } else if (companyResult) {
-          console.log("Found company data:", companyResult);
           companyData = companyResult;
         } else {
           console.log("No company found with name:", userData.company_name);
@@ -76,7 +75,6 @@ export const pdfHandler = {
 
         // 会社データ取得後にログ追加
         if (companyResult) {
-          console.log("Found company data:", companyResult);
           console.log("Bank account data:", companyResult.bank_account);
           companyData = companyResult;
         } else {
@@ -127,14 +125,6 @@ export const pdfHandler = {
         supabase.from("sales_prices").select("*").eq("estimate_id", estimateId).maybeSingle(),
       ]);
 
-      // 追加デバッグ：trade_in_vehiclesテーブルの全データを確認
-      const { data: allTradeInData, error: allTradeInError } = await supabase
-        .from("trade_in_vehicles")
-        .select("estimate_id, vehicle_name, registration_number")
-        .limit(10);
-
-      console.log("All trade-in vehicles (sample):", allTradeInData);
-      console.log("Trade-in query error:", allTradeInError);
 
       // エラーチェック
       const errors = [
