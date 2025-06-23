@@ -20,7 +20,7 @@
   /* PDFテンプレート用の共通スタイル */
   .pdf-template {
     -webkit-print-color-adjust: exact;
-    color-adjust: exact;
+    print-color-adjust: exact;
   }
   
   /* ページマージンの調整 */
@@ -32,7 +32,7 @@
   /* 背景色や境界線が印刷されるように */
   * {
     -webkit-print-color-adjust: exact;
-    color-adjust: exact;
+    print-color-adjust: exact;
   }
 }
 

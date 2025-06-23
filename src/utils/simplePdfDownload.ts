@@ -57,7 +57,7 @@ export const downloadOrderElementAsPDF = async (element: HTMLElement, options: P
           style.textContent = `
             * {
               -webkit-print-color-adjust: exact !important;
-              color-adjust: exact !important;
+              print-color-adjust: exact !important;
             }
             table, th, td {
               border-collapse: collapse !important;
@@ -119,7 +119,7 @@ export const downloadOrderElementAsPDF = async (element: HTMLElement, options: P
               style.textContent = `
                 * {
                   -webkit-print-color-adjust: exact !important;
-                  color-adjust: exact !important;
+                  print-color-adjust: exact !important;
                 }
                 table, th, td {
                   border-collapse: collapse !important;
@@ -200,7 +200,7 @@ export const downloadSinglePageElementAsPDF = async (element: HTMLElement, optio
           style.textContent = `
             * {
               -webkit-print-color-adjust: exact !important;
-              color-adjust: exact !important;
+              print-color-adjust: exact !important;
             }
             table, th, td {
               border-collapse: collapse !important;
