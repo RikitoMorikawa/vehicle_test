@@ -167,68 +167,88 @@ export const downloadOrderElementAsPDF = async (element: HTMLElement, options: P
 /**
  * 既存の単一ページPDF生成（見積書・請求書用）
  */
+/**
+ * 既存の単一ページPDF生成（見積書・請求書用）- 横幅390mmに統一
+ */
 export const downloadSinglePageElementAsPDF = async (element: HTMLElement, options: PDFOptions = {}): Promise<void> => {
   const { filename = "document.pdf", quality = 0.95, scale = 2 } = options;
 
   try {
-    const canvas = await html2canvas(element, {
-      scale,
-      useCORS: true,
-      backgroundColor: "#ffffff",
-      logging: false,
-      allowTaint: true,
-      removeContainer: true,
-      imageTimeout: 10000,
-      onclone: (clonedDoc) => {
-        const style = clonedDoc.createElement("style");
-        style.textContent = `
-          * {
-            -webkit-print-color-adjust: exact !important;
-            color-adjust: exact !important;
-          }
-          table, th, td {
-            border-collapse: collapse !important;
-          }
-        `;
-        clonedDoc.head.appendChild(style);
-      },
-    });
+    // 要素をクローンして一時divに追加（注文書と同様の処理）
+    const clonedElement = element.cloneNode(true) as HTMLElement;
 
-    // PDFを作成
-    const pdf = new jsPDF({
-      orientation: "portrait",
-      unit: "mm",
-      format: "a4",
-    });
+    // 一時divを作成して横幅を390mmに設定
+    const tempDiv = document.createElement("div");
+    tempDiv.style.position = "absolute";
+    tempDiv.style.left = "-9999px";
+    tempDiv.style.top = "0";
+    tempDiv.style.width = "390mm"; // 注文書のメインページと同じ横幅
+    tempDiv.appendChild(clonedElement);
+    document.body.appendChild(tempDiv);
 
-    // A4サイズの設定
-    const pdfWidth = 210;
-    const pdfHeight = 297;
-    const margin = 3;
+    try {
+      const canvas = await html2canvas(clonedElement, {
+        scale,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+        allowTaint: true,
+        removeContainer: true,
+        imageTimeout: 10000,
+        onclone: (clonedDoc) => {
+          const style = clonedDoc.createElement("style");
+          style.textContent = `
+            * {
+              -webkit-print-color-adjust: exact !important;
+              color-adjust: exact !important;
+            }
+            table, th, td {
+              border-collapse: collapse !important;
+            }
+          `;
+          clonedDoc.head.appendChild(style);
+        },
+      });
 
-    // 画像のアスペクト比を計算
-    const imgWidth = pdfWidth - margin * 2;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      // PDFを作成
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
 
-    // 画像がページに収まるかチェック
-    let finalHeight = imgHeight;
-    let finalWidth = imgWidth;
+      // A4サイズの設定
+      const pdfWidth = 210;
+      const pdfHeight = 297;
+      const margin = 3;
 
-    if (imgHeight > pdfHeight - margin * 2) {
-      finalHeight = pdfHeight - margin * 2;
-      finalWidth = (canvas.width * finalHeight) / canvas.height;
+      // 画像のアスペクト比を計算
+      const imgWidth = pdfWidth - margin * 2;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      // 画像がページに収まるかチェック
+      let finalHeight = imgHeight;
+      let finalWidth = imgWidth;
+
+      if (imgHeight > pdfHeight - margin * 2) {
+        finalHeight = pdfHeight - margin * 2;
+        finalWidth = (canvas.width * finalHeight) / canvas.height;
+      }
+
+      // 中央配置のための計算
+      const x = (pdfWidth - finalWidth) / 2;
+      const y = (pdfHeight - finalHeight) / 2;
+
+      // 画像をPDFに追加
+      const imgData = canvas.toDataURL("image/jpeg", quality);
+      pdf.addImage(imgData, "JPEG", x, y, finalWidth, finalHeight);
+
+      // PDFをダウンロード
+      pdf.save(filename);
+    } finally {
+      // 一時要素を削除
+      document.body.removeChild(tempDiv);
     }
-
-    // 中央配置のための計算
-    const x = (pdfWidth - finalWidth) / 2;
-    const y = (pdfHeight - finalHeight) / 2;
-
-    // 画像をPDFに追加
-    const imgData = canvas.toDataURL("image/jpeg", quality);
-    pdf.addImage(imgData, "JPEG", x, y, finalWidth, finalHeight);
-
-    // PDFをダウンロード
-    pdf.save(filename);
   } catch (error) {
     console.error("PDF生成エラー:", error);
     throw new Error("PDFの生成に失敗しました");
