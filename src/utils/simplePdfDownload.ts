@@ -24,7 +24,7 @@ export const downloadOrderElementAsPDF = async (element: HTMLElement, options: P
     // A4サイズの設定
     const pdfWidth = 210;
     const pdfHeight = 297;
-    const margin = 10;
+    const margin = 3;
 
     // 1. メインページを取得（特約条項を除外）
     const mainPageElement = element.cloneNode(true) as HTMLElement;
@@ -38,7 +38,7 @@ export const downloadOrderElementAsPDF = async (element: HTMLElement, options: P
     tempMainDiv.style.position = "absolute";
     tempMainDiv.style.left = "-9999px";
     tempMainDiv.style.top = "0";
-    tempMainDiv.style.width = "210mm"; // A4幅
+    tempMainDiv.style.width = "390mm"; // 横幅最大化
     tempMainDiv.appendChild(mainPageElement);
     document.body.appendChild(tempMainDiv);
 
@@ -100,7 +100,7 @@ export const downloadOrderElementAsPDF = async (element: HTMLElement, options: P
         tempSpecialDiv.style.position = "absolute";
         tempSpecialDiv.style.left = "-9999px";
         tempSpecialDiv.style.top = "0";
-        tempSpecialDiv.style.width = "210mm"; // A4幅
+        tempSpecialDiv.style.width = "250mm";
         tempSpecialDiv.appendChild(specialTermsElement);
         document.body.appendChild(tempSpecialDiv);
 
@@ -204,7 +204,7 @@ export const downloadSinglePageElementAsPDF = async (element: HTMLElement, optio
     // A4サイズの設定
     const pdfWidth = 210;
     const pdfHeight = 297;
-    const margin = 10;
+    const margin = 3;
 
     // 画像のアスペクト比を計算
     const imgWidth = pdfWidth - margin * 2;

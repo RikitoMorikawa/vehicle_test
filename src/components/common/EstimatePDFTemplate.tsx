@@ -21,7 +21,7 @@ const EstimatePDFTemplate: React.FC<EstimatePDFTemplateProps> = ({ data, classNa
   // 特約条項コンポーネント（注文書専用）
   const SpecialTermsPage = () => (
     <div
-      className="order-terms-page bg-white p-8 max-w-4xl mx-auto"
+      className="order-terms-page bg-white p-8 max-w-7xl mx-auto"
       style={{
         fontFamily: "system-ui, -apple-system, sans-serif",
         minHeight: "100vh",
@@ -154,7 +154,7 @@ const EstimatePDFTemplate: React.FC<EstimatePDFTemplateProps> = ({ data, classNa
   // メインページコンポーネント
   const MainPage = () => (
     <div
-      className={`${className} bg-white p-8 max-w-4xl mx-auto pdf-page`}
+      className={`${className} bg-white p-8 max-w-7xl mx-auto pdf-page`}
       style={{
         fontFamily: "system-ui, -apple-system, sans-serif",
         minHeight: "100vh",
