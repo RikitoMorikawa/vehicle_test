@@ -106,7 +106,7 @@ const EditUserComponent: React.FC<EditUserComponentProps> = ({
 
               <div className="p-6">
                 <form onSubmit={onSubmit} className="space-y-6">
-                  <Input label="会社名" name="company_name" value={formData.company_name} onChange={onInputChange} disabled={saving} />
+                  <Input label="会社名" name="company_name" value={formData.company_name} onChange={onInputChange} disabled={true} />
                   <Input label="担当者名" name="user_name" value={formData.user_name} onChange={onInputChange} disabled={saving} />
                   <Input label="電話番号" name="phone" value={formData.phone} onChange={onInputChange} disabled={saving} />
                   <Input label="メールアドレス" name="email" type="email" value={formData.email} onChange={onInputChange} disabled={saving} />

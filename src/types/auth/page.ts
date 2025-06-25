@@ -7,12 +7,13 @@ export interface User {
   id: string;
   company_name: string;
   user_name: string;
-  phone: string;
+  phone: string;  
   email: string;
   role: string;
   created_at: string;
   updated_at: string;
   is_approved: boolean;
+  password?: string; // パスワードは通常、クライアント側では扱わないが、フォームデータとして必要な場合もある
 }
 
 // `any`型を避けた定義

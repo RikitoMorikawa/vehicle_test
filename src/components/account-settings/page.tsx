@@ -80,13 +80,7 @@ const AccountSettingsComponent: React.FC<AccountSettingsComponentProps> = ({
                 <h2 className="text-lg font-medium text-gray-900 mb-6">プロフィール情報</h2>
                 <form onSubmit={onProfileSubmit} className="space-y-6">
                   <div className="grid grid-cols-1 gap-6">
-                    <Input
-                      label="会社名"
-                      name="company_name"
-                      value={formData.company_name}
-                      onChange={onInputChange}
-                      disabled={!isEditing || isProfileLoading}
-                    />
+                    <Input label="会社名" name="company_name" value={formData.company_name} onChange={onInputChange} disabled={true} />
                     <Input label="担当者名" name="user_name" value={formData.user_name} onChange={onInputChange} disabled={!isEditing || isProfileLoading} />
                     <Input label="電話番号" name="phone" value={formData.phone} onChange={onInputChange} disabled={!isEditing || isProfileLoading} />
                     <Input
