@@ -81,13 +81,6 @@ export const pdfHandler = {
           console.log("No company found with name:", userData.company_name);
         }
 
-        // dealerInfo構築後にログ追加
-        console.log("Final dealerInfo:", {
-          name: companyData?.name || userData?.company_name || "販売店名未設定",
-          address: companyData?.address || "住所未設定",
-          bankAccount: companyData?.bank_account,
-        });
-
       }
 
       const [tradeInResult, loanResult, accessoriesResult, taxInsuranceResult, legalFeesResult, processingFeesResult, salesPricesResult] = await Promise.all([

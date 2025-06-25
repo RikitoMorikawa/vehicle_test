@@ -312,9 +312,12 @@ const EstimateContainer: React.FC = () => {
       // 成功時の処理
       setSuccess("見積書を作成しました");
 
+      // ★デバッグ用ログ追加
+      console.log("vehicleId:", vehicleId);
+      console.log("user:", user);
       // 少し待ってから遷移（成功メッセージを見せるため）
       setTimeout(() => {
-        navigate("/reports"); // 帳票管理画面に遷移
+        navigate(`/vehicle/${vehicleId}`);
       }, 1000);
     } catch (err) {
       console.error("見積書作成エラー:", err);

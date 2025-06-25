@@ -34,15 +34,6 @@ export const estimateHandler = {
   async createEstimate(data: { vehicleId: string; userId: string } & EstimateFormData): Promise<void> {
     const { vehicleId, userId, tradeIn, loanCalculation, accessories, taxInsuranceFees, legalFees, processingFees, salesPrice, shippingInfo } = data;
 
-    console.log("Creating estimate with data:", {
-      vehicleId,
-      userId, // ★追加
-      tradeIn,
-      loanCalculation,
-      accessories,
-      shippingInfo,
-    });
-
     try {
       // まず車両情報を取得して、estimate_vehicles テーブルに必要なデータをコピー
       const { data: vehicleData, error: vehicleFetchError } = await supabase

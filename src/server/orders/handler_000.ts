@@ -103,7 +103,6 @@ export const orderHandler = {
         console.log("✅ DEBUG: Other user has pending order");
         return { isAvailable: false };
       } else {
-        console.log("✅ DEBUG: Vehicle is available for order");
         return { isAvailable: true };
       }
     } catch (error) {
