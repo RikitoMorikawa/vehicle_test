@@ -14,7 +14,10 @@ export const registerSchema = z.object({
   password: z.string().min(1, "パスワードを入力してください").min(6, "パスワードは6文字以上で入力してください"),
   company_name: z.string().min(1, "会社名を選択してください"),
   user_name: z.string().min(1, "担当者名を入力してください"),
-  phone: z.string().min(1, "電話番号を入力してください"),
+  phone: z
+    .string()
+    .min(1, "電話番号を入力してください")
+    .regex(/^\d{2,4}-\d{2,4}-\d{4}$/, "電話番号は半角数字でXXX-XXX-XXXXの形式で入力してください"),
 });
 
 // 型エイリアス

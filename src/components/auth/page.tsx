@@ -1,4 +1,4 @@
-// src/components/AuthPage.tsx
+// src/components/auth/page.tsx
 import React from "react";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
@@ -49,7 +49,7 @@ const LoginForm: React.FC = () => {
   );
 };
 
-const RegisterForm: React.FC = () => {
+const RegisterForm: React.FC<{ onModeChange: (mode: AuthMode) => void }> = ({ onModeChange }) => {
   const { formData, errors, isLoading, companies, registrationComplete, handleChange, handleSubmit, resetRegistration } = useRegisterForm();
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -57,6 +57,12 @@ const RegisterForm: React.FC = () => {
       e.preventDefault();
       handleSubmit(new Event("submit") as unknown as React.FormEvent);
     }
+  };
+
+  // ログイン画面に戻る処理
+  const handleBackToLogin = () => {
+    resetRegistration(); // 登録完了状態をリセット
+    onModeChange(AuthMode.LOGIN); // ログイン画面に切り替え
   };
 
   // 登録完了時の表示
@@ -78,7 +84,7 @@ const RegisterForm: React.FC = () => {
             承認後、ログインが可能になります。
           </p>
         </div>
-        <Button type="button" variant="outline" onClick={resetRegistration} className="mt-4">
+        <Button type="button" variant="outline" onClick={handleBackToLogin} className="mt-4">
           ログイン画面に戻る
         </Button>
       </div>
@@ -200,7 +206,7 @@ const AuthContainer: React.FC<{
             </>
           ) : (
             <>
-              <RegisterForm />
+              <RegisterForm onModeChange={onModeChange} />
               <div className="mt-6 text-center text-sm">
                 <span className="text-gray-500">既にアカウントをお持ちの方は</span>{" "}
                 <button type="button" onClick={() => onModeChange(AuthMode.LOGIN)} className="text-red-600 hover:text-red-500 font-medium">
