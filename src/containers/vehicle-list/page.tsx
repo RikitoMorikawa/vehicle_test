@@ -4,12 +4,15 @@ import { vehicleService } from "../../services/vehicle-list/page";
 import { favoritesService } from "../../services/favorites/page";
 import VehicleListComponent from "../../components/vehicle-list/page";
 import { useAuth } from "../../hooks/useAuth";
+import { makerService } from "../../services/common/car_makers/page";
 
 const VehicleListContainer: React.FC = () => {
   const { user } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
   const isAdmin = user?.role === "admin";
-
+  // 車両メーカーの取得
+  const { data: carMakers, isLoading: isLoadingMakers } = makerService.useMakers();
+  
   // キーワード入力用の状態
   const [keyword, setKeyword] = useState("");
 
@@ -99,6 +102,8 @@ const VehicleListContainer: React.FC = () => {
       onPageChange={setCurrentPage}
       onToggleFavorite={handleToggleFavorite}
       favoriteVehicleIds={Array.from(favoriteMap.keys())}
+      carMakers={carMakers || []}
+      isLoadingMakers={isLoadingMakers}
     />
   );
 };

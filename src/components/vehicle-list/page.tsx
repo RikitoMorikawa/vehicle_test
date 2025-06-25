@@ -26,6 +26,8 @@ interface VehicleListComponentProps {
   onPageChange: (page: number) => void;
   onToggleFavorite: (vehicleId: string) => void;
   favoriteVehicleIds: string[];
+  carMakers: { id: string | number; name: string }[];
+  isLoadingMakers: boolean;
 }
 
 const VehicleListComponent: React.FC<VehicleListComponentProps> = ({
@@ -42,6 +44,7 @@ const VehicleListComponent: React.FC<VehicleListComponentProps> = ({
   onPageChange,
   onToggleFavorite,
   favoriteVehicleIds,
+  carMakers,
 }) => {
   if (loading) {
     return (
@@ -104,10 +107,12 @@ const VehicleListComponent: React.FC<VehicleListComponentProps> = ({
                     className="rounded-md py-2 pl-2 border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
                   >
                     <option value="">メーカー: 全て</option>
-                    <option value="トヨタ">トヨタ</option>
-                    <option value="日産">日産</option>
-                    <option value="ホンダ">ホンダ</option>
-                    <option value="スバル">スバル</option>
+                    {carMakers &&
+                      carMakers.map((maker) => (
+                        <option key={maker.id} value={maker.name}>
+                          {maker.name}
+                        </option>
+                      ))}
                   </select>
                   <select
                     name="year"
@@ -116,7 +121,7 @@ const VehicleListComponent: React.FC<VehicleListComponentProps> = ({
                     className="rounded-md pl-2 border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
                   >
                     <option value="">年式: 指定なし</option>
-                    {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                    {Array.from({ length: 50 }, (_, i) => new Date().getFullYear() - i).map((year) => (
                       <option key={year} value={year}>
                         {year}年
                       </option>
@@ -133,6 +138,7 @@ const VehicleListComponent: React.FC<VehicleListComponentProps> = ({
                     <option value="10000-30000">1万km - 3万km</option>
                     <option value="30000-50000">3万km - 5万km</option>
                     <option value="50000-100000">5万km - 10万km</option>
+                    <option value="100000-1000000">10万km -</option>
                   </select>
                   <select
                     name="sort"
@@ -165,7 +171,7 @@ const VehicleListComponent: React.FC<VehicleListComponentProps> = ({
                       {/* adminでない場合のみお気に入りボタンを表示 */}
                       {!isAdmin && (
                         <button
-                          onClick={(e) => {
+                          onClick={() => {
                             onToggleFavorite(vehicle.id);
                           }}
                           className={`p-2 rounded-full bg-white/80 hover:bg-white transition-colors ${
