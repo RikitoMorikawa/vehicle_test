@@ -1,7 +1,8 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "../../../lib/supabase";
 import { LoanApplicationStatus } from "../../../types/enum";
+import { QUERY_KEYS } from "../../../constants/queryKeys";
+import { loanApplicationHandler } from "../../../server/loan-application/handler_000";
 
 interface LoanApplicationStatusViewProps {
   userId: string;
@@ -14,19 +15,9 @@ const LoanApplicationStatusView: React.FC<LoanApplicationStatusViewProps> = ({ u
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["loanApplication", userId, vehicleId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("loan_applications")
-        .select("*")
-        .eq("user_id", userId)
-        .eq("vehicle_id", vehicleId)
-        .order("created_at", { ascending: false })
-        .limit(1);
-
-      if (error) throw error;
-      return data?.[0] || null;
-    },
+    // ← この queryKey を container と同じにする
+    queryKey: [QUERY_KEYS.LOAN_APPLICATION_STATUS, vehicleId, userId],
+    queryFn: () => loanApplicationHandler.getLoanApplicationStatus(vehicleId, userId),
     enabled: !!userId && !!vehicleId,
   });
 

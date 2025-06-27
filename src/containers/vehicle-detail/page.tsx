@@ -199,8 +199,14 @@ const VehicleDetailContainer: React.FC = () => {
   // タブ切り替え処理
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
-  };
 
+    // ローン審査申込タブに切り替わった時にローン審査状況を再フェッチ
+    if (tab === "ローン審査申込") {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.LOAN_APPLICATION_STATUS, id, user?.id],
+      });
+    }
+  };
   // 見積書作成ボタンのハンドラ
   const handleCreateEstimate = () => {
     setActiveTab("見積書作成");

@@ -10,6 +10,7 @@ export const QUERY_KEYS = {
   Car_MAKERS: ["carMakers"] as const,
   ORDERS: ["orders"] as const,
   VEHICLE_ORDER_STATUS: ["order", "detail"] as const,
+  LOAN_APPLICATION_STATUS: ["loanApplicationStatus"] as const,
 } as const;
 
 export type QueryKeys = typeof QUERY_KEYS;

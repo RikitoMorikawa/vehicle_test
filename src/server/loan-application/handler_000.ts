@@ -120,4 +120,18 @@ export const loanApplicationHandler = {
       };
     }
   },
+
+  // 最新のローン申請ステータスを取得する関数
+  async getLoanApplicationStatus(vehicleId: string, userId?: string) {
+    const { data, error } = await supabase
+      .from("loan_applications")
+      .select("*")
+      .eq("vehicle_id", vehicleId)
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (error) throw error;
+    return data?.[0] || null;
+  },
 };
