@@ -1,11 +1,19 @@
-// src / containers / admin / loan - review / page.tsx;
-import React from "react";
+// src/containers/admin/loan-review/page.tsx
+import React, { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { QUERY_KEYS } from "../../../constants/queryKeys";
 import LoanReviewComponent from "../../../components/admin/loan-review/page";
 import { loanReviewService } from "../../../services/admin/loan-review/page";
 
 const LoanReviewContainer: React.FC = () => {
+  const queryClient = useQueryClient();
   const { applications, isLoading, error } = loanReviewService.useLoanApplications();
   const updateStatus = loanReviewService.useUpdateLoanStatus();
+
+  // 画面に遷移したタイミングでデータを無効化
+  useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.LOAN_APPLICATIONS });
+  }, [queryClient]);
 
   const handleStatusUpdate = async (applicationId: string, status: number) => {
     try {
