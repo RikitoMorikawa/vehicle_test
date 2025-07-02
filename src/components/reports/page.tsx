@@ -4,6 +4,7 @@ import Header from "../Header";
 import Sidebar from "../Sidebar";
 import Footer from "../Footer";
 import Button from "../ui/Button";
+import Pagination from "../ui/Pagination"; // 追加
 import { FileText, Calendar, Car, Building, Eye } from "lucide-react";
 import type { EstimateReport } from "../../types/report/page";
 
@@ -21,6 +22,11 @@ interface ReportsPageProps {
   invoiceCount: number;
   orderCount: number;
   onDownloadPDF: (estimateId: string) => Promise<void>;
+  // ページネーション関連のpropsを追加
+  currentPage: number;
+  totalPages: number;
+  paginatedEstimates: EstimateReport[];
+  onPageChange: (page: number) => void;
 }
 
 const ReportsPage: React.FC<ReportsPageProps> = ({
@@ -37,6 +43,10 @@ const ReportsPage: React.FC<ReportsPageProps> = ({
   invoiceCount,
   orderCount,
   onDownloadPDF,
+  currentPage,
+  totalPages,
+  paginatedEstimates,
+  onPageChange,
 }) => {
   if (loading) {
     return (
@@ -123,85 +133,97 @@ const ReportsPage: React.FC<ReportsPageProps> = ({
                   </div>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">書類番号</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">車両情報</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">加盟店</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">支払総額</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">作成日</th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">アクション</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredEstimates.map((estimate) => {
-                        const isDownloading = downloadingIds.has(estimate.id);
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">書類番号</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">車両情報</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">加盟店</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">支払総額</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">作成日</th>
+                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">アクション</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {/* paginatedEstimatesを使用（変更点） */}
+                        {paginatedEstimates.map((estimate) => {
+                          const isDownloading = downloadingIds.has(estimate.id);
 
-                        return (
-                          <tr key={estimate.id} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center">
-                                <FileText className="w-4 h-4 text-gray-400 mr-2" />
-                                <span className="text-sm font-medium text-gray-900">{estimate.estimateNumber}</span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center">
-                                <Car className="w-4 h-4 text-gray-400 mr-2" />
-                                <div>
-                                  <div className="text-sm font-medium text-gray-900">
-                                    {estimate.vehicleInfo.maker} {estimate.vehicleInfo.name}
+                          return (
+                            <tr key={estimate.id} className="hover:bg-gray-50">
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center">
+                                  <FileText className="w-4 h-4 text-gray-400 mr-2" />
+                                  <span className="text-sm font-medium text-gray-900">{estimate.estimateNumber}</span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center">
+                                  <Car className="w-4 h-4 text-gray-400 mr-2" />
+                                  <div>
+                                    <div className="text-sm font-medium text-gray-900">
+                                      {estimate.vehicleInfo.maker} {estimate.vehicleInfo.name}
+                                    </div>
+                                    <div className="text-sm text-gray-500">{estimate.vehicleInfo.year}年</div>
                                   </div>
-                                  <div className="text-sm text-gray-500">{estimate.vehicleInfo.year}年</div>
                                 </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center">
-                                <Building className="w-4 h-4 text-gray-400 mr-2" />
-                                <div>
-                                  <div className="text-sm font-medium text-gray-900">{estimate.companyName || "-"}</div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center">
+                                  <Building className="w-4 h-4 text-gray-400 mr-2" />
+                                  <div>
+                                    <div className="text-sm font-medium text-gray-900">{estimate.companyName || "-"}</div>
+                                  </div>
                                 </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className="text-sm font-semibold text-gray-900">¥{estimate.totalAmount.toLocaleString()}</span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center">
-                                <Calendar className="w-4 h-4 text-gray-400 mr-2" />
-                                <span className="text-sm text-gray-900">{formatDate(estimate.createdAt)}</span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => onDownloadPDF(estimate.id)}
-                                disabled={isDownloading}
-                                className="flex items-center text-blue-600 border-blue-300 hover:bg-blue-50"
-                              >
-                                {isDownloading ? (
-                                  <>
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-1"></div>
-                                    読み込み中...
-                                  </>
-                                ) : (
-                                  <>
-                                    <Eye className="w-4 h-4 mr-1" />
-                                    プレビュー
-                                  </>
-                                )}
-                              </Button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className="text-sm font-semibold text-gray-900">¥{estimate.totalAmount.toLocaleString()}</span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center">
+                                  <Calendar className="w-4 h-4 text-gray-400 mr-2" />
+                                  <span className="text-sm text-gray-900">{formatDate(estimate.createdAt)}</span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => onDownloadPDF(estimate.id)}
+                                  disabled={isDownloading}
+                                  className="flex items-center text-blue-600 border-blue-300 hover:bg-blue-50"
+                                >
+                                  {isDownloading ? (
+                                    <>
+                                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-1"></div>
+                                      読み込み中...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Eye className="w-4 h-4 mr-1" />
+                                      プレビュー
+                                    </>
+                                  )}
+                                </Button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* ページネーションコンポーネントを追加 */}
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    totalItems={filteredEstimates.length}
+                    itemsPerPage={10}
+                    onPageChange={onPageChange}
+                  />
+                </>
               )}
             </div>
           </div>

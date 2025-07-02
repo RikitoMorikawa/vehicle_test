@@ -218,7 +218,7 @@ export const reportsHandler = {
   },
 
   // PDF生成（既存）
-  async generateEstimatePDF(): Promise<Blob> {
+  async generateEstimatePDF(estimateId: string): Promise<Blob> {
     // TODO: PDF生成機能を実装
     throw new Error("PDF生成機能は未実装です");
   },

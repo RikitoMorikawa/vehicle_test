@@ -1,5 +1,5 @@
 // src/containers/reports/page.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import ReportsPage from "../../components/reports/page";
 import PDFPreviewModal from "../../components/common/PDFPreviewModal";
 import { reportsService } from "../../services/reports/page";
@@ -14,6 +14,10 @@ const ReportsContainer: React.FC = () => {
 
   // タブ状態管理
   const [activeTab, setActiveTab] = useState<"estimate" | "invoice" | "order">("estimate");
+
+  // ページネーション状態管理を追加
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // PDFプレビューモーダル状態
   const [showPDFModal, setShowPDFModal] = useState(false);
@@ -46,6 +50,15 @@ const ReportsContainer: React.FC = () => {
     const documentType = estimate.document_type || "estimate";
     return documentType === activeTab;
   });
+
+  // ページネーション処理
+  const paginatedEstimates = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredEstimates.slice(startIndex, endIndex);
+  }, [filteredEstimates, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(filteredEstimates.length / itemsPerPage);
 
   // 日付フォーマット
   const formatDate = (dateString: string) => {
@@ -106,6 +119,17 @@ const ReportsContainer: React.FC = () => {
     setPdfData(null);
   };
 
+  // ページ変更ハンドラー
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  // タブ変更ハンドラー（ページをリセット）
+  const handleTabChange = (tab: "estimate" | "invoice" | "order") => {
+    setCurrentPage(1); // タブ変更時にページをリセット
+    setActiveTab(tab);
+  };
+
   return (
     <>
       <ReportsPage
@@ -113,7 +137,7 @@ const ReportsContainer: React.FC = () => {
         loading={loading}
         error={error}
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         filteredEstimates={filteredEstimates}
         downloadingIds={new Set([loadingPdfId].filter(Boolean) as string[])}
         formatDate={formatDate}
@@ -122,6 +146,11 @@ const ReportsContainer: React.FC = () => {
         invoiceCount={invoiceCount}
         orderCount={orderCount}
         onDownloadPDF={handlePreviewPDF}
+        // ページネーション関連のpropsを追加
+        currentPage={currentPage}
+        totalPages={totalPages}
+        paginatedEstimates={paginatedEstimates}
+        onPageChange={handlePageChange}
       />
 
       {/* PDFプレビューモーダル */}
