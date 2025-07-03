@@ -2,8 +2,26 @@
 import { supabase } from "../../../lib/supabase";
 import { LoanApplication } from "../../../types/admin/loan-review/page";
 
+interface LoanApplicationsWithPagination {
+  applications: LoanApplication[];
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+}
+
 export const loanReviewHandler = {
-  async fetchLoanApplications(): Promise<LoanApplication[]> {
+  async fetchLoanApplications(page: number = 1, itemsPerPage: number = 10): Promise<LoanApplicationsWithPagination> {
+    // 総件数を取得
+    const { count, error: countError } = await supabase.from("loan_applications").select("*", { count: "exact", head: true });
+
+    if (countError) throw countError;
+
+    const totalItems = count || 0;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const offset = (page - 1) * itemsPerPage;
+
+    // ページネーション対応のデータ取得
     const { data, error } = await supabase
       .from("loan_applications")
       .select(
@@ -12,14 +30,23 @@ export const loanReviewHandler = {
         vehicle:vehicles(name)
       `
       )
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range(offset, offset + itemsPerPage - 1);
 
     if (error) throw error;
 
-    return data.map((application) => ({
+    const applications = data.map((application) => ({
       ...application,
       vehicle_name: application.vehicle?.name || "Unknown",
     }));
+
+    return {
+      applications,
+      currentPage: page,
+      totalPages,
+      totalItems,
+      itemsPerPage,
+    };
   },
 
   async fetchLoanApplicationById(id: string): Promise<LoanApplication> {

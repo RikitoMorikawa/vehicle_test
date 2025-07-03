@@ -1,4 +1,4 @@
-// src/types/admin/loan-review/page.ts
+// src/types/admin/loan-review/page.ts に追加・更新
 export interface LoanApplication {
   id: string;
   user_id: string;
@@ -37,8 +37,13 @@ export interface LoanApplication {
   updated_at: string;
 }
 
+// ページネーション対応のクエリ結果
 export interface LoanApplicationsQueryResult {
   applications: LoanApplication[];
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
   isLoading: boolean;
   error: Error | null;
 }
