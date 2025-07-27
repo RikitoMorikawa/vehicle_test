@@ -23,8 +23,9 @@ const Header: React.FC = () => {
     <header className="bg-white shadow-sm">
       <div className="max-w-full mx-2 px-2 sm:px-4">
         <div className="flex justify-between h-16 items-center">
-          <Link to="/vehicles" className="flex items-center text-xl font-semibold text-gray-900">
-            車両販売プラットフォーム
+          <Link to="/vehicles" className="flex items-center">
+            <img src="/images/logo01.png" alt="U's WING STOCK STATION" className="h-9 w-auto" />
+            <img src="/images/logo02.png" alt="" className="h-8 w-auto ml-2" />
           </Link>
 
           <div className="relative" ref={dropdownRef}>

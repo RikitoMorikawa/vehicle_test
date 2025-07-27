@@ -1,5 +1,4 @@
-
--- ユーザー情報を格納するテーブル
+-- ユーザー
 create table public.users (
   id uuid not null default gen_random_uuid (),
   company_name text not null,
@@ -33,8 +32,7 @@ execute FUNCTION set_admin_approved ();
 
 
 
-
--- 車輌情報を格納するテーブル
+-- 車両
 create table public.vehicles (
   id uuid not null default gen_random_uuid (),
   name text not null,
@@ -83,58 +81,56 @@ create index IF not exists idx_vehicles_images on public.vehicles using gin (ima
 
 
 
--- 見積もり時の交換車輌情報を格納するテーブル
-create table public.trade_in_vehicles (
-  id uuid not null default gen_random_uuid (),
-  vehicle_name text not null,
-  registration_number text not null,
-  mileage integer not null,
-  first_registration_date date null,
-  inspection_expiry_date date null,
-  chassis_number text null,
-  exterior_color text not null,
-  created_at timestamp with time zone null default now(),
-  updated_at timestamp with time zone null default now(),
-  estimate_id uuid null,
-  trade_in_available boolean not null default false,
-  constraint trade_in_vehicles_pkey primary key (id),
-  constraint trade_in_vehicles_estimate_id_fkey foreign KEY (estimate_id) references estimate_vehicles (id) on delete CASCADE
+-- 車メーカー
+create table public.car_makers (
+  id serial not null,
+  name text not null,
+  logo_url text null,
+  country text null,
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone not null default now(),
+  constraint car_makers_pkey primary key (id),
+  constraint car_makers_name_key unique (name)
 ) TABLESPACE pg_default;
 
-create index IF not exists idx_trade_in_vehicles_chassis_number on public.trade_in_vehicles using btree (chassis_number) TABLESPACE pg_default;
 
-create index IF not exists idx_trade_in_vehicles_registration_number on public.trade_in_vehicles using btree (registration_number) TABLESPACE pg_default;
+-- 加盟店（企業）
+create table public.companies (
+  id uuid not null default gen_random_uuid (),
+  name text not null,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  address text null,
+  bank_account jsonb null,
+  constraint companies_pkey primary key (id),
+  constraint companies_name_key unique (name)
+) TABLESPACE pg_default;
 
-create trigger update_trade_in_vehicles_updated_at BEFORE
-update on trade_in_vehicles for EACH row
+create trigger update_companies_updated_at BEFORE
+update on companies for EACH row
 execute FUNCTION update_updated_at_column ();
 
 
 
--- 見積もり時の税金・保険料情報を格納するテーブル
-create table public.tax_insurance_fees (
+-- お気に入り
+create table public.favorites (
   id uuid not null default gen_random_uuid (),
-  automobile_tax integer not null default 0,
-  environmental_performance_tax integer not null default 0,
-  weight_tax integer not null default 0,
-  liability_insurance_fee integer not null default 0,
-  voluntary_insurance_fee integer not null default 0,
+  user_id uuid not null,
+  vehicle_id uuid not null,
   created_at timestamp with time zone null default now(),
-  updated_at timestamp with time zone null default now(),
-  estimate_id uuid null,
-  constraint tax_insurance_fees_pkey primary key (id),
-  constraint tax_insurance_fees_estimate_id_fkey foreign KEY (estimate_id) references estimate_vehicles (id) on delete CASCADE
+  constraint favorites_pkey primary key (id),
+  constraint favorites_user_id_vehicle_id_key unique (user_id, vehicle_id),
+  constraint favorites_user_id_fkey foreign KEY (user_id) references users (id) on delete CASCADE,
+  constraint favorites_vehicle_id_fkey foreign KEY (vehicle_id) references vehicles (id) on delete CASCADE
 ) TABLESPACE pg_default;
 
-create index IF not exists tax_insurance_fees_estimate_id_idx on public.tax_insurance_fees using btree (estimate_id) TABLESPACE pg_default;
+create index IF not exists favorites_user_id_idx on public.favorites using btree (user_id) TABLESPACE pg_default;
 
-create trigger update_tax_insurance_fees_updated_at BEFORE
-update on tax_insurance_fees for EACH row
-execute FUNCTION update_updated_at_column ();
+create index IF not exists favorites_vehicle_id_idx on public.favorites using btree (vehicle_id) TABLESPACE pg_default;
 
 
 
--- 運送費用情報を格納するマスタテーブル
+-- 運送費用
 create table public.shipping_costs (
   id serial not null,
   area_code integer not null,
@@ -158,107 +154,47 @@ update on shipping_costs for EACH row
 execute FUNCTION update_updated_at_column ();
 
 
-
--- 見積もり時の金額情報を格納するテーブル
-create table public.sales_prices (
+-- 注文
+create table public.orders (
   id uuid not null default gen_random_uuid (),
-  vehicle_id uuid null,
-  base_price integer not null default 0,
-  discount integer not null default 0,
-  inspection_fee integer not null default 0,
-  accessories_fee integer not null default 0,
-  vehicle_price integer not null default 0,
-  tax_insurance integer not null default 0,
-  legal_fee integer not null default 0,
-  processing_fee integer not null default 0,
-  misc_fee integer not null default 0,
-  consumption_tax integer not null default 0,
-  total_price integer not null default 0,
-  trade_in_price integer not null default 0,
-  trade_in_debt integer not null default 0,
-  payment_total integer not null default 0,
-  created_at timestamp with time zone null default now(),
-  updated_at timestamp with time zone null default now(),
-  estimate_id uuid null,
-  constraint sales_prices_pkey primary key (id),
-  constraint sales_prices_estimate_id_fkey foreign KEY (estimate_id) references estimate_vehicles (id) on delete CASCADE,
-  constraint sales_prices_vehicle_id_fkey foreign KEY (vehicle_id) references vehicles (id) on delete CASCADE
+  user_id uuid not null,
+  vehicle_id uuid not null,
+  status integer not null default 0,
+  order_date timestamp with time zone not null default now(),
+  approved_date timestamp with time zone null,
+  rejected_date timestamp with time zone null,
+  admin_user_id uuid null,
+  reject_reason text null,
+  notes text null,
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone not null default now(),
+  constraint orders_pkey primary key (id),
+  constraint fk_orders_admin_user foreign KEY (admin_user_id) references users (id) on delete set null,
+  constraint fk_orders_user foreign KEY (user_id) references users (id) on delete CASCADE,
+  constraint fk_orders_vehicle foreign KEY (vehicle_id) references vehicles (id) on delete CASCADE,
+  constraint orders_status_check check ((status = any (array[0, 1, 2, 3])))
 ) TABLESPACE pg_default;
 
-create index IF not exists idx_sales_prices_vehicle_id on public.sales_prices using btree (vehicle_id) TABLESPACE pg_default;
+create index IF not exists idx_orders_user_id on public.orders using btree (user_id) TABLESPACE pg_default;
 
-create index IF not exists sales_prices_estimate_id_idx on public.sales_prices using btree (estimate_id) TABLESPACE pg_default;
+create index IF not exists idx_orders_vehicle_id on public.orders using btree (vehicle_id) TABLESPACE pg_default;
 
-create trigger update_sales_prices_updated_at BEFORE
-update on sales_prices for EACH row
-execute FUNCTION update_updated_at_column ();
+create index IF not exists idx_orders_status on public.orders using btree (status) TABLESPACE pg_default;
 
+create index IF not exists idx_orders_order_date on public.orders using btree (order_date) TABLESPACE pg_default;
 
--- 見積もり時の手数料情報を格納するテーブル
-create table public.processing_fees (
-  id uuid not null default gen_random_uuid (),
-  inspection_registration_fee integer not null default 0,
-  parking_certificate_fee integer not null default 0,
-  trade_in_processing_fee integer not null default 0,
-  trade_in_assessment_fee integer not null default 0,
-  recycling_management_fee integer not null default 0,
-  delivery_fee integer not null default 0,
-  other_fees integer not null default 0,
-  created_at timestamp with time zone null default now(),
-  updated_at timestamp with time zone null default now(),
-  estimate_id uuid null,
-  constraint processing_fees_pkey primary key (id),
-  constraint processing_fees_estimate_id_fkey foreign KEY (estimate_id) references estimate_vehicles (id) on delete CASCADE
-) TABLESPACE pg_default;
+create index IF not exists idx_orders_created_at on public.orders using btree (created_at) TABLESPACE pg_default;
 
-create index IF not exists processing_fees_estimate_id_idx on public.processing_fees using btree (estimate_id) TABLESPACE pg_default;
+create index IF not exists idx_orders_vehicle_user_status on public.orders using btree (vehicle_id, user_id, status) TABLESPACE pg_default;
 
-create trigger update_processing_fees_updated_at BEFORE
-update on processing_fees for EACH row
-execute FUNCTION update_updated_at_column ();
+create index IF not exists idx_orders_vehicle_status on public.orders using btree (vehicle_id, status) TABLESPACE pg_default;
+
+create trigger orders_updated_at_trigger BEFORE
+update on orders for EACH row
+execute FUNCTION update_orders_updated_at ();
 
 
--- 見積もり時のローン計算情報を格納するテーブル
-create table public.loan_calculations (
-  id uuid not null default gen_random_uuid (),
-  down_payment integer not null default 0,
-  principal integer not null default 0,
-  interest_fee integer not null default 0,
-  total_payment integer not null default 0,
-  payment_count integer not null,
-  payment_period integer not null,
-  first_payment integer not null default 0,
-  monthly_payment integer not null default 0,
-  bonus_months text[] null default '{}'::text[],
-  bonus_amount integer not null default 0,
-  created_at timestamp with time zone null default now(),
-  updated_at timestamp with time zone null default now(),
-  estimate_id uuid null,
-  vehicle_id uuid null,
-  annual_rate numeric(5, 2) not null default 0.00,
-  constraint loan_calculations_pkey primary key (id),
-  constraint loan_calculations_estimate_id_fkey foreign KEY (estimate_id) references estimate_vehicles (id) on delete CASCADE,
-  constraint loan_calculations_annual_rate_check check (
-    (
-      (annual_rate >= 0.00)
-      and (annual_rate <= 50.00)
-    )
-  ),
-  constraint loan_calculations_payment_count_check check ((payment_count > 0)),
-  constraint loan_calculations_payment_period_check check ((payment_period > 0))
-) TABLESPACE pg_default;
-
-create index IF not exists idx_loan_calculations_payment_period on public.loan_calculations using btree (payment_period) TABLESPACE pg_default;
-
-create index IF not exists idx_loan_calculations_annual_rate on public.loan_calculations using btree (annual_rate) TABLESPACE pg_default;
-
-create trigger update_loan_calculations_updated_at BEFORE
-update on loan_calculations for EACH row
-execute FUNCTION update_updated_at_column ();
-
-
-
--- ローン申請情報を格納するテーブル
+-- ローン審査
 create table public.loan_applications (
   id uuid not null default extensions.uuid_generate_v4 (),
   user_id uuid not null,
@@ -312,51 +248,7 @@ create index IF not exists idx_loan_applications_user_id on public.loan_applicat
 create index IF not exists idx_loan_applications_vehicle_id on public.loan_applications using btree (vehicle_id) TABLESPACE pg_default;
 
 
-
-
-
-
-
--- 見積もり時の法定費用情報を格納するテーブル
-create table public.legal_fees (
-  id uuid not null default gen_random_uuid (),
-  inspection_registration_stamp integer not null default 0,
-  parking_certificate_stamp integer not null default 0,
-  trade_in_stamp integer not null default 0,
-  recycling_deposit integer not null default 0,
-  other_nontaxable integer not null default 0,
-  created_at timestamp with time zone null default now(),
-  updated_at timestamp with time zone null default now(),
-  estimate_id uuid null,
-  constraint legal_fees_pkey primary key (id),
-  constraint legal_fees_estimate_id_fkey foreign KEY (estimate_id) references estimate_vehicles (id) on delete CASCADE
-) TABLESPACE pg_default;
-
-create index IF not exists legal_fees_estimate_id_idx on public.legal_fees using btree (estimate_id) TABLESPACE pg_default;
-
-create trigger update_legal_fees_updated_at BEFORE
-update on legal_fees for EACH row
-execute FUNCTION update_updated_at_column ();
-
-
--- お気に入り機能のためのテーブル
-create table public.favorites (
-  id uuid not null default gen_random_uuid (),
-  user_id uuid not null,
-  vehicle_id uuid not null,
-  created_at timestamp with time zone null default now(),
-  constraint favorites_pkey primary key (id),
-  constraint favorites_user_id_vehicle_id_key unique (user_id, vehicle_id),
-  constraint favorites_user_id_fkey foreign KEY (user_id) references users (id) on delete CASCADE,
-  constraint favorites_vehicle_id_fkey foreign KEY (vehicle_id) references vehicles (id) on delete CASCADE
-) TABLESPACE pg_default;
-
-create index IF not exists favorites_user_id_idx on public.favorites using btree (user_id) TABLESPACE pg_default;
-
-create index IF not exists favorites_vehicle_id_idx on public.favorites using btree (vehicle_id) TABLESPACE pg_default;
-
-
--- 見積もり時の車輌情報を格納するテーブル
+-- 書類用：車両
 create table public.estimate_vehicles (
   id uuid not null default gen_random_uuid (),
   user_id uuid null,
@@ -404,40 +296,182 @@ update on estimate_vehicles for EACH row
 execute FUNCTION update_modified_column ();
 
 
-
--- 加盟店ユーザーが所属する会社情報を格納するテーブル
-create table public.companies (
+-- 書類用：法定費用
+create table public.legal_fees (
   id uuid not null default gen_random_uuid (),
-  name text not null,
+  inspection_registration_stamp integer not null default 0,
+  parking_certificate_stamp integer not null default 0,
+  trade_in_stamp integer not null default 0,
+  recycling_deposit integer not null default 0,
+  other_nontaxable integer not null default 0,
   created_at timestamp with time zone null default now(),
   updated_at timestamp with time zone null default now(),
-  address text null,
-  bank_account jsonb null,
-  constraint companies_pkey primary key (id),
-  constraint companies_name_key unique (name)
+  estimate_id uuid null,
+  constraint legal_fees_pkey primary key (id),
+  constraint legal_fees_estimate_id_fkey foreign KEY (estimate_id) references estimate_vehicles (id) on delete CASCADE
 ) TABLESPACE pg_default;
 
-create trigger update_companies_updated_at BEFORE
-update on companies for EACH row
+create index IF not exists legal_fees_estimate_id_idx on public.legal_fees using btree (estimate_id) TABLESPACE pg_default;
+
+create trigger update_legal_fees_updated_at BEFORE
+update on legal_fees for EACH row
 execute FUNCTION update_updated_at_column ();
 
 
 
-
--- 車メーカー情報を格納するテーブル
-create table public.car_makers (
-  id serial not null,
-  name text not null,
-  logo_url text null,
-  country text null,
-  created_at timestamp with time zone not null default now(),
-  updated_at timestamp with time zone not null default now(),
-  constraint car_makers_pkey primary key (id),
-  constraint car_makers_name_key unique (name)
+-- 書類用：ローン計算
+create table public.loan_calculations (
+  id uuid not null default gen_random_uuid (),
+  down_payment integer not null default 0,
+  principal integer not null default 0,
+  interest_fee integer not null default 0,
+  total_payment integer not null default 0,
+  payment_count integer not null,
+  payment_period integer not null,
+  first_payment integer not null default 0,
+  monthly_payment integer not null default 0,
+  bonus_months text[] null default '{}'::text[],
+  bonus_amount integer not null default 0,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  estimate_id uuid null,
+  vehicle_id uuid null,
+  annual_rate numeric(5, 2) not null default 0.00,
+  constraint loan_calculations_pkey primary key (id),
+  constraint loan_calculations_estimate_id_fkey foreign KEY (estimate_id) references estimate_vehicles (id) on delete CASCADE,
+  constraint loan_calculations_annual_rate_check check (
+    (
+      (annual_rate >= 0.00)
+      and (annual_rate <= 50.00)
+    )
+  ),
+  constraint loan_calculations_payment_count_check check ((payment_count > 0)),
+  constraint loan_calculations_payment_period_check check ((payment_period > 0))
 ) TABLESPACE pg_default;
 
+create index IF not exists idx_loan_calculations_payment_period on public.loan_calculations using btree (payment_period) TABLESPACE pg_default;
 
--- 見積もり時の装備品情報を格納するテーブル
+create index IF not exists idx_loan_calculations_annual_rate on public.loan_calculations using btree (annual_rate) TABLESPACE pg_default;
+
+create trigger update_loan_calculations_updated_at BEFORE
+update on loan_calculations for EACH row
+execute FUNCTION update_updated_at_column ();
+
+
+
+-- 書類用：手続き手数料
+create table public.processing_fees (
+  id uuid not null default gen_random_uuid (),
+  inspection_registration_fee integer not null default 0,
+  parking_certificate_fee integer not null default 0,
+  trade_in_processing_fee integer not null default 0,
+  trade_in_assessment_fee integer not null default 0,
+  recycling_management_fee integer not null default 0,
+  delivery_fee integer not null default 0,
+  other_fees integer not null default 0,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  estimate_id uuid null,
+  constraint processing_fees_pkey primary key (id),
+  constraint processing_fees_estimate_id_fkey foreign KEY (estimate_id) references estimate_vehicles (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create index IF not exists processing_fees_estimate_id_idx on public.processing_fees using btree (estimate_id) TABLESPACE pg_default;
+
+create trigger update_processing_fees_updated_at BEFORE
+update on processing_fees for EACH row
+execute FUNCTION update_updated_at_column ();
+
+
+
+-- 書類用：販売価格
+create table public.sales_prices (
+  id uuid not null default gen_random_uuid (),
+  vehicle_id uuid null,
+  base_price integer not null default 0,
+  discount integer not null default 0,
+  inspection_fee integer not null default 0,
+  accessories_fee integer not null default 0,
+  vehicle_price integer not null default 0,
+  tax_insurance integer not null default 0,
+  legal_fee integer not null default 0,
+  processing_fee integer not null default 0,
+  misc_fee integer not null default 0,
+  consumption_tax integer not null default 0,
+  total_price integer not null default 0,
+  trade_in_price integer not null default 0,
+  trade_in_debt integer not null default 0,
+  payment_total integer not null default 0,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  estimate_id uuid null,
+  constraint sales_prices_pkey primary key (id),
+  constraint sales_prices_estimate_id_fkey foreign KEY (estimate_id) references estimate_vehicles (id) on delete CASCADE,
+  constraint sales_prices_vehicle_id_fkey foreign KEY (vehicle_id) references vehicles (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create index IF not exists idx_sales_prices_vehicle_id on public.sales_prices using btree (vehicle_id) TABLESPACE pg_default;
+
+create index IF not exists sales_prices_estimate_id_idx on public.sales_prices using btree (estimate_id) TABLESPACE pg_default;
+
+create trigger update_sales_prices_updated_at BEFORE
+update on sales_prices for EACH row
+execute FUNCTION update_updated_at_column ();
+
+
+
+-- 書類用：税金・保険料
+create table public.tax_insurance_fees (
+  id uuid not null default gen_random_uuid (),
+  automobile_tax integer not null default 0,
+  environmental_performance_tax integer not null default 0,
+  weight_tax integer not null default 0,
+  liability_insurance_fee integer not null default 0,
+  voluntary_insurance_fee integer not null default 0,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  estimate_id uuid null,
+  constraint tax_insurance_fees_pkey primary key (id),
+  constraint tax_insurance_fees_estimate_id_fkey foreign KEY (estimate_id) references estimate_vehicles (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create index IF not exists tax_insurance_fees_estimate_id_idx on public.tax_insurance_fees using btree (estimate_id) TABLESPACE pg_default;
+
+create trigger update_tax_insurance_fees_updated_at BEFORE
+update on tax_insurance_fees for EACH row
+execute FUNCTION update_updated_at_column ();
+
+
+
+-- 書類用：下取り車両
+create table public.trade_in_vehicles (
+  id uuid not null default gen_random_uuid (),
+  vehicle_name text not null,
+  registration_number text not null,
+  mileage integer not null,
+  first_registration_date date null,
+  inspection_expiry_date date null,
+  chassis_number text null,
+  exterior_color text not null,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  estimate_id uuid null,
+  trade_in_available boolean not null default false,
+  constraint trade_in_vehicles_pkey primary key (id),
+  constraint trade_in_vehicles_estimate_id_fkey foreign KEY (estimate_id) references estimate_vehicles (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create index IF not exists idx_trade_in_vehicles_chassis_number on public.trade_in_vehicles using btree (chassis_number) TABLESPACE pg_default;
+
+create index IF not exists idx_trade_in_vehicles_registration_number on public.trade_in_vehicles using btree (registration_number) TABLESPACE pg_default;
+
+create trigger update_trade_in_vehicles_updated_at BEFORE
+update on trade_in_vehicles for EACH row
+execute FUNCTION update_updated_at_column ();
+
+
+
+-- 書類用：装備品
 create table public.accessories (
   id uuid not null default gen_random_uuid (),
   name text not null,
@@ -454,44 +488,3 @@ create index IF not exists accessories_estimate_id_idx on public.accessories usi
 create trigger update_accessories_updated_at BEFORE
 update on accessories for EACH row
 execute FUNCTION update_updated_at_column ();
-
-
-
--- 注文情報を格納するテーブル
-create table public.orders (
-  id uuid not null default gen_random_uuid (),
-  user_id uuid not null,
-  vehicle_id uuid not null,
-  status integer not null default 0,
-  order_date timestamp with time zone not null default now(),
-  approved_date timestamp with time zone null,
-  rejected_date timestamp with time zone null,
-  admin_user_id uuid null,
-  reject_reason text null,
-  notes text null,
-  created_at timestamp with time zone not null default now(),
-  updated_at timestamp with time zone not null default now(),
-  constraint orders_pkey primary key (id),
-  constraint fk_orders_admin_user foreign KEY (admin_user_id) references users (id) on delete set null,
-  constraint fk_orders_user foreign KEY (user_id) references users (id) on delete CASCADE,
-  constraint fk_orders_vehicle foreign KEY (vehicle_id) references vehicles (id) on delete CASCADE,
-  constraint orders_status_check check ((status = any (array[0, 1, 2, 3])))
-) TABLESPACE pg_default;
-
-create index IF not exists idx_orders_user_id on public.orders using btree (user_id) TABLESPACE pg_default;
-
-create index IF not exists idx_orders_vehicle_id on public.orders using btree (vehicle_id) TABLESPACE pg_default;
-
-create index IF not exists idx_orders_status on public.orders using btree (status) TABLESPACE pg_default;
-
-create index IF not exists idx_orders_order_date on public.orders using btree (order_date) TABLESPACE pg_default;
-
-create index IF not exists idx_orders_created_at on public.orders using btree (created_at) TABLESPACE pg_default;
-
-create index IF not exists idx_orders_vehicle_user_status on public.orders using btree (vehicle_id, user_id, status) TABLESPACE pg_default;
-
-create index IF not exists idx_orders_vehicle_status on public.orders using btree (vehicle_id, status) TABLESPACE pg_default;
-
-create trigger orders_updated_at_trigger BEFORE
-update on orders for EACH row
-execute FUNCTION update_orders_updated_at ();

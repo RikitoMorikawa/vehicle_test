@@ -237,7 +237,7 @@ const VehicleRegisterComponent: React.FC<RegisterVehicleComponentProps> = ({
 
                     {/* 新規フィールド: 車両ステータス */}
                     <Select
-                      label="新車/中古車"
+                      label="車両状態"
                       name="vehicle_status"
                       value={formData.vehicle_status || ""}
                       onChange={onInputChange}
@@ -246,6 +246,7 @@ const VehicleRegisterComponent: React.FC<RegisterVehicleComponentProps> = ({
                       <option value="">選択してください</option>
                       <option value="新車">新車</option>
                       <option value="中古車">中古車</option>
+                      <option value="未使用車">未使用車</option>
                     </Select>
 
                     {/* 新規フィールド: フル型式 */}
@@ -326,7 +327,6 @@ const VehicleRegisterComponent: React.FC<RegisterVehicleComponentProps> = ({
                       value={formData.inspection_date || ""}
                       onChange={onInputChange}
                       error={error?.inspection_date}
-                      required
                     />
 
                     {/* 新規フィールド: 登録年月日 */}
@@ -337,15 +337,6 @@ const VehicleRegisterComponent: React.FC<RegisterVehicleComponentProps> = ({
                       value={formData.registration_date || ""}
                       onChange={onInputChange}
                       error={error?.registration_date}
-                    />
-
-                    {/* 新規フィールド: 希望ナンバー */}
-                    <Input
-                      label="希望ナンバー"
-                      name="desired_number"
-                      value={formData.desired_number || ""}
-                      onChange={onInputChange}
-                      error={error?.desired_number}
                     />
                   </div>
                 </div>

@@ -288,15 +288,37 @@ const VehicleEditContainer: React.FC = () => {
       return imageUrl === removedPreviewUrl;
     });
 
+    let newDeletedImages = [...deletedImages];
+    let newImageFiles = [...imageFiles];
+
     if (originalImageIndex !== -1) {
       // 既存画像の場合は削除リストに追加
       const deletedImagePath = originalImages[originalImageIndex];
-      setDeletedImages((prev) => [...prev, deletedImagePath]);
+      newDeletedImages = [...deletedImages, deletedImagePath];
+      setDeletedImages(newDeletedImages);
     } else {
       // 新規追加画像の場合はファイルリストから削除
       const newImageIndex = index - (originalImages.length - deletedImages.length);
       if (newImageIndex >= 0) {
-        setImageFiles((prev) => prev.filter((_, i) => i !== newImageIndex));
+        newImageFiles = imageFiles.filter((_, i) => i !== newImageIndex);
+        setImageFiles(newImageFiles);
+      }
+    }
+
+    // 削除後の最終画像数をチェック
+    const remainingOriginalImages = originalImages.filter((imagePath) => !newDeletedImages.includes(imagePath));
+    const finalImageCount = remainingOriginalImages.length + newImageFiles.length;
+
+    // 最後の1枚を削除しようとした場合の警告
+    if (finalImageCount === 0) {
+      setError((prev) => ({
+        ...prev,
+        images: "車両画像は最低1枚必要です",
+      }));
+    } else {
+      // エラーをクリア
+      if (error?.images) {
+        setError((prev) => (prev ? { ...prev, images: undefined } : null));
       }
     }
   };
@@ -306,7 +328,28 @@ const VehicleEditContainer: React.FC = () => {
     e.preventDefault();
     if (!id) return;
 
-    const validation = validateVehicleEditForm(formData);
+    // エラーをリセット
+    setError(null);
+
+    // 最終的な画像数をチェック（既存画像 - 削除予定 + 新規追加）
+    const remainingOriginalImages = originalImages.filter((imagePath) => !deletedImages.includes(imagePath));
+    const finalImageCount = remainingOriginalImages.length + imageFiles.length;
+
+    // 車両には最低1枚の画像が必要
+    if (finalImageCount === 0) {
+      setError({
+        images: "車両画像は最低1枚必要です",
+      });
+      return;
+    }
+
+    // バリデーション時にimageFilesも含める
+    const validation = validateVehicleEditForm({
+      ...formData,
+      imageFiles: imageFiles || [],
+      images: formData.images || [],
+    });
+
     if (!validation.success) {
       setError(validation.errors);
       return;
@@ -315,7 +358,7 @@ const VehicleEditContainer: React.FC = () => {
     try {
       let view360_images: string[] = [];
 
-      // メイン画像の処理（修正版）
+      // メイン画像の処理
       // 1. 既存画像から削除対象を除外
       const remainingOriginalImages = originalImages.filter((imagePath) => !deletedImages.includes(imagePath));
 
@@ -383,7 +426,7 @@ const VehicleEditContainer: React.FC = () => {
         id,
         formData: {
           ...formData,
-          images: finalImages, // 最終的な画像リスト
+          images: finalImages,
           view360_images,
           accident_history: formData.accident_history,
           recycling_deposit: formData.recycling_deposit,

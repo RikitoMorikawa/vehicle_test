@@ -11,7 +11,7 @@ export const QUERY_KEYS = {
   ORDERS: ["orders"] as const,
   VEHICLE_ORDER_STATUS: ["order", "detail"] as const,
   LOAN_APPLICATION_STATUS: ["loanApplicationStatus"] as const,
-  LOAN_APPLICATIONS: ["loanApplications"] as const,
+    LOAN_APPLICATIONS: ["loanApplications"] as const,
   LOAN_APPLICATION_DETAIL: ["loanApplication"] as const,
 } as const;
 

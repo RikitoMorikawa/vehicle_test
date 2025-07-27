@@ -177,7 +177,7 @@ const AuthContainer: React.FC<{
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900">車両販売プラットフォーム</h2>
+        <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900">U's WING STOCK STATION</h2>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">

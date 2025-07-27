@@ -89,3 +89,10 @@ INSERT INTO public.users (
   'admin',
   true
 );
+
+
+
+-- ストレージ名
+vehicle-images (Public)
+vehicle-360 (Public)
+loan-documents (Private)

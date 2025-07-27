@@ -91,7 +91,10 @@ const VehicleEditComponent: React.FC<VehicleEditComponentProps> = ({
               <form onSubmit={onSubmit} className="p-6 space-y-6">
                 {/* 画像アップロード部分 */}
                 <div className="space-y-4">
-                  <label className="block text-sm font-medium text-slate-700">車両画像（最大5枚）</label>
+                  <div className="flex items-center justify-between">
+                    <label className="block text-sm font-medium text-slate-700">車両画像（最大5枚）</label>
+                    {error?.images && <p className="text-sm text-red-600">{error.images}</p>}
+                  </div>
 
                   {/* 既存画像の表示 */}
                   {imagePreviews.length > 0 && (
@@ -111,37 +114,24 @@ const VehicleEditComponent: React.FC<VehicleEditComponentProps> = ({
                     </div>
                   )}
 
-                  {/* 画像アップロードエリア */}
+                  {/* 統一された画像アップロードエリア */}
                   {imagePreviews.length < 5 && (
-                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-300 border-dashed rounded-md">
+                    <div
+                      className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 ${
+                        error?.images ? "border-red-300" : "border-slate-300"
+                      } border-dashed rounded-md`}
+                    >
                       <div className="space-y-1 text-center">
                         <div className="flex flex-col items-center">
-                          <Image className="mx-auto h-12 w-12 text-gray-400" />
+                          <Image className={`mx-auto h-12 w-12 ${error?.images ? "text-red-400" : "text-gray-400"}`} />
                           <div className="flex text-sm text-gray-600">
                             <label htmlFor="image-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-teal-500 hover:text-teal-600">
-                              <span>画像を追加（あと{5 - imagePreviews.length}枚）</span>
+                              <span>{imagePreviews.length > 0 ? `画像を追加（あと${5 - imagePreviews.length}枚）` : "画像をアップロード（最大5枚）"}</span>
                               <input id="image-upload" type="file" accept="image/*" multiple className="hidden" onChange={onImagesChange} />
                             </label>
                           </div>
                           <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 画像がない場合の初期表示 */}
-                  {imagePreviews.length === 0 && (
-                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-300 border-dashed rounded-md">
-                      <div className="space-y-1 text-center">
-                        <div className="flex flex-col items-center">
-                          <Image className="mx-auto h-12 w-12 text-gray-400" />
-                          <div className="flex text-sm text-gray-600">
-                            <label htmlFor="image-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-teal-500 hover:text-teal-600">
-                              <span>画像をアップロード（最大5枚）</span>
-                              <input id="image-upload" type="file" accept="image/*" multiple className="hidden" onChange={onImagesChange} />
-                            </label>
-                          </div>
-                          <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                          {error?.images && <p className="text-xs text-red-500 mt-1">{error.images}</p>}
                         </div>
                       </div>
                     </div>
@@ -224,16 +214,11 @@ const VehicleEditComponent: React.FC<VehicleEditComponentProps> = ({
                     />
 
                     {/* 新規フィールド: 車両ステータス */}
-                    <Select
-                      label="新車/中古車"
-                      name="vehicle_status"
-                      value={formData.vehicle_status || ""}
-                      onChange={onInputChange}
-                      error={error?.vehicle_status}
-                    >
+                    <Select label="車両状態" name="vehicle_status" value={formData.vehicle_status || ""} onChange={onInputChange} error={error?.vehicle_status}>
                       <option value="">選択してください</option>
                       <option value="新車">新車</option>
                       <option value="中古車">中古車</option>
+                      <option value="未使用車">未使用車</option>
                     </Select>
 
                     {/* 新規フィールド: フル型式 */}
@@ -313,7 +298,6 @@ const VehicleEditComponent: React.FC<VehicleEditComponentProps> = ({
                       value={formData.inspection_date || ""}
                       onChange={onInputChange}
                       error={error?.inspection_date}
-                      required
                     />
 
                     {/* 新規フィールド: 登録年月日 */}
@@ -324,15 +308,6 @@ const VehicleEditComponent: React.FC<VehicleEditComponentProps> = ({
                       value={formData.registration_date || ""}
                       onChange={onInputChange}
                       error={error?.registration_date}
-                    />
-
-                    {/* 新規フィールド: 希望ナンバー */}
-                    <Input
-                      label="希望ナンバー"
-                      name="desired_number"
-                      value={formData.desired_number || ""}
-                      onChange={onInputChange}
-                      error={error?.desired_number}
                     />
                   </div>
                 </div>

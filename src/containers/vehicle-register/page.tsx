@@ -186,6 +186,18 @@ const VehicleRegisterContainer: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // エラーをリセット
+    setError(null);
+
+    // 車両画像の必須チェック（バリデーション前に実行）
+    if (imageFiles.length === 0) {
+      setError({
+        images: "車両画像は最低1枚選択してください",
+      });
+      return;
+    }
+    
     if (!validateForm()) return;
 
     try {

@@ -17,6 +17,11 @@ export const vehicleEditHandler = {
 
     const convertedRecyclingDeposit = data.recycling_deposit === "true" ? true : data.recycling_deposit === "false" ? false : undefined;
 
+    // 日付フィールドの空文字をnullに変換するヘルパー関数
+    const convertDateField = (dateValue: string | undefined): string | null => {
+      return dateValue && dateValue.trim() !== "" ? dateValue : null;
+    };
+
     const { data: updatedVehicle, error } = await supabase
       .from("vehicles")
       .update({
@@ -31,7 +36,6 @@ export const vehicleEditHandler = {
         engine_size: parseInt(data.engine_size),
         transmission: data.transmission,
         drive_system: data.drive_system,
-        inspection_date: data.inspection_date,
         vehicle_id: data.vehicle_id,
         images: data.images,
         view360_images: data.view360_images,
@@ -41,7 +45,6 @@ export const vehicleEditHandler = {
         full_model_code: data.full_model_code || undefined,
         grade: data.grade || undefined,
         registration_number: data.registration_number || undefined,
-        first_registration_date: data.first_registration_date || undefined,
         chassis_number: data.chassis_number || undefined,
         body_type: data.body_type || undefined,
         door_count: data.door_count ? parseInt(data.door_count) : undefined,
@@ -49,8 +52,11 @@ export const vehicleEditHandler = {
         sales_format: data.sales_format || undefined,
         accident_history: convertedAccidentHistory,
         recycling_deposit: convertedRecyclingDeposit,
-        registration_date: data.registration_date || undefined,
         tax_rate: data.tax_rate ? parseInt(data.tax_rate) : undefined,
+
+        inspection_date: convertDateField(data.inspection_date),
+        first_registration_date: convertDateField(data.first_registration_date),
+        registration_date: convertDateField(data.registration_date),
       })
       .eq("id", id)
       .select()
