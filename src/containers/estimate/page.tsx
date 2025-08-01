@@ -81,7 +81,6 @@ const EstimateContainer: React.FC = () => {
       environmental_performance_tax: 0,
       weight_tax: 0,
       liability_insurance_fee: 0,
-      voluntary_insurance_fee: 0,
     },
     legalFees: {
       inspection_registration_stamp: 0,
@@ -93,8 +92,6 @@ const EstimateContainer: React.FC = () => {
     processingFees: {
       inspection_registration_fee: 0,
       parking_certificate_fee: 0,
-      trade_in_processing_fee: 0,
-      trade_in_assessment_fee: 0,
       recycling_management_fee: 0,
       delivery_fee: 0,
       other_fees: 0,
@@ -110,14 +107,12 @@ const EstimateContainer: React.FC = () => {
   // フォームデータの各セクション変更を監視して販売価格の対応するフィールドを更新するuseEffect
   // EstimateContainer の修正版 useEffect
   React.useEffect(() => {
-
     // 基本集計のみ（消費税計算は SalesPriceInfo に委ねる）
     const totalTaxInsurance =
       (formData.taxInsuranceFees.automobile_tax || 0) +
       (formData.taxInsuranceFees.environmental_performance_tax || 0) +
       (formData.taxInsuranceFees.weight_tax || 0) +
-      (formData.taxInsuranceFees.liability_insurance_fee || 0) +
-      (formData.taxInsuranceFees.voluntary_insurance_fee || 0);
+      (formData.taxInsuranceFees.liability_insurance_fee || 0);
     const totalLegalFee =
       (formData.legalFees.inspection_registration_stamp || 0) +
       (formData.legalFees.parking_certificate_stamp || 0) +
@@ -127,8 +122,6 @@ const EstimateContainer: React.FC = () => {
     const totalProcessingFee =
       (formData.processingFees.inspection_registration_fee || 0) +
       (formData.processingFees.parking_certificate_fee || 0) +
-      (formData.processingFees.trade_in_processing_fee || 0) +
-      (formData.processingFees.trade_in_assessment_fee || 0) +
       (formData.processingFees.recycling_management_fee || 0) +
       (formData.processingFees.delivery_fee || 0) +
       (formData.processingFees.other_fees || 0);
@@ -145,7 +138,6 @@ const EstimateContainer: React.FC = () => {
       formData.salesPrice.accessories_fee !== totalAccessoriesFee;
 
     if (basicUpdateNeeded) {
-
       setFormData((prev) => ({
         ...prev,
         salesPrice: {

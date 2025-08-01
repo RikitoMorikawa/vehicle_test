@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import Select from "../ui/Select";
 import { shippingService } from "../../services/shipping/shipping";
 import type { ShippingInfo, EstimateError } from "../../validations/estimate/page";
-// import ShippingAreaDebug from "./ShippingAreaDebug"; // デバッグコンポーネント
 
 interface ShippingAreaSelectorProps {
   shippingInfo: ShippingInfo;
@@ -43,7 +42,7 @@ const ShippingAreaSelector: React.FC<ShippingAreaSelectorProps> = ({ shippingInf
         area_code: selectedCity.area_code,
         prefecture: selectedCity.prefecture,
         city: selectedCity.city,
-        shipping_cost: selectedCity.cost,
+        shipping_cost: selectedCity.cost, // ★修正: costをshipping_costにマッピング
       });
     }
   };
@@ -57,9 +56,6 @@ const ShippingAreaSelector: React.FC<ShippingAreaSelectorProps> = ({ shippingInf
   return (
     <div className="border-b border-gray-200 pb-6">
       <h2 className="text-lg font-medium text-gray-900 mb-4">配送エリア・送料</h2>
-
-      {/* デバッグ情報表示（開発時のみ） */}
-      {/* <ShippingAreaDebug /> */}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* 都道府県選択 */}
