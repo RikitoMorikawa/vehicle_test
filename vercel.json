@@ -1,8 +1,3 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next",
-  "routes": [
-    { "src": "/contact", "dest": "app/contact/page.tsx" },
-    { "src": "/api/contact", "dest": "app/api/contact/route.ts" }
-  ]
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
