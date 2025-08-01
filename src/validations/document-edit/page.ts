@@ -1,4 +1,3 @@
-// src/validations/document-edit/page.ts
 import { z } from "zod";
 
 export const documentEditSchema = z.object({

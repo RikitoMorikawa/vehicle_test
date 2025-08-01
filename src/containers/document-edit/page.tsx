@@ -1,464 +1,228 @@
-// src/containers/document-edit/page.tsx
-import React, { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import DocumentEditComponent from "../../components/document-edit/page";
-import type { EstimateError, EstimateFormData, ShippingInfo } from "../../validations/estimate/page";
-import { Vehicle } from "../../server/estimate/handler_000";
-import { Accessory } from "../../types/db/accessories";
-import { fetchDocumentData, updateDocument, deleteDocument } from "../../services/document-edit/page";
-import { useAuth } from "../../hooks/useAuth";
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import DocumentEditPage from "../../components/document-edit/page";
+import { documentEditService } from "../../services/document-edit/page";
+import { documentEditHandler } from "../../server/document-edit/handler_000";
+import { validateDocumentEdit, type DocumentEditFormData, type DocumentType } from "../../validations/document-edit/page";
+import type { EstimateReport } from "../../types/report/page";
+
+interface LocationState {
+  documentType?: DocumentType;
+  vehicleId?: string;
+  returnPath?: string;
+}
 
 const DocumentEditContainer: React.FC = () => {
-  const { id: documentId } = useParams<{ id: string }>();
+  const { documentId } = useParams<{ documentId: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
-
-  // 状態管理（新規作成と同じ構造）
+  const location = useLocation();
+  
+  const state = location.state as LocationState;
+  const { documentType = "estimate", returnPath } = state || {};
+  
+  const [document, setDocument] = useState<EstimateReport | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [vehicle, setVehicle] = useState<Vehicle | undefined>(undefined);
-  const [errors, setErrors] = useState<EstimateError | null>(null);
-
-  // フォームデータの初期状態（新規作成と同じ）
-  const [formData, setFormData] = useState<EstimateFormData>({
-    document_type: "estimate",
-    tradeIn: {
-      trade_in_available: true,
-      vehicle_name: "",
-      registration_number: "",
-      mileage: 0,
-      first_registration_date: "",
-      inspection_expiry_date: "",
-      chassis_number: "",
-      exterior_color: "",
-    },
-    loanCalculation: {
-      down_payment: 0,
-      principal: 0,
-      annual_rate: 0,
-      interest_fee: 0,
-      total_payment: 0,
-      payment_count: 24,
-      payment_period: 2,
-      first_payment: 0,
-      monthly_payment: 0,
-      bonus_amount: 0,
-      bonus_months: [],
-    },
-    accessories: [],
-    taxInsuranceFees: {
-      automobile_tax: 0,
-      environmental_performance_tax: 0,
-      weight_tax: 0,
-      liability_insurance_fee: 0,
-      voluntary_insurance_fee: 0,
-    },
-    legalFees: {
-      inspection_registration_stamp: 0,
-      parking_certificate_stamp: 0,
-      trade_in_stamp: 0,
-      recycling_deposit: 0,
-      other_nontaxable: 0,
-    },
-    processingFees: {
-      inspection_registration_fee: 0,
-      parking_certificate_fee: 0,
-      trade_in_processing_fee: 0,
-      trade_in_assessment_fee: 0,
-      recycling_management_fee: 0,
-      delivery_fee: 0,
-      other_fees: 0,
-    },
-    salesPrice: {
-      base_price: 0,
-      discount: 0,
-      inspection_fee: 0,
-      accessories_fee: 0,
-      vehicle_price: 0,
-      tax_insurance: 0,
-      legal_fee: 0,
-      processing_fee: 0,
-      misc_fee: 0,
-      consumption_tax: 0,
-      total_price: 0,
-      trade_in_price: 0,
-      trade_in_debt: 0,
-      payment_total: 0,
-    },
-    shippingInfo: {
-      area_code: null,
-      prefecture: "",
-      city: "",
-      shipping_cost: 0,
-    },
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  const [formData, setFormData] = useState<DocumentEditFormData>({
+    estimateNumber: "",
+    companyName: "",
+    customerName: "",
+    customerEmail: "",
+    customerPhone: "",
+    deliveryDate: "",
+    validUntil: "",
+    notes: "",
+    items: [],
+    taxRate: 10,
+    documentType: "estimate"
   });
 
-  // 既存データの取得
+  // 書類データの取得
   useEffect(() => {
-    const loadDocumentData = async () => {
+    const fetchDocument = async () => {
       if (!documentId) {
-        setError("ドキュメントIDが指定されていません");
-        setLoading(false);
-        return;
-      }
-
-      if (!user) {
-        setError("ログインが必要です");
-        setLoading(false);
+        setError("書類IDが見つかりません");
+        navigate(-1);
         return;
       }
 
       try {
         setLoading(true);
         setError(null);
-
-        const data = await fetchDocumentData(documentId);
-
-        if (data.success && data.data) {
-          setFormData(data.data.formData);
-          setVehicle(data.data.vehicle);
-        } else {
-          setError(data.error || "データの取得に失敗しました");
-        }
+        
+        const data = await documentEditService.getDocument(documentId);
+        setDocument(data);
+        
+        // フォームデータを設定
+        setFormData({
+          estimateNumber: data.estimateNumber,
+          companyName: data.companyName || "",
+          customerName: data.customerName || "",
+          customerEmail: data.customerEmail || "",
+          customerPhone: data.customerPhone || "",
+          deliveryDate: data.deliveryDate || "",
+          validUntil: data.validUntil || "",
+          notes: data.notes || "",
+          taxRate: data.taxRate || 10,
+          documentType: documentType
+        });
       } catch (err) {
-        console.error("Document load error:", err);
-        setError("データの読み込み中にエラーが発生しました");
+        console.error("書類取得エラー:", err);
+        const errorMessage = err instanceof Error ? err.message : "書類の取得に失敗しました";
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
     };
 
-    loadDocumentData();
-  }, [documentId, user]);
+    fetchDocument();
+  }, [documentId, navigate, documentType]);
 
-  // フォームデータの各セクション変更を監視して販売価格の対応するフィールドを更新（新規作成と同じロジック）
-  useEffect(() => {
-    const totalTaxInsurance =
-      (formData.taxInsuranceFees.automobile_tax || 0) +
-      (formData.taxInsuranceFees.environmental_performance_tax || 0) +
-      (formData.taxInsuranceFees.weight_tax || 0) +
-      (formData.taxInsuranceFees.liability_insurance_fee || 0) +
-      (formData.taxInsuranceFees.voluntary_insurance_fee || 0);
-
-    const totalLegalFee =
-      (formData.legalFees.inspection_registration_stamp || 0) +
-      (formData.legalFees.parking_certificate_stamp || 0) +
-      (formData.legalFees.trade_in_stamp || 0) +
-      (formData.legalFees.recycling_deposit || 0) +
-      (formData.legalFees.other_nontaxable || 0);
-
-    const totalProcessingFee =
-      (formData.processingFees.inspection_registration_fee || 0) +
-      (formData.processingFees.parking_certificate_fee || 0) +
-      (formData.processingFees.trade_in_processing_fee || 0) +
-      (formData.processingFees.trade_in_assessment_fee || 0) +
-      (formData.processingFees.recycling_management_fee || 0) +
-      (formData.processingFees.delivery_fee || 0) +
-      (formData.processingFees.other_fees || 0);
-
-    const totalAccessoriesFee = (formData.accessories || []).reduce(
-      (total, accessory) => total + (typeof accessory.price === "number" ? accessory.price : 0),
-      0
-    );
-
-    const basicUpdateNeeded =
-      formData.salesPrice.tax_insurance !== totalTaxInsurance ||
-      formData.salesPrice.legal_fee !== totalLegalFee ||
-      formData.salesPrice.processing_fee !== totalProcessingFee ||
-      formData.salesPrice.accessories_fee !== totalAccessoriesFee;
-
-    if (basicUpdateNeeded) {
-      setFormData((prev) => ({
-        ...prev,
-        salesPrice: {
-          ...prev.salesPrice,
-          tax_insurance: totalTaxInsurance,
-          legal_fee: totalLegalFee,
-          processing_fee: totalProcessingFee,
-          accessories_fee: totalAccessoriesFee,
-        },
-      }));
+  // 入力変更ハンドラー
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === "taxRate" ? parseFloat(value) || 0 : value
+    }));
+    
+    // エラークリア
+    if (errors[name]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
     }
-  }, [
-    formData.taxInsuranceFees,
-    formData.legalFees,
-    formData.processingFees,
-    formData.accessories,
-    formData.salesPrice.tax_insurance,
-    formData.salesPrice.legal_fee,
-    formData.salesPrice.processing_fee,
-    formData.salesPrice.accessories_fee,
-  ]);
+    
+    // 成功メッセージクリア
+    if (success) {
+      setSuccess(null);
+    }
+  };
 
-  // 入力値変更ハンドラ（新規作成と同じ）
-  const handleInputChange = useCallback(
-    (
-      section:
-        | "salesPrice"
-        | "tradeIn"
-        | "loanCalculation"
-        | "accessories"
-        | "taxInsuranceFees"
-        | "legalFees"
-        | "processingFees"
-        | "document_type"
-        | "shippingInfo",
-      name: string,
-      value: string | number | boolean | number[]
-    ) => {
-      // document_typeの処理
-      if (section === "document_type") {
-        setFormData((prev) => ({
-          ...prev,
-          document_type: value as string,
-        }));
-        return;
-      }
-
-      // 配送エリア情報の処理
-      if (section === "shippingInfo") {
-        setFormData((prev) => ({
-          ...prev,
-          shippingInfo: {
-            ...prev.shippingInfo,
-            [name]: value,
-          },
-        }));
-        return;
-      }
-
-      // ローン計算の特別処理
-      if (section === "loanCalculation") {
-        if (name === "payment_count" && typeof value === "number") {
-          const paymentPeriodValue = Math.floor(value / 12);
-          setFormData((prev) => ({
-            ...prev,
-            loanCalculation: {
-              ...prev.loanCalculation,
-              [name]: value,
-              payment_period: paymentPeriodValue,
-            },
-          }));
-          return;
-        }
-
-        if (name === "bonus_months" && Array.isArray(value)) {
-          setFormData((prev) => ({
-            ...prev,
-            loanCalculation: {
-              ...prev.loanCalculation,
-              bonus_months: value,
-            },
-          }));
-          return;
-        }
-      }
-
-      // 数値フィールドの一般的な処理
-      if ((section === "tradeIn" && name === "mileage") || (section === "loanCalculation" && typeof value !== "object")) {
-        const numValue = value === "" ? 0 : typeof value === "string" ? parseInt(value.replace(/[^0-9]/g, "") || "0", 10) : value;
-        setFormData((prev) => ({
-          ...prev,
-          [section]: {
-            ...prev[section],
-            [name]: numValue,
-          },
-        }));
-      } else {
-        setFormData((prev) => ({
-          ...prev,
-          [section]: {
-            ...prev[section],
-            [name]: value,
-          },
-        }));
-      }
-
-      // エラーをクリア
-      if (errors) {
-        setErrors((prevErrors) => {
-          if (!prevErrors) return null;
-
-          const newErrors = { ...prevErrors };
-          if (section === "document_type") {
-            delete newErrors.document_type;
-          } else if (newErrors[section]) {
-            if (typeof newErrors[section] === "object") {
-              const sectionErrors = { ...newErrors[section] } as Record<string, string>;
-              delete sectionErrors[name];
-              if (Object.keys(sectionErrors).length === 0) {
-                delete newErrors[section];
-              } else {
-                newErrors[section] = sectionErrors;
-              }
-            } else {
-              delete newErrors[section];
-            }
-          }
-
-          return Object.keys(newErrors).length === 0 ? null : newErrors;
-        });
-      }
-    },
-    [errors]
-  );
-
-  // 付属品変更ハンドラ（新規作成と同じ）
-  const handleAccessoryChange = useCallback(
-    (action: "add" | "remove", value: Accessory | number) => {
-      if (action === "add" && typeof value !== "number") {
-        setFormData((prev) => ({
-          ...prev,
-          accessories: [...prev.accessories, value as Accessory],
-        }));
-      } else if (action === "remove" && typeof value === "number") {
-        setFormData((prev) => ({
-          ...prev,
-          accessories: prev.accessories.filter((_, index) => index !== value),
-        }));
-      }
-
-      // 付属品関連のエラーをクリア
-      if (errors?.accessories) {
-        setErrors((prevErrors) => {
-          if (!prevErrors) return null;
-          const newErrors = { ...prevErrors };
-          delete newErrors.accessories;
-          return Object.keys(newErrors).length === 0 ? null : newErrors;
-        });
-      }
-    },
-    [errors]
-  );
-
-  // 配送情報変更ハンドラ（新規作成と同じ）
-  const handleShippingChange = useCallback(
-    (shippingInfo: ShippingInfo) => {
-      setFormData((prev) => ({
-        ...prev,
-        shippingInfo,
-      }));
-
-      // 配送情報関連のエラーをクリア
-      if (errors?.shippingInfo) {
-        setErrors((prevErrors) => {
-          if (!prevErrors) return null;
-          const newErrors = { ...prevErrors };
-          delete newErrors.shippingInfo;
-          return Object.keys(newErrors).length === 0 ? null : newErrors;
-        });
-      }
-    },
-    [errors]
-  );
-
-  // フォーム送信ハンドラ（更新処理）
+  // フォーム送信ハンドラー
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!documentId) return;
 
-    if (!user) {
-      setErrors({ general: "ログインが必要です" });
-      return;
-    }
-
-    if (!documentId) {
-      setErrors({ general: "ドキュメントIDが不足しています" });
+    // バリデーション
+    const validation = validateDocumentEdit(formData);
+    if (!validation.success) {
+      setErrors(validation.errors);
+      setError("入力内容に誤りがあります。");
       return;
     }
 
     try {
-      setLoading(true);
+      setIsLoading(true);
       setError(null);
-      setErrors(null);
       setSuccess(null);
-
-      const response = await updateDocument(documentId, {
-        userId: user.id,
-        ...formData,
-      });
-
-      if (response.success) {
-        setSuccess("書類が正常に更新されました");
-
-        // 3秒後に書類一覧ページに戻る
-        setTimeout(() => {
-          navigate("/documents");
-        }, 3000);
-      } else {
-        if (response.errors) {
-          setErrors(response.errors);
+      setErrors({});
+      
+      // フォームデータの前処理
+      const processedData = documentEditHandler.preprocessFormData(formData);
+      
+      // 更新実行
+      const updatedDocument = await documentEditHandler.updateDocument(documentId, processedData);
+      
+      setSuccess("書類を更新しました");
+      setDocument(updatedDocument);
+      
+      // 少し待ってから遷移
+      setTimeout(() => {
+        if (returnPath) {
+          navigate(returnPath);
         } else {
-          setError(response.error || "更新に失敗しました");
+          navigate(-1);
         }
-      }
+      }, 1500);
+      
     } catch (err) {
-      console.error("Update error:", err);
-      setError("更新中にエラーが発生しました");
+      console.error("書類更新エラー:", err);
+      const errorMessage = err instanceof Error ? err.message : "書類の更新に失敗しました";
+      setError(errorMessage);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  // キャンセルハンドラ
-  const handleCancel = useCallback(() => {
-    navigate(-1);
-  }, [navigate]);
-
-  // 削除ハンドラ
-  const handleDelete = async () => {
-    if (!user) {
-      setErrors({ general: "ログインが必要です" });
-      return;
-    }
-
-    if (!documentId) {
-      setErrors({ general: "ドキュメントIDが不足しています" });
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-      setSuccess(null);
-
-      const response = await deleteDocument(documentId);
-
-      if (response.success) {
-        setSuccess("書類が正常に削除されました");
-
-        // 2秒後に書類一覧ページに戻る
-        setTimeout(() => {
-          navigate("/documents");
-        }, 2000);
-      } else {
-        setError(response.error || "削除に失敗しました");
-      }
-    } catch (err) {
-      console.error("Delete error:", err);
-      setError("削除中にエラーが発生しました");
-    } finally {
-      setLoading(false);
+  // キャンセルハンドラー
+  const handleCancel = () => {
+    if (returnPath) {
+      navigate(returnPath);
+    } else {
+      navigate(-1);
     }
   };
 
-  // レンダリング
+  // ローディング状態
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-sm p-8">
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mr-3"></div>
+              <span className="text-gray-600">書類を読み込み中...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // エラー状態
+  if (error && !document) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-sm p-8">
+            <div className="text-center">
+              <div className="text-red-600 mb-4">
+                <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.996-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                {error}
+              </h3>
+              <p className="text-gray-600 mb-4">
+                指定された書類を読み込むことができませんでした。
+              </p>
+              <button
+                onClick={handleCancel}
+                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                戻る
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!document) return null;
+
   return (
-    <DocumentEditComponent
-      loading={loading}
-      error={error}
-      vehicle={vehicle}
+    <DocumentEditPage
+      document={document}
+      documentType={documentType}
       formData={formData}
       errors={errors}
+      isLoading={isLoading}
       success={success}
-      documentId={documentId || ""}
-      isEdit={true}
+      error={error}
       onInputChange={handleInputChange}
       onSubmit={handleSubmit}
       onCancel={handleCancel}
-      onAccessoryChange={handleAccessoryChange}
-      onShippingChange={handleShippingChange}
-      onDelete={handleDelete}
     />
   );
 };
