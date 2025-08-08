@@ -27,6 +27,7 @@ export interface EstimatePDFData {
   // 見積車両情報
   estimateVehicle: {
     id: string;
+    vehicle_id: string; // 車両ID
     maker: string;
     name: string;
     grade?: string;

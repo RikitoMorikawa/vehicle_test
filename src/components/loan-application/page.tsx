@@ -87,7 +87,6 @@ const LoanApplicationComponent: React.FC<LoanApplicationComponentProps> = ({ for
                     />
                   </div>
                 </div>
-
                 {/* 居住情報（新規追加） */}
                 <div className="border-b border-gray-200 pb-6">
                   <h2 className="text-lg font-medium mb-4">居住情報</h2>
@@ -130,7 +129,7 @@ const LoanApplicationComponent: React.FC<LoanApplicationComponentProps> = ({ for
                       <option value="">選択してください</option>
                       <option value="未婚">未婚</option>
                       <option value="既婚">既婚</option>
-                      <option value="離婚">離婚</option>
+                      {/* <option value="離婚">離婚</option> */}
                       <option value="その他">その他</option>
                     </Select>
                     <Input
@@ -155,7 +154,6 @@ const LoanApplicationComponent: React.FC<LoanApplicationComponentProps> = ({ for
                     />
                   </div>
                 </div>
-
                 {/* 勤務先情報 */}
                 <div className="border-b border-gray-200 pb-6">
                   <h2 className="text-lg font-medium mb-4">勤務先情報</h2>
@@ -235,7 +233,6 @@ const LoanApplicationComponent: React.FC<LoanApplicationComponentProps> = ({ for
                     />
                   </div>
                 </div>
-
                 {/* 書類情報 */}
                 <div className="border-b border-gray-200 pb-6">
                   <h2 className="text-lg font-medium mb-4">必要書類</h2>
@@ -244,14 +241,40 @@ const LoanApplicationComponent: React.FC<LoanApplicationComponentProps> = ({ for
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         本人確認書類 <span className="text-red-500">*</span>
                       </label>
-                      <p className="text-sm text-gray-500 mb-2">運転免許証、パスポート、マイナンバーカードなど</p>
+                      <p className="text-sm text-gray-500 mb-2">運転免許証、パスポート、マイナンバーカードなど（複数選択可）</p>
                       <input
                         type="file"
                         accept=".pdf,.jpg,.jpeg,.png"
-                        onChange={(e) => e.target.files && onFileChange("identification_doc", e.target.files[0])}
+                        multiple // 複数ファイル選択を有効
+                        onChange={(e) => e.target.files && onFileChange("identification_docs", e.target.files)}
                         className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100"
                       />
-                      {error?.identification_doc && <p className="mt-1 text-sm text-red-600">{error.identification_doc}</p>}
+                      {/* 選択されたファイル一覧を表示 */}
+                      {formData.identification_docs && formData.identification_docs.length > 0 && (
+                        <div className="mt-2">
+                          <p className="text-sm text-gray-600 mb-1">選択されたファイル:</p>
+                          <ul className="text-sm text-gray-500 space-y-1">
+                            {Array.from(formData.identification_docs).map((file, index) => (
+                              <li key={index} className="flex items-center justify-between bg-gray-50 px-2 py-1 rounded">
+                                <span>{file.name}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    // 個別ファイルを削除する処理
+                                    const newFiles = Array.from(formData.identification_docs).filter((_, i) => i !== index);
+                                    // カスタムイベントオブジェクトを作成してonFileChangeを呼び出し
+                                    onFileChange("identification_docs", newFiles as any);
+                                  }}
+                                  className="text-red-500 hover:text-red-700 ml-2"
+                                >
+                                  削除
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {error?.identification_docs && <p className="mt-1 text-sm text-red-600">{error.identification_docs}</p>}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -361,10 +384,8 @@ const LoanApplicationComponent: React.FC<LoanApplicationComponentProps> = ({ for
                       </div>
                       {error?.bonus_months && <p className="mt-1 text-sm text-red-600">{error.bonus_months}</p>}
                     </div>
-
                   </div>
                 </div>
-
                 {/* 連帯保証人情報 */}
                 <div className="border-b border-gray-200 pb-6">
                   <h2 className="text-lg font-medium mb-4">連帯保証人情報（任意）</h2>
@@ -417,7 +438,6 @@ const LoanApplicationComponent: React.FC<LoanApplicationComponentProps> = ({ for
                     />
                   </div>
                 </div>
-
                 {/* 備考 */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">備考</label>
@@ -431,7 +451,6 @@ const LoanApplicationComponent: React.FC<LoanApplicationComponentProps> = ({ for
                   />
                   {error?.notes && <p className="mt-1 text-sm text-red-600">{error.notes}</p>}
                 </div>
-
                 <div className="flex justify-end space-x-3">
                   <Button type="submit" isLoading={isLoading}>
                     申込む

@@ -23,13 +23,23 @@ const ShippingAreaSelector: React.FC<ShippingAreaSelectorProps> = ({ shippingInf
     const prefecture = e.target.value;
     setSelectedPrefecture(prefecture);
 
-    // 都道府県が変更されたら市区町村と送料をリセット
-    onShippingChange({
-      area_code: null,
-      prefecture: prefecture,
-      city: "",
-      shipping_cost: 0,
-    });
+    // 都道府県が空の場合は全てリセット
+    if (!prefecture) {
+      onShippingChange({
+        area_code: null,
+        prefecture: "",
+        city: "",
+        shipping_cost: 0,
+      });
+    } else {
+      // 都道府県が選択されたら市区町村と送料をリセット
+      onShippingChange({
+        area_code: null,
+        prefecture: prefecture,
+        city: "",
+        shipping_cost: 0,
+      });
+    }
   };
 
   // 市区町村変更時の処理
@@ -66,7 +76,6 @@ const ShippingAreaSelector: React.FC<ShippingAreaSelectorProps> = ({ shippingInf
           onChange={handlePrefectureChange}
           error={getFieldError("prefecture")}
           disabled={prefecturesLoading}
-          required
         >
           <option value="">都道府県を選択してください</option>
           {prefectures.map((prefecture) => (
@@ -84,7 +93,7 @@ const ShippingAreaSelector: React.FC<ShippingAreaSelectorProps> = ({ shippingInf
           onChange={handleCityChange}
           error={getFieldError("city")}
           disabled={!selectedPrefecture || citiesLoading}
-          required
+          required={!!selectedPrefecture}
         >
           <option value="">市区町村を選択してください</option>
           {cities.map((city) => (

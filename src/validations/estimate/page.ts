@@ -106,10 +106,19 @@ export const salesPriceSchema = z.object({
 
 // ★新しく追加: 配送エリア情報のバリデーションスキーマ
 export const shippingInfoSchema = z.object({
-  area_code: z.number().min(1, "配送エリアを選択してください").nullable(),
-  prefecture: z.string().min(1, "都道府県を選択してください"),
-  city: z.string().min(1, "市区町村を選択してください"),
-  shipping_cost: z.number().min(0, "送料は0以上である必要があります"),
+  area_code: z.number().nullable(),  // .optional() を削除
+  prefecture: z.string(),            // .optional() を削除
+  city: z.string(),                  // .optional() を削除
+  shipping_cost: z.number().min(0, "送料は0以上である必要があります").default(0),
+}).refine((data) => {
+  // 都道府県が選択されている場合は市区町村も必須
+  if (data.prefecture && data.prefecture.trim() !== "") {
+    return data.city && data.city.trim() !== "" && data.area_code !== null;
+  }
+  return true;
+}, {
+  message: "都道府県を選択した場合は市区町村も選択してください",
+  path: ["city"], // エラーを市区町村フィールドに表示
 });
 
 // 型の導出

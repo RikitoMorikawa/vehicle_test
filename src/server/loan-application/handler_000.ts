@@ -11,12 +11,36 @@ const LOAN_STATUS = {
 } as const;
 
 export const loanApplicationHandler = {
+  // 複数ファイルアップロード用の関数を追加
+  async uploadMultipleFiles(loanId: string, files: File[], fileType: string): Promise<string[]> {
+    const uploadPromises = files.map(async (file, index) => {
+      const fileExt = file.name.split(".").pop() || "";
+      const fileName = `${Date.now()}_${fileType}_${index + 1}.${fileExt}`;
+      const filePath = `${loanId}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("loan-documents")
+        .upload(filePath, file);
+
+      if (uploadError) {
+        console.error("File upload error:", uploadError);
+        throw new Error(`ファイルアップロードエラー: ${uploadError.message}`);
+      }
+
+      return filePath;
+    });
+
+    return Promise.all(uploadPromises);
+  },
+
   async uploadFile(loanId: string, file: File, fileType: string): Promise<string> {
     const fileExt = file.name.split(".").pop() || "";
     const fileName = `${Date.now()}_${fileType}.${fileExt}`;
     const filePath = `${loanId}/${fileName}`;
 
-    const { error: uploadError } = await supabase.storage.from("loan-documents").upload(filePath, file);
+    const { error: uploadError } = await supabase.storage
+      .from("loan-documents")
+      .upload(filePath, file);
 
     if (uploadError) {
       console.error("File upload error:", uploadError);
@@ -43,7 +67,7 @@ export const loanApplicationHandler = {
           customer_phone: formData.customer_phone,
           customer_mobile_phone: formData.customer_mobile_phone,
 
-          // 居住情報（新規追加）
+          // 居住情報
           residence_type: formData.residence_type,
           residence_years: parseInt(formData.residence_years) || 0,
           marital_status: formData.marital_status,
@@ -87,14 +111,19 @@ export const loanApplicationHandler = {
       }
 
       // ファイルがある場合はアップロード処理
-      let identificationDocUrl = null;
+      let identificationDocUrls: string[] = [];
       let incomeDocUrl = null;
 
-      if (formData.identification_doc) {
+      // 複数の本人確認書類をアップロード
+      if (formData.identification_docs && formData.identification_docs.length > 0) {
         try {
-          identificationDocUrl = await this.uploadFile(loanApplication.id, formData.identification_doc, "identification");
+          identificationDocUrls = await this.uploadMultipleFiles(
+            loanApplication.id, 
+            formData.identification_docs, 
+            "identification"
+          );
         } catch (uploadError) {
-          console.error("Identification document upload failed:", uploadError);
+          console.error("Identification documents upload failed:", uploadError);
           // ファイルアップロードエラーの場合はレコードを削除
           await supabase.from("loan_applications").delete().eq("id", loanApplication.id);
           throw uploadError;
@@ -113,13 +142,18 @@ export const loanApplicationHandler = {
       }
 
       // ファイルURLを更新
-      if (identificationDocUrl || incomeDocUrl) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (identificationDocUrls.length > 0 || incomeDocUrl) {
         const updateData: any = {};
-        if (identificationDocUrl) updateData.identification_doc_url = identificationDocUrl;
+        if (identificationDocUrls.length > 0) {
+          // 複数URLをJSON文字列として保存
+          updateData.identification_doc_url = JSON.stringify(identificationDocUrls);
+        }
         if (incomeDocUrl) updateData.income_doc_url = incomeDocUrl;
 
-        const { error: updateError } = await supabase.from("loan_applications").update(updateData).eq("id", loanApplication.id);
+        const { error: updateError } = await supabase
+          .from("loan_applications")
+          .update(updateData)
+          .eq("id", loanApplication.id);
 
         if (updateError) {
           console.error("File URL update error:", updateError);

@@ -843,7 +843,7 @@ const LegalFeesInfo: React.FC<{
           placeholder="0"
           taxStatus="nonTaxable" // 印紙代は非課税
         />
-        <Input
+        {/* <Input
           label="リサイクル預託金"
           name="recycling_deposit"
           type="text"
@@ -854,7 +854,7 @@ const LegalFeesInfo: React.FC<{
           error={getFieldError("recycling_deposit")}
           placeholder="0"
           taxStatus="nonTaxable" // 預託金は非課税
-        />
+        /> */}
         <Input
           label="その他非課税"
           name="other_nontaxable"
@@ -1341,6 +1341,46 @@ const SalesPriceInfo: React.FC<{
   );
 };
 
+// ★新規追加: （E）法定費用コンポーネント（リサイクル預託金のみ）
+const RecyclingDepositInfo: React.FC<{
+  legalFees: EstimateFormData["legalFees"];
+  onInputChange: (section: "legalFees", field: string, value: string | number) => void;
+  errors?: EstimateError | null;
+}> = ({ legalFees, onInputChange, errors }) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    const numValue = value === "" ? 0 : parseInt(value);
+    onInputChange("legalFees", name, numValue);
+  };
+
+  const getFieldError = (fieldName: string): string | undefined => {
+    if (!errors || !errors.legalFees) return undefined;
+    return typeof errors.legalFees === "string" ? errors.legalFees : errors.legalFees[fieldName];
+  };
+
+  return (
+    <div className="border-b border-gray-200 pb-6">
+      <h2 className="text-lg font-medium text-gray-900 mb-4">（E）法定費用</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Input
+          label="リサイクル預託金"
+          name="recycling_deposit"
+          type="text"
+          currency={true}
+          inputMode="numeric"
+          value={legalFees.recycling_deposit?.toString() ?? ""}
+          onChange={handleChange}
+          error={getFieldError("recycling_deposit")}
+          placeholder="0"
+          taxStatus="nonTaxable" // 預託金は非課税
+        />
+        {/* 将来的に他の法定費用を追加する場合はここに配置 */}
+      </div>
+      {errors?.legalFees && typeof errors.legalFees === "string" && <div className="mt-4 text-sm text-red-600">{errors.legalFees}</div>}
+    </div>
+  );
+};
+
 // メインコンポーネント
 // メインコンポーネント
 const EstimateComponent: React.FC<EstimateComponentProps> = ({
@@ -1479,7 +1519,6 @@ const EstimateComponent: React.FC<EstimateComponentProps> = ({
         <main className="flex-1 p-8">
           <div className="max-w-4xl mx-auto">
             <div className="bg-white shadow rounded-lg">
-
               {/* 書類種別選択 */}
               <div className="ml-4 border-b border-gray-200 pb-6 pt-4">
                 <h2 className="text-lg font-medium text-gray-900 my-4">書類種別</h2>
@@ -1514,13 +1553,12 @@ const EstimateComponent: React.FC<EstimateComponentProps> = ({
 
               {/* メインフォーム */}
               <form onSubmit={handleSubmit} className="p-6 space-y-8">
-                
                 {/* 車両情報 */}
                 {vehicle && <VehicleInfo vehicle={vehicle} />}
-                
+
                 {/* 下取り車両情報 */}
                 <TradeInInfo tradeIn={formData.tradeIn} onInputChange={onInputChange} errors={errors} />
-                
+
                 {/* ローン計算情報 - 修正された現金販売価格を渡す */}
                 <LoanCalculationComponent
                   loanCalculation={formData.loanCalculation}
@@ -1528,19 +1566,22 @@ const EstimateComponent: React.FC<EstimateComponentProps> = ({
                   onInputChange={onInputChange}
                   errors={errors}
                 />
-                
+
                 {/* 付属品情報 */}
                 <AccessoriesInfo accessories={formData.accessories || []} onInputChange={onAccessoryChange} errors={errors} />
-                
+
                 {/* 税金・保険料 */}
                 <TaxInsuranceInfo taxInsuranceFees={formData.taxInsuranceFees} onInputChange={onInputChange} errors={errors} />
-                
+
                 {/* 法定費用 */}
                 <LegalFeesInfo legalFees={formData.legalFees} onInputChange={onInputChange} errors={errors} />
-                
+
                 {/* 手続代行費用 */}
                 <ProcessingFeesInfo processingFees={formData.processingFees} onInputChange={onInputChange} errors={errors} />
-                
+
+                {/* ★新規追加: （E）法定費用（リサイクル預託金のみ） */}
+                <RecyclingDepositInfo legalFees={formData.legalFees} onInputChange={onInputChange} errors={errors} />
+
                 {/* 販売価格情報 - 修正版SalesPriceInfoコンポーネントを使用 */}
                 <SalesPriceInfo
                   salesPrice={formData.salesPrice}
@@ -1551,10 +1592,10 @@ const EstimateComponent: React.FC<EstimateComponentProps> = ({
                   onInputChange={onInputChange}
                   errors={errors}
                 />
-                
+
                 {/* 配送エリア選択 */}
                 <ShippingAreaSelector shippingInfo={formData.shippingInfo} onShippingChange={onShippingChange} errors={errors} />
-                
+
                 {/* フォームボタン */}
                 <div className="flex justify-end space-x-4">
                   <Button type="button" variant="outline" onClick={onCancel}>
@@ -1568,7 +1609,7 @@ const EstimateComponent: React.FC<EstimateComponentProps> = ({
         </main>
       </div>
       <Footer />
-      
+
       {/* 確認ダイアログ */}
       <ConfirmDialog
         isOpen={showConfirmDialog}

@@ -18,6 +18,7 @@ export const pdfHandler = {
             name
           ),
           vehicles!estimate_vehicles_vehicle_id_fkey (
+            vehicle_id,
             grade,
             full_model_code,
             color,
@@ -191,6 +192,7 @@ export const pdfHandler = {
         // 見積車両情報（vehiclesテーブルのデータを使用）
         estimateVehicle: {
           id: estimateVehicle.id,
+          vehicle_id: vehicleData.vehicle_id,
           maker: estimateVehicle.maker,
           name: estimateVehicle.name,
           grade: vehicleData.grade || "グレード未設定", // vehiclesテーブルから取得

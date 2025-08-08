@@ -1,4 +1,5 @@
-// src / validations / loan - application / page.ts;
+// src/validations/loan-application/page.ts の修正部分
+
 import { z } from "zod";
 import { validateForm, ValidationResult } from "../index";
 
@@ -51,11 +52,17 @@ export const loanApplicationSchema = z.object({
     .regex(/^[0-9]+$/, "0以上の整数で入力してください"),
 
   // 書類
-  identification_doc: z
-    .any()
-    .refine((val) => val !== null, "本人確認書類を添付してください")
-    .refine((val) => !val || val.size <= 10 * 1024 * 1024, "ファイルサイズは10MB以下にしてください")
-    .refine((val) => !val || /\.(jpg|jpeg|png|pdf)$/i.test(val.name), "JPG、PNG、PDFファイルのみ対応しています"),
+  identification_docs: z
+    .array(z.any())
+    .min(1, "本人確認書類を少なくとも1枚添付してください")
+    .refine(
+      (files) => files.every(file => file.size <= 10 * 1024 * 1024),
+      "ファイルサイズは10MB以下にしてください"
+    )
+    .refine(
+      (files) => files.every(file => /\.(jpg|jpeg|png|pdf)$/i.test(file.name)),
+      "JPG、PNG、PDFファイルのみ対応しています"
+    ),
   income_doc: z
     .any()
     .refine((val) => val !== null, "収入証明書類を添付してください")

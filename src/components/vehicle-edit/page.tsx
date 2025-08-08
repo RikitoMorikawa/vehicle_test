@@ -354,13 +354,20 @@ const VehicleEditComponent: React.FC<VehicleEditComponentProps> = ({
                 <div className="border-b border-slate-200 pb-4">
                   <h2 className="text-lg font-medium text-slate-700 mb-4">販売情報</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* 販売形態 */}
+                    {/* 販売形態
                     <Select label="販売形態" name="sales_format" value={formData.sales_format || ""} onChange={onInputChange} error={error?.sales_format}>
                       <option value="">選択してください</option>
                       <option value="新車販売">新車販売</option>
                       <option value="中古車販売">中古車販売</option>
                       <option value="リース">リース</option>
                       <option value="その他">その他</option>
+                    </Select> */}
+
+                    {/* 税率 */}
+                    <Select label="税率" name="tax_rate" value={formData.tax_rate || ""} onChange={onInputChange} error={error?.tax_rate}>
+                      <option value="">選択してください</option>
+                      <option value="8">8%</option>
+                      <option value="10">10%</option>
                     </Select>
 
                     {/* リサイクル預託金のチェックボックス - 高さを合わせるためにdivで囲む */}
@@ -373,13 +380,6 @@ const VehicleEditComponent: React.FC<VehicleEditComponentProps> = ({
                         error={error?.recycling_deposit}
                       />
                     </div>
-
-                    {/* 税率 */}
-                    <Select label="税率" name="tax_rate" value={formData.tax_rate || ""} onChange={onInputChange} error={error?.tax_rate}>
-                      <option value="">選択してください</option>
-                      <option value="8">8%</option>
-                      <option value="10">10%</option>
-                    </Select>
                   </div>
                 </div>
                 <div className="flex justify-between space-x-3">

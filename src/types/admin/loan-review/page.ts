@@ -95,6 +95,6 @@ export const RESIDENCE_TYPES = {
 export const MARITAL_STATUS = {
   "未婚": "未婚",
   "既婚": "既婚",
-  "離婚": "離婚",
+  // "離婚": "離婚",
   "その他": "その他",
 } as const;

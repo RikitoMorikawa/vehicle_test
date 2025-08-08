@@ -1,5 +1,5 @@
 // src/containers/vehicle-register/page.tsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { vehicleRegisterService } from "../../services/vehicle-register/page";
 import VehicleRegisterComponent from "../../components/vehicle-register/page";
@@ -7,6 +7,7 @@ import type { VehicleFormData, VehicleRegisterError } from "../../types/vehicle-
 import { validateVehicleRegisterForm } from "../../validations/vehicle-register/page";
 import { supabase } from "../../lib/supabase";
 import { makerService } from "../../services/common/car_makers/page";
+import { vehicleIdService } from "../../services/vehicle-register/vehicleIdService";
 
 const VehicleRegisterContainer: React.FC = () => {
   const navigate = useNavigate();
@@ -53,6 +54,23 @@ const VehicleRegisterContainer: React.FC = () => {
 
   const registerVehicle = vehicleRegisterService.useRegisterVehicle();
 
+  // コンポーネント初期表示時に車両IDを自動生成
+  useEffect(() => {
+    const generateVehicleId = async () => {
+      try {
+        const nextVehicleId = await vehicleIdService.generateNextVehicleId();
+        setFormData((prev) => ({
+          ...prev,
+          vehicle_id: nextVehicleId,
+        }));
+      } catch (error) {
+        console.error("車両ID生成エラー:", error);
+      }
+    };
+
+    generateVehicleId();
+  }, []); // 初回のみ実行
+  
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));

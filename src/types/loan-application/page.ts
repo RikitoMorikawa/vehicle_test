@@ -44,7 +44,7 @@ export interface LoanApplicationFormData {
   annual_income: string;
 
   // 書類
-  identification_doc: File | null;
+  identification_docs: File[];
   income_doc: File | null;
 
   // ローン情報
@@ -90,7 +90,7 @@ export interface LoanApplicationError {
   employment_type?: string;
   years_employed?: string;
   annual_income?: string;
-  identification_doc?: string;
+  identification_docs?: string[];
   income_doc?: string;
   vehicle_price?: string;
   down_payment?: string;
@@ -113,7 +113,7 @@ export interface LoanApplicationComponentProps {
   isLoading: boolean;
   onSubmit: (e: React.FormEvent) => void;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
-  onFileChange: (name: string, file: File) => void;
+  onFileChange: (name: string, files: FileList | File) => void;
 }
 
 // データベース用の型

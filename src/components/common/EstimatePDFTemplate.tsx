@@ -267,32 +267,30 @@ const EstimatePDFTemplate: React.FC<EstimatePDFTemplateProps> = ({ data, classNa
               <table className="w-full text-sm">
                 <tbody>
                   <tr className="border-b border-black">
-                    <td className="p-3 w-1/4 bg-gray-100 font-medium border-r border-black">車名</td>
-                    <td className="p-3 w-1/4 border-r border-black">
-                      {data.estimateVehicle.maker} {data.estimateVehicle.name}
-                    </td>
+                    <td className="p-3 w-1/4 bg-gray-100 font-medium border-r border-black">車両ID</td>
+                    <td className="p-3 w-1/4 border-r border-black">{data.estimateVehicle.vehicle_id}</td>
                     <td className="p-3 w-1/4 bg-gray-100 font-medium border-r border-black">グレード</td>
                     <td className="p-3 w-1/4">{data.estimateVehicle.grade || "-"}</td>
                   </tr>
                   <tr className="border-b border-black">
-                    <td className="p-3 bg-gray-100 font-medium border-r border-black">型式</td>
-                    <td className="p-3 border-r border-black">{data.estimateVehicle.model || "-"}</td>
-                    <td className="p-3 bg-gray-100 font-medium border-r border-black">初度登録年月</td>
-                    <td className="p-3">{data.estimateVehicle.year}年</td>
+                    <td className="p-3 w-1/4 bg-gray-100 font-medium border-r border-black">車名</td>
+                    <td className="p-3 w-1/4 border-r border-black">
+                      {data.estimateVehicle.maker} {data.estimateVehicle.name}
+                    </td>
+                    <td className="p-3 w-1/4 bg-gray-100 font-medium border-r border-black">型式</td>
+                    <td className="p-3 w-1/4">{data.estimateVehicle.model || "-"}</td>
                   </tr>
                   <tr className="border-b border-black">
+                    <td className="p-3 bg-gray-100 font-medium border-r border-black">初度登録年月</td>
+                    <td className="p-3 border-r border-black">{data.estimateVehicle.year}年</td>
                     <td className="p-3 bg-gray-100 font-medium border-r border-black">走行距離</td>
-                    <td className="p-3 border-r border-black">{formatNumber(data.estimateVehicle.mileage)}km</td>
-                    <td className="p-3 bg-gray-100 font-medium border-r border-black">修復歴</td>
-                    <td className="p-3">{data.estimateVehicle.repairHistory ? "有" : "無"}</td>
+                    <td className="p-3">{formatNumber(data.estimateVehicle.mileage)}km</td>
                   </tr>
-                  <tr>
+                  <tr className="border-b border-black">
+                    <td className="p-3 bg-gray-100 font-medium border-r border-black">修復歴</td>
+                    <td className="p-3 border-r border-black">{data.estimateVehicle.repairHistory ? "有" : "無"}</td>
                     <td className="p-3 bg-gray-100 font-medium border-r border-black">外装色</td>
-                    <td className="p-3 border-r border-black" colSpan={1}>
-                      {data.estimateVehicle.exteriorColor || "-"}
-                    </td>
-                    <td className="p-3 bg-gray-100 font-medium border-r border-black"></td>
-                    <td className="p-3"></td>
+                    <td className="p-3">{data.estimateVehicle.exteriorColor || "-"}</td>
                   </tr>
                 </tbody>
               </table>
@@ -347,7 +345,11 @@ const EstimatePDFTemplate: React.FC<EstimatePDFTemplateProps> = ({ data, classNa
                   <td className="p-3 text-right">¥{formatNumber(data.salesPrices.misc_fee)}</td>
                 </tr>
                 <tr className="border-b border-black">
-                  <td className="p-3">現金販売価格<br/>①＋②</td>
+                  <td className="p-3">
+                    現金販売価格
+                    <br />
+                    ①＋②
+                  </td>
                   <td className="p-3 text-right border-r border-black">¥{formatNumber(data.salesPrices.total_price)}</td>
                   <td className="p-3">内消費税</td>
                   <td className="p-3 text-right">¥{formatNumber(data.salesPrices.consumption_tax)}</td>
@@ -466,7 +468,7 @@ const EstimatePDFTemplate: React.FC<EstimatePDFTemplateProps> = ({ data, classNa
             </table>
           </div>
 
-          {/* (C) 預り法定費用 */}
+          {/* ★修正: （C）預り法定費用（リサイクル預託金を削除） */}
           <div>
             <div className="bg-gray-200 px-4 py-2 font-bold border-2 border-black text-lg">(C) 預り法定費用 内訳</div>
             <table className="w-full border-2 border-t-0 border-black text-sm">
@@ -480,14 +482,9 @@ const EstimatePDFTemplate: React.FC<EstimatePDFTemplateProps> = ({ data, classNa
                 <tr className="border-b border-black">
                   <td className="p-3">下取車手続・処分（印紙代）</td>
                   <td className="p-3 text-right border-r border-black">¥{formatNumber(data.legalFees.trade_in_stamp)}</td>
-                  <td className="p-3">リサイクル預託金</td>
-                  <td className="p-3 text-right">¥{formatNumber(data.legalFees.recycling_deposit)}</td>
-                </tr>
-                <tr>
+                  {/* ★リサイクル預託金の行を削除 */}
                   <td className="p-3">その他非課税費用</td>
-                  <td className="p-3 text-right border-r border-black">¥{formatNumber(data.legalFees.other_nontaxable)}</td>
-                  <td className="p-3"></td>
-                  <td className="p-3"></td>
+                  <td className="p-3 text-right">¥{formatNumber(data.legalFees.other_nontaxable)}</td>
                 </tr>
               </tbody>
             </table>
@@ -505,8 +502,6 @@ const EstimatePDFTemplate: React.FC<EstimatePDFTemplateProps> = ({ data, classNa
                   <td className="p-3 w-1/4 text-right">¥{formatNumber(data.processingFees.parking_certificate_fee)}</td>
                 </tr>
                 <tr className="border-b border-black">
-                </tr>
-                <tr className="border-b border-black">
                   <td className="p-3">リサイクル管理費</td>
                   <td className="p-3 text-right border-r border-black">¥{formatNumber(data.processingFees.recycling_management_fee)}</td>
                   <td className="p-3">納車費用</td>
@@ -518,6 +513,23 @@ const EstimatePDFTemplate: React.FC<EstimatePDFTemplateProps> = ({ data, classNa
                   <td className="p-3"></td>
                   <td className="p-3"></td>
                 </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* ★新規追加: （E）法定費用（リサイクル預託金のみ） */}
+          <div>
+            <div className="bg-gray-200 px-4 py-2 font-bold border-2 border-black text-lg">(E) 法定費用 内訳</div>
+            <table className="w-full border-2 border-t-0 border-black text-sm">
+              <tbody>
+                <tr className="border-b border-black">
+                  <td className="p-3 w-1/4">リサイクル預託金</td>
+                  <td className="p-3 w-1/4 text-right border-r border-black">¥{formatNumber(data.legalFees.recycling_deposit)}</td>
+                  {/* 将来の拡張用の空欄 */}
+                  <td className="p-3 w-1/4"></td>
+                  <td className="p-3 w-1/4 text-right"></td>
+                </tr>
+                {/* レイアウト統一のため空行を追加 */}
               </tbody>
             </table>
           </div>

@@ -39,7 +39,7 @@ const LoanApplicationContainer: React.FC = () => {
     annual_income: "",
 
     // 書類
-    identification_doc: null,
+    identification_docs: [],
     income_doc: null,
 
     // ローン情報
@@ -73,8 +73,24 @@ const LoanApplicationContainer: React.FC = () => {
     }
   };
 
-  const handleFileChange = (name: string, file: File) => {
-    setFormData((prev) => ({ ...prev, [name]: file }));
+  const handleFileChange = (name: string, files: FileList | File | File[]) => {
+    if (name === "identification_docs") {
+      if (Array.isArray(files)) {
+        // 個別削除時（File[]が渡される）
+        setFormData((prev) => ({ ...prev, [name]: files }));
+      } else {
+        // 新規ファイル追加時（FileListが渡される）
+        const newFiles = Array.from(files as FileList);
+        setFormData((prev) => ({
+          ...prev,
+          [name]: [...prev.identification_docs, ...newFiles],
+        }));
+      }
+    } else {
+      // 単一ファイルの場合（income_doc）
+      const file = Array.isArray(files) ? files[0] : files;
+      setFormData((prev) => ({ ...prev, [name]: file }));
+    }
 
     // エラーをクリア
     if (error?.[name as keyof LoanApplicationError]) {

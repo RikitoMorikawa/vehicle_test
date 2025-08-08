@@ -108,7 +108,6 @@ const LoanReviewDetailComponent: React.FC<LoanReviewDetailComponentProps> = ({ a
                 </div>
               </div>
             </div>
-
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* 申請者情報 */}
               <div className="bg-white shadow rounded-lg p-6">
@@ -242,7 +241,6 @@ const LoanReviewDetailComponent: React.FC<LoanReviewDetailComponentProps> = ({ a
                 </div>
               </div>
             </div>
-
             {/* 連帯保証人情報（存在する場合のみ表示） */}
             {(application.guarantor_name || application.guarantor_phone) && (
               <div className="mt-6 bg-white shadow rounded-lg p-6">
@@ -277,23 +275,62 @@ const LoanReviewDetailComponent: React.FC<LoanReviewDetailComponentProps> = ({ a
                 </div>
               </div>
             )}
-
+            {/* 添付書類 */}
+            // src/components/admin/loan-review-detail/page.tsx の添付書類セクション修正
             {/* 添付書類 */}
             <div className="mt-6 bg-white shadow rounded-lg p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">添付書類</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* 本人確認書類（複数対応） */}
                 {application.identification_doc_url ? (
                   <div className="border border-gray-200 rounded-lg p-4">
                     <h3 className="font-medium text-gray-900 mb-2">本人確認書類</h3>
-                    <a
-                      href={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/loan-documents/${application.identification_doc_url}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center text-blue-600 hover:text-blue-800"
-                    >
-                      <Download className="h-4 w-4 mr-1" />
-                      ダウンロード
-                    </a>
+                    {(() => {
+                      try {
+                        // JSON配列として解析を試行
+                        const docUrls = JSON.parse(application.identification_doc_url);
+                        if (Array.isArray(docUrls)) {
+                          // 複数ファイルの場合
+                          return (
+                            <div>
+                              {docUrls.map((url, index) => {
+                                const fileName = url.split("/").pop() || `ファイル${index + 1}`;
+                                const displayName = fileName.replace(/^\d+_identification_\d+\./, "本人確認書類" + (index + 1) + ".");
+
+                                return (
+                                  <div key={index} className="mb-2">
+                                    <a
+                                      href={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/loan-documents/${url}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center text-blue-600 hover:text-blue-800"
+                                    >
+                                      <Download className="h-4 w-4 mr-1" />
+                                      {displayName}
+                                    </a>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        }
+                      } catch (e) {
+                        // JSON解析に失敗した場合は単一ファイルとして処理
+                      }
+
+                      // 単一ファイルの場合（従来の形式）
+                      return (
+                        <a
+                          href={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/loan-documents/${application.identification_doc_url}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center text-blue-600 hover:text-blue-800"
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          ダウンロード
+                        </a>
+                      );
+                    })()}
                   </div>
                 ) : (
                   <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
@@ -302,6 +339,7 @@ const LoanReviewDetailComponent: React.FC<LoanReviewDetailComponentProps> = ({ a
                   </div>
                 )}
 
+                {/* 収入証明書類（変更なし） */}
                 {application.income_doc_url ? (
                   <div className="border border-gray-200 rounded-lg p-4">
                     <h3 className="font-medium text-gray-900 mb-2">収入証明書類</h3>
@@ -323,7 +361,7 @@ const LoanReviewDetailComponent: React.FC<LoanReviewDetailComponentProps> = ({ a
                 )}
               </div>
             </div>
-
+            
             {/* 備考（存在する場合のみ表示） */}
             {application.notes && (
               <div className="mt-6 bg-white shadow rounded-lg p-6">
@@ -333,7 +371,6 @@ const LoanReviewDetailComponent: React.FC<LoanReviewDetailComponentProps> = ({ a
                 </div>
               </div>
             )}
-
             {/* 申請履歴 */}
             <div className="mt-6 bg-white shadow rounded-lg p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">申請履歴</h2>
